@@ -1,9 +1,9 @@
 import { http, createConfig, injected } from "wagmi";
-import { polygonAmoy, baseSepolia } from "wagmi/chains";
+import { polygonAmoy } from "wagmi/chains";
 import { metaMask } from "wagmi/connectors";
 
 export const wagmiConfig = createConfig({
-  chains: [polygonAmoy, baseSepolia],
+  chains: [polygonAmoy],
   connectors: [
     injected(),
     metaMask({
@@ -16,6 +16,5 @@ export const wagmiConfig = createConfig({
   ],
   transports: {
     [polygonAmoy.id]: http(),
-    [baseSepolia.id]: http(),
   },
 });

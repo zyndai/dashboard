@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useAtomValue } from "jotai";
-import { accessTokenAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopNav } from "@/components/dashboard/top-nav";
 
@@ -12,16 +11,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const accessToken = useAtomValue(accessTokenAtom);
+  const { ready, authenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!accessToken) {
+    if (ready && !authenticated) {
       router.push("/auth");
     }
-  }, [accessToken, router]);
+  }, [ready, authenticated, router]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -39,9 +38,12 @@ export default function DashboardLayout({
   }, []);
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
-  const toggleSidebar = useCallback(() => setSidebarOpen((prev) => !prev), []);
+  const toggleSidebar = useCallback(
+    () => setSidebarOpen((prev) => !prev),
+    []
+  );
 
-  if (!accessToken) {
+  if (!ready || !authenticated) {
     return null;
   }
 

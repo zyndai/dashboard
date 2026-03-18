@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
-import { ButtonBasic } from "./ui/ButtonBasic";
 import { useAuth } from "@/hooks/useAuth";
 import { formatAddress } from "@/lib/utils";
 

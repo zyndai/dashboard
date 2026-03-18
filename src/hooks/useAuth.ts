@@ -24,7 +24,10 @@ export function useAuth() {
     loginAttemptedRef.current = true;
 
     try {
-      const signature = await signMessage(SIGN_MESSAGE, { uiOptions: { title: "Sign in to ZyndAI", description: "This signature verifies your identity." } });
+      const { signature } = await signMessage(
+        { message: SIGN_MESSAGE },
+        { uiOptions: { title: "Sign in to ZyndAI", description: "This signature verifies your identity." } },
+      );
 
       const response = await login({
         wallet_address: walletAddress,

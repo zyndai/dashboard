@@ -171,7 +171,7 @@ export function FrameSequence({
               width: 32,
               height: 32,
               border: "2px solid rgba(255,255,255,0.1)",
-              borderTopColor: "#BF40FF",
+              borderTopColor: "#8B5CF6",
               borderRadius: "50%",
               animation: "spin 0.8s linear infinite",
             }}

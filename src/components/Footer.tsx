@@ -114,7 +114,7 @@ export function Footer(): React.ReactElement {
         <div className="container">
           <div className="footer-grid">
             <div className="footer-box is-hide-mb">
-              <span style={{ color: "#fff", fontSize: "2.5rem", fontWeight: 700, letterSpacing: "0.01em", display: "block", width: "100%", textAlign: "center" }}>Zynd<span style={{ color: "#BF40FF" }}>AI</span></span>
+              <span style={{ color: "#fff", fontSize: "2.5rem", fontWeight: 700, letterSpacing: "0.01em", display: "block", width: "100%", textAlign: "center" }}>Zynd<span style={{ color: "#8B5CF6" }}>AI</span></span>
               <div className="middle-hero-second-line" />
               <div className="middle-hero-right-second-line" />
               <GridTripod corner="right-bottom-corner" />
@@ -166,10 +166,6 @@ export function Footer(): React.ReactElement {
                 )}
               </div>
               <FooterBoxLines />
-            </div>
-
-            <div className="footer-box footer-newsletter-mobile-box">
-              <Newsletter />
             </div>
 
             <div className="footer-box">

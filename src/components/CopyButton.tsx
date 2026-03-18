@@ -40,8 +40,8 @@ export function CopyButton({ text, label = "Copy", className = "" }: CopyButtonP
       aria-label={copied ? "Copied" : `Copy ${label || "to clipboard"}`}
       className={`inline-flex items-center justify-center min-w-[32px] min-h-[32px] text-xs px-2 py-1 rounded transition-colors ${
         copied
-          ? "bg-[#BF40FF33] text-[#BF40FF]"
-          : "bg-[#ffffff1a] text-[#ffffff66] hover:text-[#f6f6f6] hover:bg-[#ffffff26]"
+          ? "bg-[#8B5CF633] text-[#8B5CF6]"
+          : "bg-[#ffffff1a] text-[#ffffff66] hover:text-[#E0E7FF] hover:bg-[#ffffff26]"
       } ${className}`}
       title={copied ? "Copied!" : label ? `Copy ${label}` : "Copy to clipboard"}
     >

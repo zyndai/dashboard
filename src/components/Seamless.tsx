@@ -124,7 +124,7 @@ function MobileNetworkDiagram() {
           alt="ZyndAI"
           style={{ width: "56px", height: "auto" }}
         />
-        <span style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 700, marginTop: "6px", letterSpacing: "0.01em" }}>Zynd<span style={{ color: "#BF40FF" }}>AI</span></span>
+        <span style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 700, marginTop: "6px", letterSpacing: "0.01em" }}>Zynd<span style={{ color: "#8B5CF6" }}>AI</span></span>
       </div>
 
       <div

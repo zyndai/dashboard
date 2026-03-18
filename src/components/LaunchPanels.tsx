@@ -64,7 +64,7 @@ export function CodeEditorPanel({ className = "" }: { className?: string }) {
           </div>
           <div className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono text-[10px] sm:text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="text-[#BF40FF]">$</span>
+              <span className="text-[#8B5CF6]">$</span>
               <span className="text-white">pip install zyndai-agent</span>
             </div>
             <div className="mt-1 text-gray-500">Successfully installed zyndai-agent-0.2.4</div>
@@ -101,9 +101,9 @@ export function CodeEditorPanel({ className = "" }: { className?: string }) {
         </div>
 
         {/* Status output */}
-        <div className="bg-[#0E0E11]/90 backdrop-blur-xl border border-[#BF40FF]/20 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 font-mono text-[10px] sm:text-xs flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#BF40FF] shadow-[0_0_8px_rgba(191, 64, 255,0.6)] shrink-0" />
-          <span className="text-[#BF40FF]">Agent registered</span>
+        <div className="bg-[#0E0E11]/90 backdrop-blur-xl border border-[#8B5CF6]/20 rounded-lg px-3 sm:px-4 py-2 sm:py-2.5 font-mono text-[10px] sm:text-xs flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#8B5CF6] shadow-[0_0_8px_rgba(191, 64, 255,0.6)] shrink-0" />
+          <span className="text-[#8B5CF6]">Agent registered</span>
           <span className="text-gray-500">· DID created · Webhook active</span>
         </div>
       </div>
@@ -129,7 +129,7 @@ export function DashboardPanel({ className = "" }: { className?: string }) {
           </div>
           <div className="px-3 sm:px-4 py-2.5 sm:py-3 font-mono text-[10px] sm:text-xs">
             <div className="flex items-center gap-1.5">
-              <span className="text-[#BF40FF]">$</span>
+              <span className="text-[#8B5CF6]">$</span>
               <span className="text-white">npx zyndai-mcp-server</span>
             </div>
             <div className="mt-1.5 text-[#8B5CF6]">MCP Server running on stdio</div>
@@ -140,7 +140,7 @@ export function DashboardPanel({ className = "" }: { className?: string }) {
         {/* MCP Tool Cards */}
         <div className="grid grid-cols-2 gap-2">
           {[
-            { name: "search_agents", desc: "Find agents by capability", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", color: "#BF40FF" },
+            { name: "search_agents", desc: "Find agents by capability", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", color: "#8B5CF6" },
             { name: "call_agent", desc: "Invoke any agent endpoint", icon: "M13 10V3L4 14h7v7l9-11h-7z", color: "#F59E0B" },
             { name: "list_agents", desc: "Browse the full registry", icon: "M4 6h16M4 10h16M4 14h16M4 18h16", color: "#3B82F6" },
             { name: "register_agent", desc: "Publish to the network", icon: "M12 4v16m8-8H4", color: "#EC4899" },
@@ -199,7 +199,7 @@ export function WorkflowPanel({ className = "" }: { className?: string }) {
             <path d="M 55 140 C 80 140, 80 212, 105 212" fill="none" stroke="#EC4899" strokeWidth="1.5" strokeDasharray="5 12" style={{ animation: "flowDash 2s linear infinite" }} />
             {/* Search → Payment */}
             <path d="M 180 68 C 210 68, 210 140, 235 140" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
-            <path d="M 180 68 C 210 68, 210 140, 235 140" fill="none" stroke="#BF40FF" strokeWidth="1.5" strokeDasharray="5 12" style={{ animation: "flowDash 1.4s linear infinite" }} />
+            <path d="M 180 68 C 210 68, 210 140, 235 140" fill="none" stroke="#8B5CF6" strokeWidth="1.5" strokeDasharray="5 12" style={{ animation: "flowDash 1.4s linear infinite" }} />
             {/* Publish → Payment */}
             <path d="M 180 212 C 210 212, 210 140, 235 140" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
             <path d="M 180 212 C 210 212, 210 140, 235 140" fill="none" stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="5 12" style={{ animation: "flowDash 1.8s linear infinite" }} />
@@ -215,7 +215,7 @@ export function WorkflowPanel({ className = "" }: { className?: string }) {
 
           {/* Search */}
           <div className="absolute" style={{ top: "34px", left: "105px" }}>
-            <N8nNode icon="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" name="Search" sub="agents" color="#BF40FF" />
+            <N8nNode icon="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" name="Search" sub="agents" color="#8B5CF6" />
           </div>
 
           {/* Publish */}

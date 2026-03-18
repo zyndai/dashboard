@@ -169,14 +169,13 @@ export function Navbar(): React.ReactElement {
       <div className="padding-global">
         <div className="container">
           <div className="nav-content-wrap">
-            <Link href="/" className="nav-logo-wrap" style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%' }}>
+            <Link href="/" className="nav-logo-link">
               <img
                 src="/zynd.png"
                 alt="ZyndAI"
                 className="nav-logo"
-                style={{ maxHeight: "40px", width: "auto" }}
               />
-              <span style={{ color: "#fff", fontSize: "1.4rem", fontWeight: 700, letterSpacing: "0.01em" }}>Zynd<span style={{ color: "#BF40FF" }}>AI</span></span>
+              <span className="nav-logo-text">ZYND<span className="nav-logo-accent">AI</span></span>
             </Link>
 
             <div className="burger menu" ref={burgerRef}>
@@ -229,19 +228,18 @@ export function Navbar(): React.ReactElement {
             <button
               onClick={handleGetStarted}
               disabled={isConnecting || isLoggingIn}
-              className="burger is-hide-mb"
+              className="nav-cta-link is-hide-mb"
               style={{
-                width: "auto",
-                padding: "1.25rem 2.5rem",
-                textDecoration: "none",
                 cursor: isConnecting || isLoggingIn ? "wait" : "pointer",
-                border: "none",
               }}
             >
-              <div className="menu-content-wrap" style={{ color: "var(--color-black)", letterSpacing: "0.05em", fontWeight: 600 }}>
-                {buttonLabel}
-              </div>
-              <div className="burger-left-corner" />
+              {buttonLabel}
+              <span className="nav-cta-arrow">
+                <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <path d="M16.172 11l-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z" fill="currentColor" />
+                </svg>
+              </span>
             </button>
 
             <button

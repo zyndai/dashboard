@@ -81,7 +81,7 @@ const MILESTONES: Milestone[] = [
 function StatusBadge({ status }: { status: Milestone["status"] }) {
   const config = {
     completed: { label: "Completed", bg: "rgba(0,255,102,0.12)", color: "#00FF66", dot: "#00FF66" },
-    "in-progress": { label: "In Progress", bg: "rgba(191,64,255,0.2)", color: "#BF40FF", dot: "#BF40FF" },
+    "in-progress": { label: "In Progress", bg: "rgba(191,64,255,0.2)", color: "#8B5CF6", dot: "#8B5CF6" },
     upcoming: { label: "Upcoming", bg: "rgba(255,184,0,0.12)", color: "#FFB800", dot: "#FFB800" },
   }[status];
 
@@ -153,7 +153,7 @@ export function Roadmap() {
                       <ul className="roadmap-items-list">
                         {m.items.map((item, j) => (
                           <li key={j}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={m.status === "completed" ? "#00FF66" : m.status === "in-progress" ? "#BF40FF" : "#FFB800"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={m.status === "completed" ? "#00FF66" : m.status === "in-progress" ? "#8B5CF6" : "#FFB800"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             {item}

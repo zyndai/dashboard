@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAtomValue } from "jotai";
 import { Search, Eye, Pencil } from "lucide-react";
-import { accessTokenAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { getMyAgents } from "@/apis/registry";
 import { Agent, Capabilities } from "@/apis/registry/types";
 import { Badge } from "@/components/ui/Badge";
@@ -17,7 +16,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const accessToken = useAtomValue(accessTokenAtom);
+  const { registryToken: accessToken } = useAuth();
 
   useEffect(() => {
     async function fetchAgents() {

@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAtomValue } from "jotai";
 import { Plus, X } from "lucide-react";
-import { accessTokenAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { createAgent } from "@/apis/registry";
 import { Capabilities } from "@/apis/registry/types";
 import { Input } from "@/components/ui/Input";
@@ -21,7 +20,7 @@ interface AgentFormProps {
 
 export function AgentForm({ agent, isEditing = false }: AgentFormProps) {
   const router = useRouter();
-  const accessToken = useAtomValue(accessTokenAtom);
+  const { registryToken: accessToken } = useAuth();
 
   const [name, setName] = useState(agent?.name ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");

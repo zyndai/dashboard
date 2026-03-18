@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAtomValue } from "jotai";
 import { Pencil, Trash2, Copy, Check, Key, Shield } from "lucide-react";
-import { accessTokenAtom, userAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { getAgentById } from "@/apis/registry";
 import { Agent, VCResponse } from "@/apis/registry/types";
 import { Badge } from "@/components/ui/Badge";
@@ -67,8 +66,7 @@ export default function AgentDetailPage({
   const [agentId, setAgentId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const accessToken = useAtomValue(accessTokenAtom);
-  const user = useAtomValue(userAtom);
+  const { registryToken: accessToken, user } = useAuth();
 
   useEffect(() => {
     async function resolveParams() {

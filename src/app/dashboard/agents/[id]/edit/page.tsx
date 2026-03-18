@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAtomValue } from "jotai";
-import { accessTokenAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { getAgentById } from "@/apis/registry";
 import { Agent } from "@/apis/registry/types";
 import { AgentForm } from "@/components/agents/agent-form";
@@ -17,7 +16,7 @@ export default function EditAgentPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [agentId, setAgentId] = useState<string | null>(null);
-  const accessToken = useAtomValue(accessTokenAtom);
+  const { registryToken: accessToken } = useAuth();
 
   useEffect(() => {
     async function resolveParams() {

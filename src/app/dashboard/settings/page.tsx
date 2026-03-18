@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAtomValue } from "jotai";
 import {
   Key,
   Copy,
@@ -11,7 +10,7 @@ import {
   Settings as SettingsIcon,
   Trash2,
 } from "lucide-react";
-import { accessTokenAtom, userAtom } from "@/store/global.store";
+import { useAuth } from "@/hooks/useAuth";
 import { createApiKey, getApiKeys, deleteApiKey } from "@/apis/registry";
 import { APIKeyResponse } from "@/apis/registry/types";
 import { Badge } from "@/components/ui/Badge";
@@ -54,8 +53,7 @@ export default function SettingsPage() {
     type: "success" | "error";
     message: string;
   } | null>(null);
-  const accessToken = useAtomValue(accessTokenAtom);
-  const user = useAtomValue(userAtom);
+  const { registryToken: accessToken, user } = useAuth();
 
   useEffect(() => {
     setFullKeys(loadFullKeysFromStorage());

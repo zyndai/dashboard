@@ -61,8 +61,8 @@ export function Hero() {
                 </div>
                 <div className="hero-cta-buttons">
                   <ButtonBasic
-                    href="https://zynd.gitbook.io/product-docs/"
-                    text="Get Started"
+                    href="/auth"
+                    text="Login"
                   />
                   <a
                     href="https://github.com/ZyndAI"

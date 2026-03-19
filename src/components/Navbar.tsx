@@ -9,7 +9,7 @@ import { formatAddress } from "@/lib/utils";
 
 const NAV_LINKS_BASE = [
   { label: "Registry", href: "/registry" },
-  { label: "Docs", href: "https://zynd.gitbook.io/product-docs/" },
+  { label: "Docs", href: "https://docs.zynd.ai" },
   { label: "Litepaper", href: "/docs/litepaper.pdf" },
   { label: "Blog", href: "/blogs" },
 ] as const;

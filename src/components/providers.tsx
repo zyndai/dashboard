@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState, useEffect } from "react";
+import { type ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,16 +16,20 @@ const queryClient = new QueryClient({
 });
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
 
-  if (!mounted) {
-    return <>{children}</>;
+  if (!privyAppId) {
+    return (
+      <div className="m-4 border border-red-500/30 bg-red-500/[0.08] p-4 text-sm text-red-300">
+        Missing `NEXT_PUBLIC_PRIVY_APP_ID`. Add it to your `.env.local` and restart the
+        dev server.
+      </div>
+    );
   }
 
   return (
     <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+      appId={privyAppId}
       config={{
         loginMethods: ["google", "twitter", "github", "email", "wallet"],
         appearance: {

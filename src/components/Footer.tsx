@@ -70,12 +70,28 @@ function FooterBoxLines(): React.ReactElement {
 function Newsletter(): React.ReactElement {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setSubmitted(true);
-    setEmail("");
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      setSubmitted(true);
+      setEmail("");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -96,13 +112,14 @@ function Newsletter(): React.ReactElement {
             required
             className="footer-newsletter-input"
           />
-          <button type="submit" className="footer-newsletter-btn" aria-label="Subscribe">
+          <button type="submit" className="footer-newsletter-btn" aria-label="Subscribe" disabled={loading}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
         </form>
       )}
+      {error && <p className="footer-newsletter-thanks" style={{ color: "#ff4444" }}>{error}</p>}
     </div>
   );
 }

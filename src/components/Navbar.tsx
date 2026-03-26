@@ -48,7 +48,7 @@ export function Navbar(): React.ReactElement {
   const buttonLabel = !ready
     ? "GET STARTED"
     : authenticated
-      ? (user?.email ?? "Dashboard")
+      ? "Dashboard"
       : "GET STARTED";
 
   useEffect(() => {

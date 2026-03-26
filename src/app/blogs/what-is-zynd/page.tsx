@@ -41,7 +41,7 @@ const blogPostingSchema = {
             url: "https://www.zynd.ai/assets/images/logo.png",
         },
     },
-    image: "https://www.zynd.ai/zynd.png",
+    image: "https://www.zynd.ai/assets/images/logo.png",
     mainEntityOfPage: {
         "@type": "WebPage",
         "@id": "https://www.zynd.ai/blogs/what-is-zynd",

@@ -115,11 +115,12 @@ export function Navbar(): React.ReactElement {
           <div className="nav-content-wrap">
             <Link href="/" className="nav-logo-link">
               <Image
-                src="/zynd.png"
+                src="/zynd-small.png"
                 alt="ZyndAI"
                 width={40}
                 height={40}
                 className="nav-logo"
+                priority
               />
               <span className="nav-logo-text">ZYND<span className="nav-logo-accent">AI</span></span>
             </Link>

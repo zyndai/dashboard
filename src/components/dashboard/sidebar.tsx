@@ -28,7 +28,7 @@ export function Sidebar({ onLinkClick, mobile }: SidebarProps) {
     >
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
         <Link href="/" className="flex items-center gap-2.5">
-          <img src="/zynd.png" alt="ZyndAI" className="h-8 brightness-0 invert" />
+          <img src="/zynd-small.png" alt="ZyndAI" className="h-8 brightness-0 invert" />
           <span className="text-xl font-extrabold tracking-widest text-white" style={{ fontFamily: "'Chakra Petch', sans-serif" }}>
             ZYND<span className="text-[var(--color-accent)]">AI</span>
           </span>

@@ -8,6 +8,13 @@
   }
 }
 
+/* Prevent layout shifts from SplitType/SplitText text splitting */
+[text-split] .word,
+[blur-text] .word {
+  display: inline-block;
+  will-change: opacity, filter;
+}
+
 @font-face {
   font-family: "Helvetica Neue";
   src: url("/assets/fonts/HelveticaNeueMedium.woff2") format("woff2");
@@ -783,6 +790,7 @@ a {
   height: 28rem;
   max-height: 28rem;
   display: flex;
+  contain: layout;
 }
 
 .hero-accent {

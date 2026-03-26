@@ -1,8 +1,4 @@
-"use client";
-
-import { Navbar } from "@/components/Navbar";
-import { HomeContent } from "@/components/HomeContent";
-import { useLenis } from "@/hooks/useLenis";
+import { PageShell } from "@/components/PageShell";
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -68,34 +64,13 @@ const faqSchema = {
 };
 
 export default function Home() {
-  useLenis();
-
   return (
-    <div className="page-wrapper">
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <main className="main-wrapper">
-        <div className="background-light">
-          <div className="color-overlay" />
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="none"
-            className="video-background"
-            poster="/assets/images/video-poster.jpg"
-            style={{ objectFit: "cover" }}
-          >
-            <source src="/assets/videos/background-video.webm" type="video/webm" />
-            <source src="/assets/videos/background-video.mp4" type="video/mp4" />
-          </video>
-        </div>
-        <Navbar />
-        <HomeContent />
-      </main>
-    </div>
+      <PageShell />
+    </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { AccentCorners } from "./ui/AccentCorners";
 import { GridTripod } from "./ui/GridTripod";
 
@@ -80,12 +81,14 @@ export function Reward() {
                   </div>
                 </div>
                 <div className="reward-big-image-wrap">
-                  <img
-                    src="/assets/images/frame-502.png"
-                    srcSet="/assets/images/frame-502-500.png 500w, /assets/images/frame-502.png 655w"
-                    sizes="100vw"
+                  <Image
+                    src="/assets/images/frame-502.webp"
                     alt="Integrations page"
+                    width={655}
+                    height={357}
                     className="reward-big-image"
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, 655px"
                   />
                 </div>
                 <div className="middle-hero-second-line" />

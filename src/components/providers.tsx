@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState, useEffect } from "react";
+import { type ReactNode } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,13 +16,6 @@ const queryClient = new QueryClient({
 });
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <PrivyProvider
       appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
@@ -31,7 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
         appearance: {
           theme: "dark",
           accentColor: "#8B5CF6",
-          logo: "/zynd.png",
+          logo: "/zynd-small.png",
           landingHeader: "Welcome to ZyndAI",
           loginMessage: "Sign in to access the agent network",
           showWalletLoginFirst: false,

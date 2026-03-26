@@ -5,6 +5,7 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import Image from "next/image";
 import { AccentCorners } from "./ui/AccentCorners";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -103,9 +104,11 @@ function MobileNetworkDiagram() {
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <img
+            <Image
               src={logo.src}
               alt={logo.label}
+              width={32}
+              height={32}
               style={{ width: "48%", height: "48%", objectFit: "contain" }}
             />
           </div>
@@ -119,9 +122,11 @@ function MobileNetworkDiagram() {
           alignItems: "center",
         }}
       >
-        <img
-          src="/zynd.png"
+        <Image
+          src="/zynd-small.png"
           alt="ZyndAI"
+          width={56}
+          height={56}
           style={{ width: "56px", height: "auto" }}
         />
         <span style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 700, marginTop: "6px", letterSpacing: "0.01em" }}>Zynd<span style={{ color: "#8B5CF6" }}>AI</span></span>

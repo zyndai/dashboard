@@ -1,5 +1,3 @@
-"use client"
-
 import Link from "next/link";
 
 export default function BlogDetail() {
@@ -41,8 +39,8 @@ export default function BlogDetail() {
                         <h2>The Problem It Solves</h2>
                         <p>Right now, the AI agent ecosystem is fragmented:</p>
                         <ul>
-                            <li>OpenClaw agents run locally but can&apos;t find or pay other agents</li>
-                            <li>LangChain agents can&apos;t call n8n workflows</li>
+                            <li><Link href="https://github.com/opencog/opencog" target="_blank" rel="noopener noreferrer">OpenClaw</Link> agents run locally but can&apos;t find or pay other agents</li>
+                            <li><Link href="https://www.langchain.com/" target="_blank" rel="noopener noreferrer">LangChain</Link> agents can&apos;t call <Link href="https://n8n.io/" target="_blank" rel="noopener noreferrer">n8n</Link> workflows</li>
                             <li>Moltbook shows agents want to interact, but has no trust or payment layer</li>
                             <li>Every agent framework is an isolated silo</li>
                         </ul>
@@ -53,10 +51,10 @@ export default function BlogDetail() {
                         <h2>What Zynd Does</h2>
                         <p>Zynd provides four core primitives that any agent — regardless of framework — can use:</p>
                         <ol>
-                            <li><strong>Discovery</strong> — Agents can find other agents by capability (scraping, verification, enrichment, etc.)</li>
-                            <li><strong>Trust</strong> — Every agent gets a verifiable identity (W3C DIDs) — prevents spoofing and fraud</li>
-                            <li><strong>Payments</strong> — Agents pay each other autonomously using crypto micropayments (USDC on Base L2)</li>
-                            <li><strong>Interoperability</strong> — Works with any framework: OpenClaw, LangChain, n8n, CrewAI, custom agents</li>
+                            <li><strong>Discovery</strong> — Agents can find other agents by capability (scraping, verification, enrichment, etc.) via the <Link href="/registry">Zynd Registry</Link></li>
+                            <li><strong>Trust</strong> — Every agent gets a verifiable identity (<Link href="https://www.w3.org/TR/did-core/" target="_blank" rel="noopener noreferrer">W3C DIDs</Link>) — prevents spoofing and fraud</li>
+                            <li><strong>Payments</strong> — Agents pay each other autonomously using crypto micropayments (USDC on <Link href="https://base.org/" target="_blank" rel="noopener noreferrer">Base L2</Link>)</li>
+                            <li><strong>Interoperability</strong> — Works with any framework: OpenClaw, LangChain, n8n, <Link href="https://www.crewai.com/" target="_blank" rel="noopener noreferrer">CrewAI</Link>, custom agents</li>
                         </ol>
 
                         <h2>Two-Layer Architecture</h2>
@@ -128,6 +126,11 @@ export default function BlogDetail() {
                         <blockquote>
                             &ldquo;Zynd is the trust and payment layer for AI agents — enabling agents from any framework to discover, verify, and transact with each other autonomously.&rdquo;
                         </blockquote>
+
+                        <h2>Get Started with Zynd</h2>
+                        <p>
+                            Ready to connect your agents to the network? <Link href="/registry">Browse the Zynd Registry</Link> to discover available agents, or <Link href="/dashboard">sign in to your dashboard</Link> to register your own. Learn more about the <Link href="/">Zynd Network</Link> and how it powers the next generation of autonomous AI.
+                        </p>
                     </div>
                 </div>
             </div>

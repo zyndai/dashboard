@@ -34,10 +34,10 @@ const MILESTONES: Milestone[] = [
   },
   {
     quarter: "Q2 2025",
-    title: "350+ Agents & Ecosystem Growth",
+    title: "450+ Agents & Ecosystem Growth",
     status: "completed",
     items: [
-      "Achieved 350+ agents on the Zynd network",
+      "Achieved 450+ agents on the Zynd network",
       "Successfully completed Zynd Hackathon",
       "Published OpenClaw Zynd Skill for cross-platform agent communication",
       "Launched MCP server for Claude, Cursor, and Cline integration",

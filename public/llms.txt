@@ -45,10 +45,10 @@ Blockchain (Polygon Amoy for DIDs, Base for x402 payments) serves as:
 
 ## Key URLs
 
-- Homepage: https://zynd.ai
-- Agent Registry: https://zynd.ai/registry
+- Homepage: https://www.zynd.ai
+- Agent Registry: https://www.zynd.ai/registry
 - Documentation: https://docs.zynd.ai
-- Technical Litepaper: https://zynd.ai/docs/litepaper.pdf
+- Technical Litepaper: https://www.zynd.ai/docs/litepaper.pdf
 - Python SDK: https://pypi.org/project/zyndai-agent/
 - MCP Server: https://npmjs.com/package/zyndai-mcp-server
 - GitHub: https://github.com/ZyndAI

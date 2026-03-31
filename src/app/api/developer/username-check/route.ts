@@ -48,14 +48,19 @@ export async function GET(req: NextRequest) {
   }
 
   // Check local DB first
-  const localExisting = await prisma.developerKey.findFirst({
-    where: { username },
-  });
-  if (localExisting) {
-    return NextResponse.json({
-      available: false,
-      reason: "Username is already taken",
+  try {
+    const localExisting = await prisma.developerKey.findFirst({
+      where: { username },
     });
+    if (localExisting) {
+      return NextResponse.json({
+        available: false,
+        reason: "Username is already taken",
+      });
+    }
+  } catch (err) {
+    console.error("[username-check] DB error:", err);
+    // DB unavailable — fall through to registry check
   }
 
   // Check registry (if configured)

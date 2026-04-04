@@ -121,7 +121,14 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${WEBHOOK_SECRET}`,
       },
-      body: JSON.stringify({ name, state, handle: username }),
+      body: JSON.stringify({
+        name,
+        state,
+        metadata: {
+          username: username || "",
+          role: role || "",
+        },
+      }),
     });
 
     if (!res.ok) {

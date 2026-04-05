@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { encryptPrivateKey } from "@/lib/pki";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import nacl from "tweetnacl";
+import { Buffer } from "buffer";
 
 const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
 const WEBHOOK_SECRET = process.env.AGENTDNS_WEBHOOK_SECRET;
@@ -173,6 +175,55 @@ export async function POST(req: NextRequest) {
     });
 
     console.log("[developer/register] Stored key for", user.id, developer_id, "username:", username);
+
+    // Claim handle on registry if username provided
+    if (username) {
+      try {
+        console.log("[developer/register] Claiming handle:", username);
+        
+        // Decode private key from base64
+        const privKeyBytes = Buffer.from(rawPrivKey, "base64");
+        
+        // Create signature payload
+        const signable = JSON.stringify({
+          handle: username,
+          developer_id: developer_id,
+          public_key: public_key,
+        });
+        
+        // Sign with Ed25519
+        const signatureBytes = nacl.sign.detached(
+          Buffer.from(signable),
+          privKeyBytes
+        );
+        const signature = Buffer.from(signatureBytes).toString("base64");
+        
+        // Claim handle on registry
+        const claimRes = await fetch(`${REGISTRY_URL}/v1/handles`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            handle: username,
+            developer_id: developer_id,
+            public_key: public_key,
+            signature: `ed25519:${signature}`,
+          }),
+        });
+        
+        if (claimRes.ok) {
+          console.log("[developer/register] Handle claimed successfully:", username);
+        } else {
+          const claimText = await claimRes.text();
+          console.error("[developer/register] Handle claim failed:", claimRes.status, claimText);
+          // Don't fail registration if handle claim fails
+        }
+      } catch (claimErr) {
+        console.error("[developer/register] Handle claim error:", (claimErr as Error).message);
+        // Don't fail registration if handle claim fails
+      }
+    }
 
     return NextResponse.json({ developer_id, public_key, name, username, role });
   } catch (err) {

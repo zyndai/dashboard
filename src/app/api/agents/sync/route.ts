@@ -38,7 +38,23 @@ export async function POST() {
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ agents, synced: false });
+    const mapped = agents.map((a) => ({
+      id: a.id,
+      user_id: a.userId,
+      agent_id: a.agentId,
+      name: a.name,
+      description: a.description,
+      agent_url: a.agentUrl,
+      category: a.category,
+      tags: a.tags,
+      summary: a.summary,
+      agent_index: a.agentIndex,
+      status: a.status,
+      source: a.source,
+      created_at: a.createdAt.toISOString(),
+      updated_at: a.updatedAt.toISOString(),
+    }));
+    return NextResponse.json({ agents: mapped, synced: false });
   }
 
   // Fetch agents from agent-dns registry
@@ -97,11 +113,28 @@ export async function POST() {
     }
   }
 
-  // Return all agents for this user
+  // Return all agents for this user, mapped to snake_case for frontend
   const agents = await prisma.agent.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ agents, synced: true });
+  const mapped = agents.map((a) => ({
+    id: a.id,
+    user_id: a.userId,
+    agent_id: a.agentId,
+    name: a.name,
+    description: a.description,
+    agent_url: a.agentUrl,
+    category: a.category,
+    tags: a.tags,
+    summary: a.summary,
+    agent_index: a.agentIndex,
+    status: a.status,
+    source: a.source,
+    created_at: a.createdAt.toISOString(),
+    updated_at: a.updatedAt.toISOString(),
+  }));
+
+  return NextResponse.json({ agents: mapped, synced: true });
 }

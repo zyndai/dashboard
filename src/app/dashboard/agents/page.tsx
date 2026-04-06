@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Eye, Pencil } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { AgentRecord } from "@/lib/supabase/db";
 import { Badge } from "@/components/ui/Badge";
@@ -24,25 +23,10 @@ export default function AgentsPage() {
     async function fetchAgents() {
       try {
         setLoading(true);
-
-        // Sync agents from registry, then use the returned list
         const syncRes = await fetch("/api/agents/sync", { method: "POST" });
-        if (syncRes.ok) {
-          const { agents: synced } = await syncRes.json();
-          setAgents(synced || []);
-          setError(null);
-          return;
-        }
-
-        // Fallback: read directly from Supabase if sync fails
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from("agents")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (fetchError) throw fetchError;
-        setAgents(data || []);
+        if (!syncRes.ok) throw new Error("Sync failed");
+        const { agents: synced } = await syncRes.json();
+        setAgents(synced || []);
         setError(null);
       } catch (err) {
         setError("Failed to load agents");

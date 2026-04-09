@@ -70,7 +70,7 @@ export async function GET(
     });
   }
 
-  // 2. Try by agent_id (the URL param might be an agent_id like agdns:...)
+  // 2. Try by agent_id (the URL param might be an entity ID like zns:...)
   const byAgentId = await prisma.agent.findUnique({
     where: { agentId: id },
   });

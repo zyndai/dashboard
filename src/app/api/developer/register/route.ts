@@ -9,6 +9,16 @@ import { Buffer } from "buffer";
 const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
 const WEBHOOK_SECRET = process.env.AGENTDNS_WEBHOOK_SECRET;
 
+/** JSON.stringify with sorted keys to match Go's json.Marshal on map[string]string. */
+function jsonSortedStringify(obj: Record<string, string>): string {
+  return JSON.stringify(
+    Object.keys(obj).sort().reduce((sorted: Record<string, string>, key) => {
+      sorted[key] = obj[key];
+      return sorted;
+    }, {})
+  );
+}
+
 async function getClientIp(req: NextRequest): Promise<string | null> {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
@@ -97,7 +107,7 @@ export async function POST(req: NextRequest) {
             console.log("[developer/register] Handle not on registry, retrying claim:", effectiveUsername);
             const rawPrivKey = decryptPrivateKey(existing.privateKeyEnc);
             const privKeyBytes = Buffer.from(rawPrivKey, "base64");
-            const signable = JSON.stringify({
+            const signable = jsonSortedStringify({
               developer_id: existing.developerId,
               handle: effectiveUsername,
               public_key: existing.publicKey,
@@ -231,9 +241,9 @@ export async function POST(req: NextRequest) {
         // Decode private key from base64
         const privKeyBytes = Buffer.from(rawPrivKey, "base64");
         
-        // Create signature payload — keys MUST be alphabetical to match
+        // Create signature payload — keys sorted alphabetically to match
         // Go's json.Marshal(map[string]string{...}) which sorts keys.
-        const signable = JSON.stringify({
+        const signable = jsonSortedStringify({
           developer_id: developer_id,
           handle: username,
           public_key: public_key,

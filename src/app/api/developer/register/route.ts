@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { encryptPrivateKey } from "@/lib/pki";
+import { encryptPrivateKey, decryptPrivateKey } from "@/lib/pki";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import nacl from "tweetnacl";
@@ -82,11 +82,58 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const effectiveUsername = existing.username || username;
+
+    // Check if handle is claimed on registry; retry if not
+    if (effectiveUsername) {
+      try {
+        const checkRes = await fetch(
+          `${REGISTRY_URL}/v1/developers/${existing.developerId}`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (checkRes.ok) {
+          const devData = await checkRes.json();
+          if (!devData.dev_handle) {
+            console.log("[developer/register] Handle not on registry, retrying claim:", effectiveUsername);
+            const rawPrivKey = decryptPrivateKey(existing.privateKeyEnc);
+            const privKeyBytes = Buffer.from(rawPrivKey, "base64");
+            const signable = JSON.stringify({
+              developer_id: existing.developerId,
+              handle: effectiveUsername,
+              public_key: existing.publicKey,
+            });
+            const signatureBytes = nacl.sign.detached(
+              Buffer.from(signable),
+              privKeyBytes
+            );
+            const signature = Buffer.from(signatureBytes).toString("base64");
+            const claimRes = await fetch(`${REGISTRY_URL}/v1/handles`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                handle: effectiveUsername,
+                developer_id: existing.developerId,
+                public_key: existing.publicKey,
+                signature: `ed25519:${signature}`,
+              }),
+            });
+            if (claimRes.ok) {
+              console.log("[developer/register] Handle retry claim succeeded:", effectiveUsername);
+            } else {
+              console.error("[developer/register] Handle retry claim failed:", claimRes.status, await claimRes.text());
+            }
+          }
+        }
+      } catch (retryErr) {
+        console.error("[developer/register] Handle retry error:", (retryErr as Error).message);
+      }
+    }
+
     return NextResponse.json({
       developer_id: existing.developerId,
       public_key: existing.publicKey,
       name: existing.name,
-      username: existing.username || username,
+      username: effectiveUsername,
       role: existing.role || role,
     });
   }
@@ -184,10 +231,11 @@ export async function POST(req: NextRequest) {
         // Decode private key from base64
         const privKeyBytes = Buffer.from(rawPrivKey, "base64");
         
-        // Create signature payload
+        // Create signature payload — keys MUST be alphabetical to match
+        // Go's json.Marshal(map[string]string{...}) which sorts keys.
         const signable = JSON.stringify({
-          handle: username,
           developer_id: developer_id,
+          handle: username,
           public_key: public_key,
         });
         

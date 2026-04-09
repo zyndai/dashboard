@@ -32,7 +32,7 @@ export async function GET(
     if (localAgent.agentId) {
       try {
         const res = await fetch(
-          `${REGISTRY_URL}/v1/agents/${localAgent.agentId}`,
+          `${REGISTRY_URL}/v1/entities/${localAgent.agentId}`,
           { signal: AbortSignal.timeout(5000) }
         );
         if (res.ok) {
@@ -78,7 +78,7 @@ export async function GET(
   if (byAgentId && byAgentId.userId === user.id) {
     let registryData: Record<string, unknown> | null = null;
     try {
-      const res = await fetch(`${REGISTRY_URL}/v1/agents/${id}`, {
+      const res = await fetch(`${REGISTRY_URL}/v1/entities/${id}`, {
         signal: AbortSignal.timeout(5000),
       });
       if (res.ok) {

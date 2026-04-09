@@ -64,7 +64,7 @@ export async function POST() {
   let registryAgents: RegistryAgent[] = [];
   try {
     const res = await fetch(
-      `${REGISTRY_URL}/v1/developers/${devKey.developerId}/agents`,
+      `${REGISTRY_URL}/v1/developers/${devKey.developerId}/entities`,
       { signal: AbortSignal.timeout(5000) }
     );
     if (res.ok) {

@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import type { AgentRecord } from "@/lib/supabase/db";
+import { useEffect, useMemo, useState } from "react";
+import { useAgents } from "@/hooks/useAgents";
 import { AgentForm } from "@/components/agents/agent-form";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -12,11 +10,8 @@ export default function EditAgentPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [agent, setAgent] = useState<AgentRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [agentId, setAgentId] = useState<string | null>(null);
-  const { authenticated } = useAuth();
+  const { agents, loading: agentsLoading, error } = useAgents();
 
   useEffect(() => {
     async function resolveParams() {
@@ -26,31 +21,12 @@ export default function EditAgentPage({
     resolveParams();
   }, [params]);
 
-  useEffect(() => {
-    if (!agentId || !authenticated) return;
+  const agent = useMemo(() => {
+    if (!agentId) return null;
+    return agents.find((a) => a.id === agentId) ?? null;
+  }, [agents, agentId]);
 
-    async function fetchAgent() {
-      try {
-        setLoading(true);
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from("agents")
-          .select("*")
-          .eq("id", agentId!)
-          .single();
-
-        if (fetchError) throw fetchError;
-        setAgent(data);
-      } catch (err) {
-        setError("Failed to load agent details");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAgent();
-  }, [agentId, authenticated]);
+  const loading = !agentId || (agentsLoading && agents.length === 0);
 
   if (loading) {
     return (

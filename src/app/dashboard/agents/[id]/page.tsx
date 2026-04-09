@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Pencil, Trash2, Copy, Check } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import type { AgentRecord } from "@/lib/supabase/db";
+import { useAgents } from "@/hooks/useAgents";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Dialog } from "@/components/ui/Dialog";
@@ -40,12 +38,9 @@ export default function AgentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const [agent, setAgent] = useState<AgentRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [agentId, setAgentId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { authenticated } = useAuth();
+  const { agents, loading: agentsLoading, error: agentsError, refresh } = useAgents();
 
   useEffect(() => {
     async function resolveParams() {
@@ -55,37 +50,19 @@ export default function AgentDetailPage({
     resolveParams();
   }, [params]);
 
-  useEffect(() => {
-    if (!agentId || !authenticated) return;
+  const agent = useMemo(() => {
+    if (!agentId) return null;
+    return agents.find((a) => a.id === agentId) ?? null;
+  }, [agents, agentId]);
 
-    async function fetchAgent() {
-      try {
-        setLoading(true);
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from("agents")
-          .select("*")
-          .eq("id", agentId!)
-          .single();
-
-        if (fetchError) throw fetchError;
-        setAgent(data);
-      } catch (err) {
-        setError("Failed to load agent details");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchAgent();
-  }, [agentId, authenticated]);
+  const loading = !agentId || (agentsLoading && agents.length === 0);
 
   const handleDelete = async () => {
     if (!agentId) return;
     try {
-      const supabase = createClient();
-      await supabase.from("agents").delete().eq("id", agentId);
+      const res = await fetch(`/api/agents/${agentId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      await refresh();
       router.push("/dashboard/agents");
     } catch (err) {
       console.error("Error deleting agent:", err);
@@ -102,11 +79,11 @@ export default function AgentDetailPage({
     );
   }
 
-  if (error || !agent || !agentId) {
+  if (agentsError || !agent || !agentId) {
     return (
       <div className="py-16 text-center">
         <div className="border border-red-500/20 bg-red-500/[0.06] px-4 py-8 text-red-400">
-          {error || "Agent not found"}
+          {agentsError || "Agent not found"}
         </div>
         <button
           onClick={() => router.push("/dashboard/agents")}

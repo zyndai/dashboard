@@ -37,14 +37,18 @@ model Agent {
   agentId     String?  @unique @map("agent_id")
   name        String
   description String?
-  agentUrl    String?  @map("agent_url")
-  category    String?
-  tags        String[] @default([])
-  summary     String?
-  agentIndex  Int?     @map("agent_index")
-  fqan        String?  @map("fqan")
-  status      String   @default("active")
-  source      String   @default("dashboard")
+  entityUrl       String?  @map("entity_url")
+  category        String?
+  tags            String[] @default([])
+  summary         String?
+  agentIndex      Int?     @map("agent_index")
+  fqan            String?  @map("fqan")
+  entityType      String?  @default("agent") @map("entity_type")
+  serviceEndpoint String?  @map("service_endpoint")
+  openapiUrl      String?  @map("openapi_url")
+  entityPricing   Json?    @map("entity_pricing")
+  status          String   @default("active")
+  source          String   @default("dashboard")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

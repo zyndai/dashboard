@@ -98,7 +98,7 @@ export default function NamesPage() {
 
     try {
       const res = await fetch(
-        `/api/zns/resolve?developer=${encodeURIComponent(name.developer_handle)}&agent=${encodeURIComponent(name.agent_name)}`
+        `/api/zns/resolve?developer=${encodeURIComponent(name.developer_handle)}&entity=${encodeURIComponent(name.agent_name)}`
       );
       const data = await res.json();
       if (!res.ok) {
@@ -291,13 +291,13 @@ export default function NamesPage() {
               </div>
             ) : resolveResult ? (
               <div className="divide-y divide-white/[0.05]">
-                <ResolveRow label="Agent ID" value={resolveResult.agent_id} mono />
+                <ResolveRow label="Entity ID" value={resolveResult.agent_id} mono />
                 <ResolveRow label="Status" value={resolveResult.status} />
                 {resolveResult.version && (
                   <ResolveRow label="Version" value={resolveResult.version} />
                 )}
-                {resolveResult.agent_url && (
-                  <ResolveRow label="Agent URL" value={resolveResult.agent_url} mono />
+                {resolveResult.entity_url && (
+                  <ResolveRow label="Entity URL" value={resolveResult.entity_url} mono />
                 )}
                 <ResolveRow label="Developer" value={resolveResult.developer_handle} />
                 <ResolveRow label="Registry" value={resolveResult.registry_host} />

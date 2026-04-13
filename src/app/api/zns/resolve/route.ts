@@ -24,33 +24,33 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   let developer = searchParams.get("developer");
-  let agent = searchParams.get("agent");
+  let entity = searchParams.get("entity");
 
-  // Support ?fqan=registry/developer/agent or dns01.zynd.ai/developer/agent
+  // Support ?fqan=registry/developer/entity or dns01.zynd.ai/developer/entity
   const fqan = searchParams.get("fqan");
   if (fqan) {
     const parts = fqan.split("/");
     if (parts.length === 3) {
-      // registry/developer/agent
+      // registry/developer/entity
       developer = parts[1];
-      agent = parts[2];
+      entity = parts[2];
     } else if (parts.length === 2) {
-      // developer/agent (no registry prefix)
+      // developer/entity (no registry prefix)
       developer = parts[0];
-      agent = parts[1];
+      entity = parts[1];
     }
   }
 
-  if (!developer || !agent) {
+  if (!developer || !entity) {
     return NextResponse.json(
-      { error: "Provide ?fqan=developer/agent or ?developer=...&agent=..." },
+      { error: "Provide ?fqan=developer/entity or ?developer=...&entity=..." },
       { status: 400 }
     );
   }
 
   try {
     const res = await fetch(
-      `${REGISTRY_URL}/v1/resolve/${encodeURIComponent(developer)}/${encodeURIComponent(agent)}`
+      `${REGISTRY_URL}/v1/resolve/${encodeURIComponent(developer)}/${encodeURIComponent(entity)}`
     );
 
     if (!res.ok) {

@@ -8,7 +8,7 @@ const REGISTRY_URL =
 interface RegistryAgent {
   agent_id: string;
   name: string;
-  agent_url?: string;
+  entity_url?: string;
   category?: string;
   tags?: string[];
   summary?: string;
@@ -16,6 +16,10 @@ interface RegistryAgent {
   status?: string;
   fqan?: string;
   developer_handle?: string;
+  entity_type?: string;
+  service_endpoint?: string;
+  openapi_url?: string;
+  entity_pricing?: Record<string, unknown>;
 }
 
 export async function POST() {
@@ -46,12 +50,16 @@ export async function POST() {
       agent_id: a.agentId,
       name: a.name,
       description: a.description,
-      agent_url: a.agentUrl,
+      entity_url: a.entityUrl,
       category: a.category,
       tags: a.tags,
       summary: a.summary,
       agent_index: a.agentIndex,
       fqan: a.fqan,
+      entity_type: a.entityType,
+      service_endpoint: a.serviceEndpoint,
+      openapi_url: a.openapiUrl,
+      entity_pricing: a.entityPricing,
       status: a.status,
       source: a.source,
       created_at: a.createdAt.toISOString(),
@@ -92,22 +100,30 @@ export async function POST() {
               userId: user.id,
               agentId: ra.agent_id,
               name: ra.name,
-              agentUrl: ra.agent_url || null,
+              entityUrl: ra.entity_url || null,
               category: ra.category || null,
               tags: ra.tags || [],
               summary: ra.summary || null,
               agentIndex: ra.agent_index ?? null,
               fqan: ra.fqan || null,
+              entityType: ra.entity_type || "agent",
+              serviceEndpoint: ra.service_endpoint || null,
+              openapiUrl: ra.openapi_url || null,
+              entityPricing: ra.entity_pricing ?? undefined,
               status: ra.status || "active",
               source: "registry",
             },
             update: {
               name: ra.name,
-              agentUrl: ra.agent_url || null,
+              entityUrl: ra.entity_url || null,
               category: ra.category || null,
               tags: ra.tags || [],
               summary: ra.summary || null,
               fqan: ra.fqan || null,
+              entityType: ra.entity_type || "agent",
+              serviceEndpoint: ra.service_endpoint || null,
+              openapiUrl: ra.openapi_url || null,
+              entityPricing: ra.entity_pricing ?? undefined,
               status: ra.status || "active",
             },
           })
@@ -130,12 +146,16 @@ export async function POST() {
     agent_id: a.agentId,
     name: a.name,
     description: a.description,
-    agent_url: a.agentUrl,
+    entity_url: a.entityUrl,
     category: a.category,
     tags: a.tags,
     summary: a.summary,
     agent_index: a.agentIndex,
     fqan: a.fqan,
+    entity_type: a.entityType,
+    service_endpoint: a.serviceEndpoint,
+    openapi_url: a.openapiUrl,
+    entity_pricing: a.entityPricing,
     status: a.status,
     source: a.source,
     created_at: a.createdAt.toISOString(),

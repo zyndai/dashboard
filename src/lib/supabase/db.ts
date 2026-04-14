@@ -16,17 +16,17 @@ export interface EntityPricing {
   rates?: Record<string, number>;
 }
 
-export interface AgentRecord {
+export interface EntityRecord {
   id: string;
   user_id: string;
-  agent_id: string | null;
+  entity_id: string | null;
   name: string;
   description: string | null;
   entity_url: string | null;
   category: string | null;
   tags: string[] | null;
   summary: string | null;
-  agent_index: number | null;
+  entity_index: number | null;
   fqan: string | null;
   entity_type: string | null;
   service_endpoint: string | null;

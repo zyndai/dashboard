@@ -10,17 +10,17 @@ import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Dialog } from "@/components/ui/Dialog";
 
-interface AgentDetail {
+interface EntityDetail {
   id: string;
   user_id: string;
-  agent_id: string | null;
+  entity_id: string | null;
   name: string;
   description: string | null;
-  agent_url: string | null;
+  entity_url: string | null;
   category: string | null;
   tags: string[] | null;
   summary: string | null;
-  agent_index: number | null;
+  entity_index: number | null;
   fqan: string | null;
   developer_handle: string | null;
   status: string;
@@ -56,43 +56,43 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function AgentDetailPage({
+export default function EntityDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const [agent, setAgent] = useState<AgentDetail | null>(null);
+  const [entity, setEntity] = useState<EntityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [agentId, setAgentId] = useState<string | null>(null);
+  const [entityId, setEntityId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { authenticated } = useAuth();
 
   useEffect(() => {
     async function resolveParams() {
       const resolvedParams = await params;
-      setAgentId(resolvedParams.id);
+      setEntityId(resolvedParams.id);
     }
     resolveParams();
   }, [params]);
 
   useEffect(() => {
-    if (!agentId || !authenticated) return;
+    if (!entityId || !authenticated) return;
 
-    async function fetchAgent() {
+    async function fetchEntity() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/agents/${agentId}`);
+        const res = await fetch(`/api/entities/${entityId}`);
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || "Failed to load agent");
+          throw new Error(data.error || "Failed to load entity");
         }
-        const { agent: agentData } = await res.json();
-        setAgent(agentData);
+        const { entity: entityData } = await res.json();
+        setEntity(entityData);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load agent details"
+          err instanceof Error ? err.message : "Failed to load entity details"
         );
         console.error(err);
       } finally {
@@ -100,17 +100,17 @@ export default function AgentDetailPage({
       }
     }
 
-    fetchAgent();
-  }, [agentId, authenticated]);
+    fetchEntity();
+  }, [entityId, authenticated]);
 
   const handleDelete = async () => {
-    if (!agentId) return;
+    if (!entityId) return;
     try {
       const supabase = createClient();
-      await supabase.from("agents").delete().eq("id", agentId);
-      router.push("/dashboard/agents");
+      await supabase.from("entities").delete().eq("id", entityId);
+      router.push("/dashboard/entities");
     } catch (err) {
-      console.error("Error deleting agent:", err);
+      console.error("Error deleting entity:", err);
     }
   };
 
@@ -124,17 +124,17 @@ export default function AgentDetailPage({
     );
   }
 
-  if (error || !agent || !agentId) {
+  if (error || !entity || !entityId) {
     return (
       <div className="py-16 text-center">
         <div className="border border-red-500/20 bg-red-500/[0.06] px-4 py-8 text-red-400">
-          {error || "Agent not found"}
+          {error || "Entity not found"}
         </div>
         <button
-          onClick={() => router.push("/dashboard/agents")}
+          onClick={() => router.push("/dashboard/entities")}
           className="mt-4 cursor-pointer border border-white/10 px-4 py-2 text-sm text-white/50 transition-colors hover:text-white"
         >
-          Return to Agent List
+          Return to Entity List
         </button>
       </div>
     );
@@ -159,18 +159,18 @@ export default function AgentDetailPage({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl sm:text-2xl font-bold text-white">
-              {agent.name}
+              {entity.name}
             </h2>
-            <Badge variant={getStatusVariant(agent.status)}>
-              {agent.status.toUpperCase()}
+            <Badge variant={getStatusVariant(entity.status)}>
+              {entity.status.toUpperCase()}
             </Badge>
           </div>
           <p className="mt-1 text-xs font-mono text-white/30">
-            {agent.agent_id || agentId}
+            {entity.entity_id || entityId}
           </p>
         </div>
         <div className="flex gap-3">
-          <Link href={`/dashboard/agents/${agentId}/edit`}>
+          <Link href={`/dashboard/entities/${entityId}/edit`}>
             <button className="flex cursor-pointer items-center gap-2 border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition-colors hover:bg-white/[0.06]">
               <Pencil className="h-4 w-4" />
               Edit
@@ -189,76 +189,76 @@ export default function AgentDetailPage({
       <div className="rounded border border-white/10 bg-white/[0.02]">
         <div className="border-b border-white/10 px-5 py-4">
           <h3 className="text-sm font-medium uppercase tracking-wider text-white/50">
-            Agent Details
+            Entity Details
           </h3>
         </div>
         <div className="divide-y divide-white/[0.05] px-5">
-          {agent.fqan && (
+          {entity.fqan && (
             <div className="grid grid-cols-1 sm:grid-cols-12 items-start sm:items-center gap-1 sm:gap-0 py-4">
               <dt className="sm:col-span-3 text-sm text-white/40">FQAN</dt>
               <dd className="sm:col-span-9 flex items-center justify-between border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/[0.04] px-3 py-2 overflow-hidden">
-                <span className="font-mono text-sm text-[var(--color-accent)] truncate">{agent.fqan}</span>
-                <CopyButton text={agent.fqan} />
+                <span className="font-mono text-sm text-[var(--color-accent)] truncate">{entity.fqan}</span>
+                <CopyButton text={entity.fqan} />
               </dd>
             </div>
           )}
-          {agent.agent_id && (
+          {entity.entity_id && (
             <div className="grid grid-cols-1 sm:grid-cols-12 items-start sm:items-center gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Agent ID</dt>
+              <dt className="sm:col-span-3 text-sm text-white/40">Entity ID</dt>
               <dd className="sm:col-span-9 flex items-center justify-between border border-white/10 bg-white/5 px-3 py-2 overflow-hidden">
-                <span className="font-mono text-sm text-white truncate">{agent.agent_id}</span>
-                <CopyButton text={agent.agent_id} />
+                <span className="font-mono text-sm text-white truncate">{entity.entity_id}</span>
+                <CopyButton text={entity.entity_id} />
               </dd>
             </div>
           )}
-          {agent.developer_handle && (
+          {entity.developer_handle && (
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
               <dt className="sm:col-span-3 text-sm text-white/40">Developer</dt>
-              <dd className="sm:col-span-9 text-sm text-white font-mono">@{agent.developer_handle}</dd>
+              <dd className="sm:col-span-9 text-sm text-white font-mono">@{entity.developer_handle}</dd>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
             <dt className="sm:col-span-3 text-sm text-white/40">Description</dt>
             <dd className="sm:col-span-9 text-sm text-white">
-              {agent.description || agent.summary || (
+              {entity.description || entity.summary || (
                 <span className="italic text-white/25">No description provided</span>
               )}
             </dd>
           </div>
-          {agent.agent_url && (
+          {entity.entity_url && (
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Agent URL</dt>
-              <dd className="sm:col-span-9 text-sm text-white break-all">{agent.agent_url}</dd>
+              <dt className="sm:col-span-3 text-sm text-white/40">Entity URL</dt>
+              <dd className="sm:col-span-9 text-sm text-white break-all">{entity.entity_url}</dd>
             </div>
           )}
-          {agent.category && (
+          {entity.category && (
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
               <dt className="sm:col-span-3 text-sm text-white/40">Category</dt>
-              <dd className="sm:col-span-9 text-sm text-white">{agent.category}</dd>
+              <dd className="sm:col-span-9 text-sm text-white">{entity.category}</dd>
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
             <dt className="sm:col-span-3 text-sm text-white/40">Status</dt>
             <dd className="sm:col-span-9">
-              <Badge variant={getStatusVariant(agent.status)}>
-                {agent.status.toUpperCase()}
+              <Badge variant={getStatusVariant(entity.status)}>
+                {entity.status.toUpperCase()}
               </Badge>
             </dd>
           </div>
-          {agent.tags && agent.tags.length > 0 && (
+          {entity.tags && entity.tags.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
               <dt className="sm:col-span-3 text-sm text-white/40">Tags</dt>
               <dd className="sm:col-span-9 flex flex-wrap gap-1.5">
-                {agent.tags.map((tag) => (
+                {entity.tags.map((tag) => (
                   <Badge key={tag} variant="active">{tag}</Badge>
                 ))}
               </dd>
             </div>
           )}
-          {agent.home_registry && (
+          {entity.home_registry && (
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
               <dt className="sm:col-span-3 text-sm text-white/40">Registry</dt>
-              <dd className="sm:col-span-9 text-sm text-white/60 font-mono">{agent.home_registry}</dd>
+              <dd className="sm:col-span-9 text-sm text-white/60 font-mono">{entity.home_registry}</dd>
             </div>
           )}
         </div>
@@ -267,11 +267,11 @@ export default function AgentDetailPage({
       <Dialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Agent?"
+        title="Delete Entity?"
       >
         <p className="text-sm text-white/50">
-          This action cannot be undone. This will permanently delete the agent
-          &ldquo;{agent.name}&rdquo;.
+          This action cannot be undone. This will permanently delete the entity
+          &ldquo;{entity.name}&rdquo;.
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button

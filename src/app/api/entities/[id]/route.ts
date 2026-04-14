@@ -22,17 +22,17 @@ export async function GET(
   }
 
   // 1. Try local DB first (by UUID)
-  const localAgent = await prisma.agent.findUnique({
+  const localEntity = await prisma.entity.findUnique({
     where: { id },
   });
 
-  if (localAgent && localAgent.userId === user.id) {
-    // If we have agent_id but missing registry details, enrich from registry
+  if (localEntity && localEntity.userId === user.id) {
+    // If we have entity_id but missing registry details, enrich from registry
     let registryData: Record<string, unknown> | null = null;
-    if (localAgent.agentId) {
+    if (localEntity.entityId) {
       try {
         const res = await fetch(
-          `${REGISTRY_URL}/v1/entities/${localAgent.agentId}`,
+          `${REGISTRY_URL}/v1/entities/${localEntity.entityId}`,
           { signal: AbortSignal.timeout(5000) }
         );
         if (res.ok) {
@@ -44,23 +44,23 @@ export async function GET(
     }
 
     return NextResponse.json({
-      agent: {
-        id: localAgent.id,
-        user_id: localAgent.userId,
-        agent_id: localAgent.agentId,
-        name: localAgent.name,
-        description: localAgent.description,
-        agent_url: localAgent.agentUrl,
-        category: localAgent.category,
-        tags: localAgent.tags,
-        summary: localAgent.summary,
-        agent_index: localAgent.agentIndex,
-        fqan: localAgent.fqan || registryData?.fqan || null,
+      entity: {
+        id: localEntity.id,
+        user_id: localEntity.userId,
+        entity_id: localEntity.entityId,
+        name: localEntity.name,
+        description: localEntity.description,
+        entity_url: localEntity.entityUrl,
+        category: localEntity.category,
+        tags: localEntity.tags,
+        summary: localEntity.summary,
+        entity_index: localEntity.entityIndex,
+        fqan: localEntity.fqan || registryData?.fqan || null,
         developer_handle: registryData?.developer_handle || null,
-        status: localAgent.status,
-        source: localAgent.source,
-        created_at: localAgent.createdAt.toISOString(),
-        updated_at: localAgent.updatedAt.toISOString(),
+        status: localEntity.status,
+        source: localEntity.source,
+        created_at: localEntity.createdAt.toISOString(),
+        updated_at: localEntity.updatedAt.toISOString(),
         // Registry-enriched fields
         public_key: registryData?.public_key || null,
         trust_score: registryData?.trust_score || null,
@@ -70,12 +70,12 @@ export async function GET(
     });
   }
 
-  // 2. Try by agent_id (the URL param might be an entity ID like zns:...)
-  const byAgentId = await prisma.agent.findUnique({
-    where: { agentId: id },
+  // 2. Try by entity_id (the URL param might be an entity ID like zns:...)
+  const byEntityId = await prisma.entity.findUnique({
+    where: { entityId: id },
   });
 
-  if (byAgentId && byAgentId.userId === user.id) {
+  if (byEntityId && byEntityId.userId === user.id) {
     let registryData: Record<string, unknown> | null = null;
     try {
       const res = await fetch(`${REGISTRY_URL}/v1/entities/${id}`, {
@@ -89,23 +89,23 @@ export async function GET(
     }
 
     return NextResponse.json({
-      agent: {
-        id: byAgentId.id,
-        user_id: byAgentId.userId,
-        agent_id: byAgentId.agentId,
-        name: byAgentId.name,
-        description: byAgentId.description,
-        agent_url: byAgentId.agentUrl,
-        category: byAgentId.category,
-        tags: byAgentId.tags,
-        summary: byAgentId.summary,
-        agent_index: byAgentId.agentIndex,
-        fqan: byAgentId.fqan || registryData?.fqan || null,
+      entity: {
+        id: byEntityId.id,
+        user_id: byEntityId.userId,
+        entity_id: byEntityId.entityId,
+        name: byEntityId.name,
+        description: byEntityId.description,
+        entity_url: byEntityId.entityUrl,
+        category: byEntityId.category,
+        tags: byEntityId.tags,
+        summary: byEntityId.summary,
+        entity_index: byEntityId.entityIndex,
+        fqan: byEntityId.fqan || registryData?.fqan || null,
         developer_handle: registryData?.developer_handle || null,
-        status: byAgentId.status,
-        source: byAgentId.source,
-        created_at: byAgentId.createdAt.toISOString(),
-        updated_at: byAgentId.updatedAt.toISOString(),
+        status: byEntityId.status,
+        source: byEntityId.source,
+        created_at: byEntityId.createdAt.toISOString(),
+        updated_at: byEntityId.updatedAt.toISOString(),
         public_key: registryData?.public_key || null,
         trust_score: registryData?.trust_score || null,
         developer_id: registryData?.developer_id || null,
@@ -114,5 +114,5 @@ export async function GET(
     });
   }
 
-  return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+  return NextResponse.json({ error: "Entity not found" }, { status: 404 });
 }

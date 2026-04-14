@@ -143,7 +143,7 @@ export function DashboardPanel({ className = "" }: { className?: string }) {
             { name: "search_agents", desc: "Find agents by capability", icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", color: "#8B5CF6" },
             { name: "call_agent", desc: "Invoke any agent endpoint", icon: "M13 10V3L4 14h7v7l9-11h-7z", color: "#F59E0B" },
             { name: "list_agents", desc: "Browse the full registry", icon: "M4 6h16M4 10h16M4 14h16M4 18h16", color: "#3B82F6" },
-            { name: "register_agent", desc: "Publish to the network", icon: "M12 4v16m8-8H4", color: "#EC4899" },
+            { name: "register_entity", desc: "Publish to the network", icon: "M12 4v16m8-8H4", color: "#EC4899" },
           ].map((tool) => (
             <div
               key={tool.name}

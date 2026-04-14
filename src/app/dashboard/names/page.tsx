@@ -11,10 +11,10 @@ import { Dialog } from "@/components/ui/Dialog";
 
 interface ZNSName {
   fqan: string;
-  agent_name: string;
+  entity_name: string;
   developer_handle: string;
   registry_host: string;
-  agent_id: string;
+  entity_id: string;
   developer_id: string;
   current_version?: string;
   capability_tags?: string[];
@@ -25,12 +25,12 @@ interface ZNSName {
 
 interface ZNSResolveResponse {
   fqan: string;
-  agent_id: string;
+  entity_id: string;
   developer_id: string;
   developer_handle: string;
   registry_host: string;
   version?: string;
-  agent_url: string;
+  entity_url: string;
   public_key: string;
   protocols?: string[];
   trust_score: number;
@@ -85,8 +85,8 @@ export default function NamesPage() {
   const filteredNames = names.filter(
     (n) =>
       n.fqan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      n.agent_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      n.agent_id.toLowerCase().includes(searchTerm.toLowerCase())
+      n.entity_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      n.entity_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   async function handleResolve(name: ZNSName) {
@@ -98,7 +98,7 @@ export default function NamesPage() {
 
     try {
       const res = await fetch(
-        `/api/zns/resolve?developer=${encodeURIComponent(name.developer_handle)}&entity=${encodeURIComponent(name.agent_name)}`
+        `/api/zns/resolve?developer=${encodeURIComponent(name.developer_handle)}&entity=${encodeURIComponent(name.entity_name)}`
       );
       const data = await res.json();
       if (!res.ok) {
@@ -206,7 +206,7 @@ export default function NamesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <Table headers={["FQAN", "Agent Name", "Agent ID", "Version", "Updated", "Actions"]}>
+            <Table headers={["FQAN", "Agent Name", "Entity ID", "Version", "Updated", "Actions"]}>
               {filteredNames.map((name) => (
                 <tr key={name.fqan} className="transition-colors hover:bg-white/[0.02]">
                   <td>
@@ -228,11 +228,11 @@ export default function NamesPage() {
                     </div>
                   </td>
                   <td>
-                    <div className="font-medium text-white">{name.agent_name}</div>
+                    <div className="font-medium text-white">{name.entity_name}</div>
                   </td>
                   <td>
                     <code className="border border-white/10 bg-white/[0.03] px-2 py-1 font-mono text-xs text-white/50">
-                      {name.agent_id ? `${name.agent_id.substring(0, 18)}...` : "—"}
+                      {name.entity_id ? `${name.entity_id.substring(0, 18)}...` : "—"}
                     </code>
                   </td>
                   <td>
@@ -291,7 +291,7 @@ export default function NamesPage() {
               </div>
             ) : resolveResult ? (
               <div className="divide-y divide-white/[0.05]">
-                <ResolveRow label="Entity ID" value={resolveResult.agent_id} mono />
+                <ResolveRow label="Entity ID" value={resolveResult.entity_id} mono />
                 <ResolveRow label="Status" value={resolveResult.status} />
                 {resolveResult.version && (
                   <ResolveRow label="Version" value={resolveResult.version} />

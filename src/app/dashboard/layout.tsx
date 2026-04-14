@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { AgentsProvider } from "@/hooks/useAgents";
+import { EntitiesProvider } from "@/hooks/useEntities";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopNav } from "@/components/dashboard/top-nav";
 
@@ -51,7 +51,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <AgentsProvider>
+    <EntitiesProvider>
       <div className="flex h-screen bg-black">
         <Sidebar />
 
@@ -72,6 +72,6 @@ export default function DashboardLayout({
           <main className="flex-1 overflow-y-auto p-5 md:p-8">{children}</main>
         </div>
       </div>
-    </AgentsProvider>
+    </EntitiesProvider>
   );
 }

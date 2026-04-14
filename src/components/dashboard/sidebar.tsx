@@ -6,7 +6,7 @@ import { LayoutDashboard, Bot, Settings, X, Globe, ShieldCheck } from "lucide-re
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Agents", href: "/dashboard/agents", icon: Bot },
+  { name: "Entities", href: "/dashboard/entities", icon: Bot },
   { name: "Names", href: "/dashboard/names", icon: Globe },
   { name: "Admin", href: "/dashboard/admin", icon: ShieldCheck },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },

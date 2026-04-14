@@ -31,17 +31,17 @@ model Subscriber {
   @@map("subscribers")
 }
 
-model Agent {
+model Entity {
   id          String   @id @default(uuid()) @db.Uuid
   userId      String   @map("user_id")
-  agentId     String?  @unique @map("agent_id")
+  entityId    String?  @unique @map("entity_id")
   name        String
   description String?
   entityUrl       String?  @map("entity_url")
   category        String?
   tags            String[] @default([])
   summary         String?
-  agentIndex      Int?     @map("agent_index")
+  entityIndex      Int?     @map("entity_index")
   fqan            String?  @map("fqan")
   entityType      String?  @default("agent") @map("entity_type")
   serviceEndpoint String?  @map("service_endpoint")
@@ -52,5 +52,5 @@ model Agent {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  @@map("agents")
+  @@map("entities")
 }

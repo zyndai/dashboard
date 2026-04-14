@@ -1,11 +1,11 @@
 "use client";
 
-import { AgentForm } from "@/components/agents/agent-form";
+import { EntityForm } from "@/components/entities/entity-form";
 
-export default function CreateAgentPage() {
+export default function CreateEntityPage() {
   return (
     <div className="space-y-6">
-      <AgentForm />
+      <EntityForm />
     </div>
   );
 }

@@ -8,18 +8,18 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AgentRecord } from "@/lib/supabase/db";
+import type { EntityRecord } from "@/lib/supabase/db";
 import { useAuth } from "@/hooks/useAuth";
 
-interface AgentsContextValue {
-  agents: AgentRecord[];
+interface EntitiesContextValue {
+  entities: EntityRecord[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
 }
 
-const AgentsContext = createContext<AgentsContextValue>({
-  agents: [],
+const EntitiesContext = createContext<EntitiesContextValue>({
+  entities: [],
   loading: true,
   error: null,
   refresh: async () => {},
@@ -27,8 +27,8 @@ const AgentsContext = createContext<AgentsContextValue>({
 
 const SYNC_INTERVAL = 20_000;
 
-export function AgentsProvider({ children }: { children: React.ReactNode }) {
-  const [agents, setAgents] = useState<AgentRecord[]>([]);
+export function EntitiesProvider({ children }: { children: React.ReactNode }) {
+  const [entities, setEntities] = useState<EntityRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { authenticated } = useAuth();
@@ -37,13 +37,13 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
   const sync = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const res = await fetch("/api/agents/sync", { method: "POST" });
+      const res = await fetch("/api/entities/sync", { method: "POST" });
       if (!res.ok) throw new Error("Sync failed");
-      const { agents: synced } = await res.json();
-      setAgents(synced || []);
+      const { entities: synced } = await res.json();
+      setEntities(synced || []);
       setError(null);
     } catch (err) {
-      setError("Failed to load agents");
+      setError("Failed to load entities");
       console.error(err);
     } finally {
       setLoading(false);
@@ -66,12 +66,12 @@ export function AgentsProvider({ children }: { children: React.ReactNode }) {
   }, [authenticated, sync]);
 
   return (
-    <AgentsContext.Provider value={{ agents, loading, error, refresh: () => sync(false) }}>
+    <EntitiesContext.Provider value={{ entities, loading, error, refresh: () => sync(false) }}>
       {children}
-    </AgentsContext.Provider>
+    </EntitiesContext.Provider>
   );
 }
 
-export function useAgents() {
-  return useContext(AgentsContext);
+export function useEntities() {
+  return useContext(EntitiesContext);
 }

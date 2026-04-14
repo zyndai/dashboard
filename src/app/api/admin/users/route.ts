@@ -37,14 +37,14 @@ export async function GET() {
     },
   });
 
-  // Count agents per user
-  const agentCounts = await prisma.agent.groupBy({
+  // Count entities per user
+  const entityCounts = await prisma.entity.groupBy({
     by: ["userId"],
     _count: { id: true },
   });
 
   const countMap = new Map(
-    agentCounts.map((a) => [a.userId, a._count.id])
+    entityCounts.map((e) => [e.userId, e._count.id])
   );
 
   // Get emails from Supabase auth (service role)

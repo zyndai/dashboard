@@ -3,54 +3,54 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { AgentRecord } from "@/lib/supabase/db";
-import { AgentForm } from "@/components/agents/agent-form";
+import type { EntityRecord } from "@/lib/supabase/db";
+import { EntityForm } from "@/components/entities/entity-form";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-export default function EditAgentPage({
+export default function EditEntityPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [agent, setAgent] = useState<AgentRecord | null>(null);
+  const [entity, setEntity] = useState<EntityRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [agentId, setAgentId] = useState<string | null>(null);
+  const [entityId, setEntityId] = useState<string | null>(null);
   const { authenticated } = useAuth();
 
   useEffect(() => {
     async function resolveParams() {
       const resolvedParams = await params;
-      setAgentId(resolvedParams.id);
+      setEntityId(resolvedParams.id);
     }
     resolveParams();
   }, [params]);
 
   useEffect(() => {
-    if (!agentId || !authenticated) return;
+    if (!entityId || !authenticated) return;
 
-    async function fetchAgent() {
+    async function fetchEntity() {
       try {
         setLoading(true);
         const supabase = createClient();
         const { data, error: fetchError } = await supabase
-          .from("agents")
+          .from("entities")
           .select("*")
-          .eq("id", agentId!)
+          .eq("id", entityId!)
           .single();
 
         if (fetchError) throw fetchError;
-        setAgent(data);
+        setEntity(data);
       } catch (err) {
-        setError("Failed to load agent details");
+        setError("Failed to load entity details");
         console.error(err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchAgent();
-  }, [agentId, authenticated]);
+    fetchEntity();
+  }, [entityId, authenticated]);
 
   if (loading) {
     return (
@@ -61,11 +61,11 @@ export default function EditAgentPage({
     );
   }
 
-  if (error || !agent) {
+  if (error || !entity) {
     return (
       <div className="py-16 text-center">
         <div className="border border-red-500/20 bg-red-500/[0.06] px-4 py-8 text-red-400">
-          {error || "Agent not found"}
+          {error || "Entity not found"}
         </div>
       </div>
     );
@@ -73,14 +73,14 @@ export default function EditAgentPage({
 
   return (
     <div className="space-y-6">
-      <AgentForm
-        agent={{
-          name: agent.name,
-          description: agent.description ?? "",
-          tags: agent.tags ?? [],
+      <EntityForm
+        entity={{
+          name: entity.name,
+          description: entity.description ?? "",
+          tags: entity.tags ?? [],
         }}
         isEditing={true}
-        agentId={agentId!}
+        entityId={entityId!}
       />
     </div>
   );

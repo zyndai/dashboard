@@ -8,24 +8,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 
-interface AgentFormProps {
-  agent?: {
+interface EntityFormProps {
+  entity?: {
     name: string;
     description: string;
     tags?: string[];
   };
   isEditing?: boolean;
-  agentId?: string;
+  entityId?: string;
 }
 
-export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps) {
+export function EntityForm({ entity, isEditing = false, entityId }: EntityFormProps) {
   const router = useRouter();
   const { authenticated } = useAuth();
 
-  const [name, setName] = useState(agent?.name ?? "");
-  const [description, setDescription] = useState(agent?.description ?? "");
+  const [name, setName] = useState(entity?.name ?? "");
+  const [description, setDescription] = useState(entity?.description ?? "");
   const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>(agent?.tags ?? []);
+  const [tags, setTags] = useState<string[]>(entity?.tags ?? []);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +53,7 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
     setError(null);
 
     if (!name.trim()) {
-      setError("Agent name is required.");
+      setError("Entity name is required.");
       return;
     }
 
@@ -66,20 +66,20 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
       setSubmitting(true);
       const supabase = createClient();
 
-      if (isEditing && agentId) {
+      if (isEditing && entityId) {
         const { error: updateError } = await supabase
-          .from("agents")
+          .from("entities")
           .update({
             name: name.trim(),
             description: description.trim() || null,
             tags: tags.length > 0 ? tags : null,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", agentId);
+          .eq("id", entityId);
 
         if (updateError) throw updateError;
       } else {
-        const { error: insertError } = await supabase.from("agents").insert({
+        const { error: insertError } = await supabase.from("entities").insert({
           name: name.trim(),
           description: description.trim() || null,
           tags: tags.length > 0 ? tags : null,
@@ -89,10 +89,10 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
         if (insertError) throw insertError;
       }
 
-      router.push("/dashboard/agents");
+      router.push("/dashboard/entities");
     } catch (err) {
       console.error(err);
-      setError("Failed to save agent. Please try again.");
+      setError("Failed to save entity. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +101,7 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
   return (
     <div className="mx-auto max-w-full sm:max-w-2xl">
       <h2 className="mb-6 text-lg sm:text-2xl font-bold text-white">
-        {isEditing ? "Edit Agent" : "Create Agent"}
+        {isEditing ? "Edit Entity" : "Create Entity"}
       </h2>
 
       {error && (
@@ -113,7 +113,7 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
       <form onSubmit={handleSubmit} className="space-y-5">
         <Input
           label="Name"
-          placeholder="My Agent"
+          placeholder="My Entity"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
@@ -121,7 +121,7 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
 
         <Textarea
           label="Description"
-          placeholder="What does this agent do?"
+          placeholder="What does this entity do?"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -183,8 +183,8 @@ export function AgentForm({ agent, isEditing = false, agentId }: AgentFormProps)
             {submitting
               ? "Saving..."
               : isEditing
-                ? "Update Agent"
-                : "Create Agent"}
+                ? "Update Entity"
+                : "Create Entity"}
           </button>
         </div>
       </form>

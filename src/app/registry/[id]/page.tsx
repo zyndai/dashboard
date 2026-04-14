@@ -160,8 +160,8 @@ export default function AgentDetailPage(): React.ReactElement {
   const [paymentAmount, setPaymentAmount] = useState("0.01");
 
   useEffect(() => {
-    const agentId = typeof params.id === "string" ? params.id : "";
-    if (!agentId) {
+    const entityId = typeof params.id === "string" ? params.id : "";
+    if (!entityId) {
       setError("Agent not found");
       setLoading(false);
       return;
@@ -169,7 +169,7 @@ export default function AgentDetailPage(): React.ReactElement {
 
     // Try sessionStorage first (populated when navigating from the registry list)
     try {
-      const cached = sessionStorage.getItem(`agent_${agentId}`);
+      const cached = sessionStorage.getItem(`agent_${entityId}`);
       if (cached) {
         setAgent(JSON.parse(cached) as Agent);
         setLoading(false);
@@ -179,7 +179,7 @@ export default function AgentDetailPage(): React.ReactElement {
       // sessionStorage unavailable, fall through to API
     }
 
-    getAgentByIdPublic(agentId)
+    getAgentByIdPublic(entityId)
       .then((data) => {
         if (data) setAgent(data);
         else setError("Agent not found");

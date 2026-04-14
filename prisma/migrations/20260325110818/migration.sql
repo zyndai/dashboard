@@ -22,7 +22,7 @@ CREATE TABLE "agents" (
     "category" TEXT,
     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "summary" TEXT,
-    "agent_index" INTEGER,
+    "entity_index" INTEGER,
     "status" TEXT NOT NULL DEFAULT 'active',
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

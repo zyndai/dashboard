@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link";
-import { AccentCorners } from "../ui/AccentCorners";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 const blogs = [
     {
@@ -17,45 +17,39 @@ const blogs = [
 
 export default function BlogList() {
     return (
-        <section className="blog-section">
-            <div className="padding-global">
-                <div className="blog-article-container">
-                    <div className="blog-header">
-                        <h1>Blog</h1>
-                        <div className="text-large">
-                            Insights, updates, and deep dives from the Zynd Protocol team.
-                        </div>
-                    </div>
+        <section className="min-h-screen bg-[#020913] text-white selection:bg-[#5b7cfa]/30 antialiased font-sans">
+            <div className="mx-auto mt-8 w-full max-w-[1240px] px-6 lg:px-12 pb-24">
+                <div className="mb-12 text-center md:text-left">
+                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3 flex items-center justify-center md:justify-start gap-4">
+                        Blog
+                     </h1>
+                     <p className="text-lg text-white/50 max-w-2xl leading-relaxed mx-auto md:mx-0">
+                         Insights, updates, and deep dives from the Zynd Protocol team.
+                     </p>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {blogs.map((blog) => (
-                        <Link href={`/blogs/${blog.slug}`} key={blog.slug}>
-                            <div className="blog-card">
-                                <AccentCorners />
-                                <div className="blog-card-top">
-                                    <div className="blog-tags">
-                                        {blog.tags.map((tag) => (
-                                            <span key={tag} className="blog-tag">{tag}</span>
-                                        ))}
-                                    </div>
-                                    <div className="blog-read-link">
-                                        Read
-                                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                                            <path d="M1 5.5H10M10 5.5L6 1.5M10 5.5L6 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
-                                    </div>
+                        <Link href={`/blogs/${blog.slug}`} key={blog.slug} className="group relative flex flex-col rounded-xl border border-white/[0.15] bg-[#0A0E17] p-6 transition-all duration-300 hover:border-white/30 hover:bg-[#0B101A] hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#5b7cfa]/10">
+                            <div className="flex items-start justify-between mb-5">
+                                <div className="flex flex-wrap gap-2">
+                                    {blog.tags.map((tag) => (
+                                        <span key={tag} className="inline-flex rounded border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#5b7cfa]">
+                                            {tag}
+                                        </span>
+                                    ))}
                                 </div>
-                                <h3>{blog.title}</h3>
-                                <div className="text-large">{blog.description}</div>
-                                <div className="blog-meta">
-                                    <div className="blog-meta-item">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                        <span>{blog.date}</span>
-                                    </div>
-                                    <div className="blog-meta-item">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        <span>{blog.readTime}</span>
-                                    </div>
+                                <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-[#5b7cfa] transition-transform duration-300 group-hover:translate-x-1">
+                                    Read
+                                    <ArrowRight className="h-3 w-3" />
                                 </div>
+                            </div>
+                            <h3 className="text-[20px] font-bold tracking-tight text-white mb-3 leading-snug group-hover:text-[#5b7cfa] transition-colors">{blog.title}</h3>
+                            <p className="text-[14px] leading-relaxed text-zinc-400 mb-6 flex-1 line-clamp-3">{blog.description}</p>
+
+                            <div className="mt-auto flex items-center justify-between border-t border-white/[0.15] pt-4 text-[12px] font-medium text-zinc-500">
+                                <span className="flex items-center gap-1.5"><Calendar className="size-3.5" /> {blog.date}</span>
+                                <span className="flex items-center gap-1.5"><Clock className="size-3.5" /> {blog.readTime}</span>
                             </div>
                         </Link>
                     ))}

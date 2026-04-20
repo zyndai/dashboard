@@ -2,18 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 
 interface EntityFormProps {
-  entity?: {
-    name: string;
-    description: string;
-    tags?: string[];
-  };
+  entity?: { name: string; description: string; tags?: string[] };
   isEditing?: boolean;
   entityId?: string;
 }
@@ -21,7 +14,6 @@ interface EntityFormProps {
 export function EntityForm({ entity, isEditing = false, entityId }: EntityFormProps) {
   const router = useRouter();
   const { authenticated } = useAuth();
-
   const [name, setName] = useState(entity?.name ?? "");
   const [description, setDescription] = useState(entity?.description ?? "");
   const [tagInput, setTagInput] = useState("");
@@ -31,163 +23,76 @@ export function EntityForm({ entity, isEditing = false, entityId }: EntityFormPr
 
   const addTag = () => {
     const trimmed = tagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags((prev) => [...prev, trimmed]);
-      setTagInput("");
-    }
+    if (trimmed && !tags.includes(trimmed)) { setTags((p) => [...p, trimmed]); setTagInput(""); }
   };
-
-  const removeTag = (tag: string) => {
-    setTags((prev) => prev.filter((t) => t !== tag));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
-    }
-  };
+  const removeTag = (tag: string) => setTags((p) => p.filter((t) => t !== tag));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!name.trim()) {
-      setError("Entity name is required.");
-      return;
-    }
-
-    if (!authenticated) {
-      setError("Not authenticated.");
-      return;
-    }
+    if (!name.trim()) { setError("Entity name is required."); return; }
+    if (!authenticated) { setError("Not authenticated."); return; }
 
     try {
       setSubmitting(true);
       const supabase = createClient();
-
       if (isEditing && entityId) {
-        const { error: updateError } = await supabase
-          .from("entities")
-          .update({
-            name: name.trim(),
-            description: description.trim() || null,
-            tags: tags.length > 0 ? tags : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", entityId);
-
-        if (updateError) throw updateError;
+        const { error: err } = await supabase.from("entities").update({ name: name.trim(), description: description.trim() || null, tags: tags.length > 0 ? tags : null, updated_at: new Date().toISOString() }).eq("id", entityId);
+        if (err) throw err;
       } else {
-        const { error: insertError } = await supabase.from("entities").insert({
-          name: name.trim(),
-          description: description.trim() || null,
-          tags: tags.length > 0 ? tags : null,
-          status: "active",
-        });
-
-        if (insertError) throw insertError;
+        const { error: err } = await supabase.from("entities").insert({ name: name.trim(), description: description.trim() || null, tags: tags.length > 0 ? tags : null, status: "active" });
+        if (err) throw err;
       }
-
       router.push("/dashboard/entities");
-    } catch (err) {
-      console.error(err);
-      setError("Failed to save entity. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (err) { console.error(err); setError("Failed to save entity. Please try again."); }
+    finally { setSubmitting(false); }
   };
 
   return (
-    <div className="mx-auto max-w-full sm:max-w-2xl">
-      <h2 className="mb-6 text-lg sm:text-2xl font-bold text-white">
-        {isEditing ? "Edit Entity" : "Create Entity"}
-      </h2>
-
-      {error && (
-        <div className="mb-4 border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-sm text-red-400">
-          {error}
+    <div style={{ maxWidth: "640px" }}>
+      <div className="dashboard-header">
+        <div>
+          <h1>{isEditing ? "Edit Entity" : "Create Entity"}</h1>
+          <p>{isEditing ? "Update entity details" : "Register a new entity"}</p>
         </div>
-      )}
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <Input
-          label="Name"
-          placeholder="My Entity"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-
-        <Textarea
-          label="Description"
-          placeholder="What does this entity do?"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-        />
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm text-white/50">Tags</label>
-          <div className="flex gap-2">
-            <Input
-              placeholder="e.g. text-generation"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-            <button
-              type="button"
-              onClick={addTag}
-              className="flex cursor-pointer items-center gap-1.5 border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/[0.08] px-3 py-2 text-sm text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)]/15"
-            >
-              <Plus className="h-4 w-4" />
-              Add
-            </button>
+      <div className="dashboard-card">
+        {error && (
+          <div style={{ marginBottom: "20px", padding: "12px 16px", border: "1px solid rgba(239, 68, 68, 0.2)", backgroundColor: "rgba(239, 68, 68, 0.06)", fontSize: "13px", color: "#ef4444", borderRadius: "6px" }}>{error}</div>
+        )}
+        <form onSubmit={handleSubmit}>
+          <div className="dashboard-form-group">
+            <label className="dashboard-label">Name *</label>
+            <input className="dashboard-input" type="text" placeholder="My Entity" value={name} onChange={(e) => setName(e.target.value)} required />
           </div>
-          {tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 border border-[var(--color-accent)]/25 bg-[var(--color-accent)]/[0.08] px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-[var(--color-accent)]"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="cursor-pointer text-[var(--color-accent)]/50 transition-colors hover:text-[var(--color-accent)]"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
+          <div className="dashboard-form-group">
+            <label className="dashboard-label">Description</label>
+            <textarea className="dashboard-input" placeholder="What does this entity do?" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} style={{ resize: "vertical" }} />
+          </div>
+          <div className="dashboard-form-group">
+            <label className="dashboard-label">Tags</label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input className="dashboard-input" type="text" placeholder="e.g. text-generation" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }} style={{ flex: 1 }} />
+              <button type="button" onClick={addTag} className="dashboard-button-secondary" style={{ whiteSpace: "nowrap", padding: "8px 16px", borderRadius: "6px" }}>+ Add</button>
             </div>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="cursor-pointer border border-white/10 bg-white/[0.03] px-6 py-2.5 min-h-[44px] text-sm text-white transition-colors hover:bg-white/[0.06]"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="cursor-pointer bg-[var(--color-accent)] px-6 py-2.5 min-h-[44px] text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {submitting
-              ? "Saving..."
-              : isEditing
-                ? "Update Entity"
-                : "Create Entity"}
-          </button>
-        </div>
-      </form>
+            {tags.length > 0 && (
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
+                {tags.map((tag) => (
+                  <span key={tag} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", backgroundColor: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", borderRadius: "4px", fontSize: "11px", fontWeight: 600, color: "var(--color-accent)", textTransform: "uppercase" }}>
+                    {tag}
+                    <button type="button" onClick={() => removeTag(tag)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(139, 92, 246, 0.5)", fontSize: "14px", padding: 0, lineHeight: 1 }}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: "12px", paddingTop: "16px" }}>
+            <button type="button" onClick={() => router.back()} style={{ padding: "10px 20px", backgroundColor: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "6px", color: "#fff", fontSize: "14px", cursor: "pointer" }}>Cancel</button>
+            <button type="submit" disabled={submitting} className="dashboard-button" style={{ opacity: submitting ? 0.5 : 1 }}>{submitting ? "Saving..." : isEditing ? "Update Entity" : "Create Entity"}</button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

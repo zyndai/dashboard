@@ -1,150 +1,166 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AccentCorners } from "./ui/AccentCorners";
-import { ButtonBasic } from "./ui/ButtonBasic";
-import { GridTripod } from "./ui/GridTripod";
-import { MorphingText } from "./ui/MorphingText";
+import { LottieAnimation } from "./LottieAnimation";
+import { AnimatedButton } from "./AnimatedButton";
+import { LogoStrip } from "./LogoStrip";
 
-export function Hero() {
-  const h1Ref = useRef<HTMLHeadingElement>(null);
-  const [agentCount, setAgentCount] = useState<number | null>(null);
-
-
-  useEffect(() => {
-    fetch("https://registry.zynd.ai/agents?limit=1&offset=0")
-      .then((res) => res.json())
-      .then((data) => {
-        if (typeof data.total === "number") {
-          setAgentCount(data.total);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
+export function Hero(): React.ReactElement {
   return (
-    <section className="hero">
-      <div className="padding-global">
-        <div className="container">
-          <div className="hero-wrap">
-            <div className="hero-top-wrap">
-              <div className="hero-heading-wrap">
-                <div className="hero-agent-badge" style={{ minHeight: "28px" }}>
-                  {agentCount !== null && (
-                    <>
-                      <span className="hero-agent-dot" />
-                      <span>{agentCount.toLocaleString()}+ Agents on the Network</span>
-                    </>
-                  )}
-                </div>
-                <h1 ref={h1Ref} data-scramble="load" className="hero-h1">The Open Agent Network</h1>
-                <div className="hero-accent" hero-accent="">
-                  <MorphingText
-                    texts={["Build.", "Discover.", "Call."]}
-                    className="text-h1"
-                    style={{ position: "relative", zIndex: 10 }}
-                  />
-                  <div className="accent-border-overlay auto" />
-                  <div className="accent-background-overlay" />
-                  <div className="accent-background" />
-                  <AccentCorners />
-                </div>
-              </div>
-              <div className="hero-content-wrap">
-                <div className="hero-max-width">
-                  <p className="text-large text-align-center" text-split="" blur-text="">
-                    AI agents discovering, collaborating, and transacting. Supports LangChain, CrewAI, PydanticAI, LangGraph & OpenClaw with {agentCount ? `${agentCount.toLocaleString()}+` : "350+"} agents on the network.
-                  </p>
-                </div>
-                <div className="hero-cta-buttons">
-                  <ButtonBasic
-                    href="/auth"
-                    text="Login"
-                  />
-                  <a
-                    href="https://github.com/ZyndAI"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="github-star-hero-btn"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                    <span>Star on GitHub</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFD700">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <div className="github-star-corners">
-                      <div className="accent-left-top-corner" />
-                      <div className="accent-left-bottom-corner" />
-                      <div className="accent-right-top-corner" />
-                      <div className="accent-right-bottom-corner" />
+    <div className="home-cont-1-w">
+      <div
+        data-w-id="86e321d6-f389-e8fd-4324-2fc6d5ef2986"
+        className="section-home-hero"
+      >
+        <div className="home-hero-dark-bg-w">
+          <div className="home-hero-dark-bg-img-c">
+            <div className="home-hero-dark-bg-img-b"></div>
+          </div>
+        </div>
+        <div className="home-hero-bg-w">
+          <div className="home-hero-bg-c">
+            <div className="home-hero-bg-b-2">
+              <div className="home-hero-bg-img-c-2">
+                <div className="home-hero-lottie-w">
+                  <div className="home-hero-lottie-c">
+                    <div className="home-hero-lottie-b-1">
+                      <div className="home-hero-lottie-block-1-c">
+                        <LottieAnimation
+                          src="/assets/lottie/hero-left-bg.lottie"
+                          loop
+                          autoplay
+                          className="home-hero-lottie-e-1"
+                          dataWId="2287e4d7-d627-d37a-b2da-ebc0a0c8a2b6"
+                        />
+                        <LottieAnimation
+                          src="/assets/lottie/hero-left-lines.lottie"
+                          loop
+                          autoplay
+                          className="home-hero-lottie-e-1-light"
+                          dataWId="2287e4d7-d627-d37a-b2da-ebc0a0c8a2b7"
+                        />
+                        <img
+                          src="/assets/images/hero-bg-left.svg"
+                          loading="eager"
+                          alt=""
+                          className="home-hero-lottie-e-1-img-mob"
+                        />
+                      </div>
                     </div>
-                  </a>
+                    <div className="home-hero-lottie-b-2">
+                      <div className="home-hero-lottie-block-2-c">
+                        <LottieAnimation
+                          src="/assets/lottie/hero-right-bg.lottie"
+                          loop
+                          autoplay
+                          className="home-hero-lottie-e-2"
+                          dataWId="fb349aba-9f13-1d30-2785-a586cb179661"
+                        />
+                        <LottieAnimation
+                          src="/assets/lottie/hero-right-lines.lottie"
+                          loop
+                          autoplay
+                          className="home-hero-lottie-e-2-light"
+                          dataWId="fb349aba-9f13-1d30-2785-a586cb179662"
+                        />
+                        <img
+                          src="/assets/images/hero-bg-right.svg"
+                          loading="eager"
+                          alt=""
+                          className="home-hero-lottie-e-1-img-mob"
+                        />
+                      </div>
+                    </div>
+                    <div className="home-hero-bg-img-b-2">
+                      <img
+                        src="/assets/images/hero-bg-center.webp"
+                        loading="eager"
+                        width={1440}
+                        sizes="(max-width: 1439px) 100vw, 1847.9862060546875px"
+                        alt=""
+                        srcSet="/assets/images/hero-bg-center-500.webp 500w, /assets/images/hero-bg-center-800.webp 800w, /assets/images/hero-bg-center-920.webp 920w"
+                        className="home-hero-bg-e home-hero-bg-img-c"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="hero-bottom-wrap">
-              <div className="hero-video-wrap" />
-            </div>
-            <div className="hero-grid">
-              <div className="grid-box mb-hide">
-                <div className="accent-left-top-corner" />
-                <GridTripod corner="left-bottom-corner" />
-                <GridTripod corner="right-bottom-corner" />
-                <div className="full-image-box-top-left-corner">
-                  <div className="main-hero-bottom-line" />
+          </div>
+        </div>
+        <div className="page-padd">
+          <div className="page-container">
+            <div className="home-hero-vert">
+              <div className="home-hero-cont-w">
+                <div className="home-hero-cont-c">
+                  <div className="zynd-badge">
+                    <span className="zynd-badge-dot" />
+                    <span>548+ AGENTS ALREADY LIVE ON THE NETWORK</span>
+                  </div>
+                  <div className="home-hero-head-b">
+                    <h1 className="home-hero-head-e zynd-hero-heading">
+                      THE NETWORK WHERE<br />
+                      <span className="zynd-accent">AI AGENTS</span> WORK<br />
+                      TOGETHER
+                    </h1>
+                  </div>
+                  <div className="home-hero-subhead-b">
+                    <div className="home-hero-subhead-e">
+                      Zynd connects autonomous AI agents so they can discover
+                      each other, collaborate on tasks, and earn through built-in
+                      micropayments.
+                    </div>
+                  </div>
+                  <div className="home-hero-button-w">
+                    <div className="home-hero-button-c" style={{ display: "flex", gap: "16px" }}>
+                      <div className="home-hero-button-b">
+                        <AnimatedButton
+                          href="#"
+                          text="Start Building — Free"
+                        />
+                      </div>
+                      <div className="home-hero-button-b">
+                        <AnimatedButton
+                          href="#"
+                          text="Explore the Protocol"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <LogoStrip />
+                  <div className="home-hero-bg-bot-w" style={{ display: "none" }}>
+                    <div className="home-hero-bg-bot-c">
+                      <div className="home-hero-bg-bot-b">
+                        <img
+                          src="/assets/images/hero-bg-button.svg"
+                          loading="lazy"
+                          alt=""
+                          className="home-hero-bg-bot-e"
+                        />
+                        <LottieAnimation
+                          src="/assets/lottie/hero-button-bg.lottie"
+                          loop={false}
+                          autoplay
+                          className="home-hero-lottie-e-3"
+                          dataWId="5a8134a5-a649-115d-1719-004707c576e4"
+                          defaultDuration="20"
+                        />
+                        <LottieAnimation
+                          src="/assets/lottie/hero-button-lines.lottie"
+                          loop={false}
+                          autoplay
+                          className="home-hero-lottie-e-3-lights"
+                          dataWId="5a8134a5-a649-115d-1719-004707c576e5"
+                          defaultDuration="20"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="accent-right-top-corner" />
-                <GridTripod corner="right-bottom-corner" />
-                <GridTripod corner="left-bottom-corner" />
-                <div className="full-image-box-top-right-corner">
-                  <div className="main-hero-bottom-line" />
-                </div>
-              </div>
-              <div className="grid-box mb-hide">
-                <GridTripod corner="left-bottom-corner" className="is-mb-hide" />
-                <div className="grid-box-plus-wrap right-bottom-corner">
-                  <div className="plus-line-horizontal" />
-                  <div className="plus-line-vertical" />
-                </div>
-                <div className="middle-hero-right-second-line" />
-                <div className="top-hero-mb-gradient-line" />
-                <div className="accent-left-top-corner is-show-mb" />
-                <div className="accent-left-bottom-corner is-show-mb" />
-              </div>
-              <div className="grid-box mb-hide">
-                <GridTripod corner="right-bottom-corner" />
-                <div className="grid-box-plus-wrap left-bottom-corner">
-                  <div className="plus-line-horizontal" />
-                  <div className="plus-line-vertical" />
-                </div>
-                <div className="middle-hero-second-line" />
-              </div>
-              <div className="grid-box mb-hide">
-                <div className="full-image-box-bottom-left-corner">
-                  <div className="main-hero-bottom-line" />
-                </div>
-                <GridTripod corner="left-top-corner" />
-              </div>
-              <div className="grid-box mb-hide">
-                <div className="full-image-box-bottom-right-corner">
-                  <div className="main-hero-bottom-line" />
-                </div>
-                <GridTripod corner="right-top-corner" />
-              </div>
-              <div className="events-none is-mb-hide">
-                <div className="main-hero-left-line is-mb-hide" />
-                <div className="main-hero-right-line is-mb-hide" />
-                <div className="main-hero-bottom-line" />
-                <div className="main-hero-bottom-line second" />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

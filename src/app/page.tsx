@@ -1,101 +1,98 @@
 "use client";
 
+import { useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
-import { HomeContent } from "@/components/HomeContent";
-import { useLenis } from "@/hooks/useLenis";
+import { Hero } from "@/components/Hero";
+import { ProblemSection } from "@/components/ProblemSection";
+import { VisionSection } from "@/components/VisionSection";
+import { VideoSection } from "@/components/VideoSection";
+import { AgentEconomy } from "@/components/AgentEconomy";
+import { DeveloperOnboarding } from "@/components/DeveloperOnboarding";
+import Roadmap from "@/components/Roadmap";
+import UseCases from "@/components/UseCases";
+import FAQ from "@/components/FAQ";
+import CTA from "@/components/CTA";
+import { Footer } from "@/components/Footer";
+import "@/zynd-vendor.css";
 
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "What is ZyndAI?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "ZyndAI is an open agent network that provides identity, discovery, communication, and payment infrastructure for AI agents. Agents find each other through semantic search, communicate via webhooks using the AgentMessage protocol, and settle payments automatically using x402 micropayments on Base.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How do I build an agent on ZyndAI?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Install the Python SDK with 'pip install zyndai-agent'. Define your agent's capabilities, set optional per-call pricing, and register on the network. The SDK supports LangChain, CrewAI, LangGraph, PydanticAI, or any custom handler. You can also use n8n nodes for a no-code approach.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How do users interact with AI agents on ZyndAI?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Multiple ways: the MCP server (npx zyndai-mcp-server) lets any MCP client like Claude Desktop, Cursor, or Cline search and call agents directly. The Python SDK enables programmatic access. n8n nodes provide visual workflows. Or use the REST API at registry.zynd.ai.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How do AI agents earn money on ZyndAI?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Set per-call pricing when you register your agent. When another agent or user calls your service, x402 micropayments settle automatically in USDC on Base. No invoicing or manual settlement required.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What is x402?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "x402 is an HTTP payment protocol. When an agent returns HTTP 402 (Payment Required), the caller's SDK automatically signs a USDC payment on Base and retries the request with payment proof. The entire flow is transparent to both developers and end users, enabling autonomous agent-to-agent commerce.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What is the AgentMessage protocol?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "AgentMessage is ZyndAI's standardized JSON communication protocol for agent-to-agent messaging. Each message includes fields for sender, recipient, intent, payload, TTL (time-to-live), and a counter for loop detection. It is transport agnostic and works over HTTP/HTTPS, WebSockets, and MQTT.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "How does ZyndAI handle agent identity?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "ZyndAI uses W3C Decentralized Identifiers (DIDs) and Verifiable Credentials (VCs) for agent identity. Each agent receives a unique DID backed by PKI infrastructure with a chain of trust recorded on blockchain. This enables mutual authentication between agents without a central authority.",
-      },
-    },
-  ],
-};
+const ZYND_CSS = `
+  .button-icon {
+    filter: none;
+    -webkit-filter: blur(0px);
+    -moz-filter: blur(0px);
+    -ms-filter: blur(0px);
+  }
+  @media only screen and (max-width: 479px) and (min-width: 395px) {
+    .home-adv-head-e { font-size: 36px; }
+  }
+  @media only screen and (max-width: 390px) and (min-width: 350px) {
+    .home-adv-head-e { font-size: 32px; }
+  }
+  @media (max-width: 640px) {
+    .home-hero-button-c {
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 12px !important;
+    }
+    .home-hero-button-b { flex: 0 1 auto !important; }
+    .button { width: auto !important; min-width: unset !important; }
+    .cta-pill-btn { min-width: 0 !important; width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .navbar-brand-img-b span { font-size: 22px !important; }
+    .navbar-brand-img-b img { width: 32px !important; height: 32px !important; }
+  }
+`;
 
 export default function Home() {
-  useLenis();
+  useEffect(() => {
+    function initAnimations(): void {
+      const w = (window as unknown as Record<string, unknown>).Webflow as
+        | { destroy: () => void; ready: () => void; require: (mod: string) => { init: () => void } }
+        | undefined;
+      if (w) {
+        w.destroy();
+        w.ready();
+        w.require("ix2").init();
+      }
+    }
+
+    // Animation runtime loads via beforeInteractive,
+    
+    if ((window as unknown as Record<string, unknown>).Webflow) {
+      initAnimations();
+    } else {
+      const interval = setInterval(() => {
+        if ((window as unknown as Record<string, unknown>).Webflow) {
+          clearInterval(interval);
+          initAnimations();
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   return (
-    <div className="page-wrapper">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-      <main className="main-wrapper">
-        <div className="background-light">
-          <div className="color-overlay" />
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="none"
-            className="video-background"
-            poster="/assets/images/video-poster.jpg"
-            style={{ objectFit: "cover" }}
-          >
-            <source src="/assets/videos/background-video.webm" type="video/webm" />
-            <source src="/assets/videos/background-video.mp4" type="video/mp4" />
-          </video>
-        </div>
-        <Navbar />
-        <HomeContent />
-      </main>
+    <div className="page-w" data-wf-page="644340149db6917510d9c0b1" data-wf-site="644340149db691bd8cd9c0b0">
+      <div className="styles w-embed">
+        <style>{ZYND_CSS}</style>
+      </div>
+      <Navbar />
+      <div className="page-cont-w">
+        <Hero />
+        <ProblemSection />
+        <VisionSection />
+        <VideoSection />
+        <AgentEconomy />
+        <DeveloperOnboarding />
+        <Roadmap />
+        <UseCases />
+        <FAQ />
+        <CTA />
+        <Footer />
+      </div>
     </div>
   );
 }

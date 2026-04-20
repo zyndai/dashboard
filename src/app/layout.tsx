@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import "@/zynd-ui.css";
 import Script from "next/script";
 
 const SITE_URL = "https://www.zynd.ai";
@@ -176,8 +177,9 @@ export default function RootLayout({
 }>) {
   const GA_ID = process.env.NEXT_PUBLIC_ANALYTICS_ID;
   return (
-    <html lang="en">
+    <html lang="en" className="w-mod-js" data-wf-domain="app.zynd.ai" data-wf-page="644340149db6917510d9c0b1" data-wf-site="644340149db691bd8cd9c0b0">
       <head>
+        <Script id="wf-mod" strategy="beforeInteractive">{`!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js",("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);`}</Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&display=swap" rel="stylesheet" />
@@ -208,6 +210,8 @@ export default function RootLayout({
           `}
         </Script>
         <Providers>{children}</Providers>
+        <Script src="/assets/js/jquery.min.js" strategy="beforeInteractive" />
+        <Script src="/assets/js/zynd-ui.js" strategy="beforeInteractive" />
       </body>
     </html>
   );

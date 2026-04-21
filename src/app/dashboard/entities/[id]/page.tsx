@@ -3,12 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Pencil, Trash2, Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Badge } from "@/components/ui/Badge";
-import { Skeleton } from "@/components/ui/Skeleton";
-import { Dialog } from "@/components/ui/Dialog";
 
 interface EntityDetail {
   id: string;
@@ -20,7 +16,6 @@ interface EntityDetail {
   category: string | null;
   tags: string[] | null;
   summary: string | null;
-  entity_index: number | null;
   fqan: string | null;
   developer_handle: string | null;
   status: string;
@@ -33,74 +28,30 @@ interface EntityDetail {
   home_registry: string | null;
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="cursor-pointer p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-white/30 transition-colors hover:text-[var(--color-accent)]"
-    >
-      {copied ? (
-        <Check className="h-4 w-4 text-[var(--color-accent)]" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
-    </button>
-  );
-}
-
-export default function EntityDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [entity, setEntity] = useState<EntityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entityId, setEntityId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const { authenticated } = useAuth();
 
-  useEffect(() => {
-    async function resolveParams() {
-      const resolvedParams = await params;
-      setEntityId(resolvedParams.id);
-    }
-    resolveParams();
-  }, [params]);
+  useEffect(() => { params.then((p) => setEntityId(p.id)); }, [params]);
 
   useEffect(() => {
     if (!entityId || !authenticated) return;
-
-    async function fetchEntity() {
+    (async () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/entities/${entityId}`);
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || "Failed to load entity");
-        }
-        const { entity: entityData } = await res.json();
-        setEntity(entityData);
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed"); }
+        setEntity((await res.json()).entity);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load entity details"
-        );
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchEntity();
+        setError(err instanceof Error ? err.message : "Failed to load entity details");
+      } finally { setLoading(false); }
+    })();
   }, [entityId, authenticated]);
 
   const handleDelete = async () => {
@@ -109,185 +60,107 @@ export default function EntityDetailPage({
       const supabase = createClient();
       await supabase.from("entities").delete().eq("id", entityId);
       router.push("/dashboard/entities");
-    } catch (err) {
-      console.error("Error deleting entity:", err);
-    }
+    } catch (err) { console.error("Error deleting entity:", err); }
+  };
+
+  const handleCopy = async (text: string, key: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
-
-  if (error || !entity || !entityId) {
-    return (
-      <div className="py-16 text-center">
-        <div className="border border-red-500/20 bg-red-500/[0.06] px-4 py-8 text-red-400">
-          {error || "Entity not found"}
+      <div className="dashboard-page">
+        <div style={{ textAlign: "center", padding: "60px 20px" }}>
+          <div style={{ width: "32px", height: "32px", border: "2px solid rgba(139, 92, 246, 0.2)", borderTop: "2px solid #8B5CF6", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto" }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
-        <button
-          onClick={() => router.push("/dashboard/entities")}
-          className="mt-4 cursor-pointer border border-white/10 px-4 py-2 text-sm text-white/50 transition-colors hover:text-white"
-        >
-          Return to Entity List
-        </button>
       </div>
     );
   }
 
-  const getStatusVariant = (
-    status: string
-  ): "active" | "inactive" | "deprecated" => {
-    switch (status.toUpperCase()) {
-      case "ACTIVE":
-        return "active";
-      case "INACTIVE":
-        return "inactive";
-      default:
-        return "deprecated";
-    }
-  };
+  if (error || !entity) {
+    return (
+      <div className="dashboard-page">
+        <div style={{ textAlign: "center", padding: "60px 20px" }}>
+          <div style={{ padding: "32px", border: "1px solid rgba(239, 68, 68, 0.2)", backgroundColor: "rgba(239, 68, 68, 0.06)", color: "#ef4444", fontSize: "14px" }}>{error || "Entity not found"}</div>
+          <button onClick={() => router.push("/dashboard/entities")} style={{ marginTop: "16px", padding: "10px 20px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "rgba(246, 246, 246, 0.5)", cursor: "pointer", fontSize: "14px" }}>
+            Return to Entity List
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const rows: { label: string; value: string | null; mono?: boolean; copyable?: boolean }[] = [
+    { label: "FQAN", value: entity.fqan, mono: true, copyable: true },
+    { label: "Entity ID", value: entity.entity_id, mono: true, copyable: true },
+    { label: "Developer", value: entity.developer_handle ? `@${entity.developer_handle}` : null, mono: true },
+    { label: "Description", value: entity.description || entity.summary },
+    { label: "Entity URL", value: entity.entity_url, mono: true },
+    { label: "Category", value: entity.category },
+    { label: "Registry", value: entity.home_registry, mono: true },
+    { label: "Trust Score", value: entity.trust_score != null ? entity.trust_score.toFixed(3) : null },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center">
+    <div className="dashboard-page">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", paddingBottom: "16px", borderBottom: "1px solid rgba(139, 92, 246, 0.1)", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
-              {entity.name}
-            </h2>
-            <Badge variant={getStatusVariant(entity.status)}>
-              {entity.status.toUpperCase()}
-            </Badge>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700 }}>{entity.name}</h1>
+            <span className={`dashboard-badge ${entity.status.toUpperCase() === "ACTIVE" ? "badge-active" : "badge-inactive"}`}>{entity.status.toUpperCase()}</span>
           </div>
-          <p className="mt-1 text-xs font-mono text-white/30">
-            {entity.entity_id || entityId}
-          </p>
+          <p style={{ marginTop: "4px", fontFamily: "monospace", fontSize: "12px", color: "rgba(246, 246, 246, 0.3)" }}>{entity.entity_id || entityId}</p>
         </div>
-        <div className="flex gap-3">
-          <Link href={`/dashboard/entities/${entityId}/edit`}>
-            <button className="flex cursor-pointer items-center gap-2 border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition-colors hover:bg-white/[0.06]">
-              <Pencil className="h-4 w-4" />
-              Edit
-            </button>
-          </Link>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="flex cursor-pointer items-center gap-2 border border-red-500/15 px-4 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/[0.06]"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <Link href={`/dashboard/entities/${entityId}/edit`} className="dashboard-button-secondary" style={{ textDecoration: "none", padding: "8px 16px", fontSize: "14px", borderRadius: "6px" }}>Edit</Link>
+          <button onClick={() => setShowDeleteConfirm(true)} style={{ padding: "8px 16px", fontSize: "14px", border: "1px solid rgba(239, 68, 68, 0.3)", background: "transparent", color: "rgba(239, 68, 68, 0.8)", cursor: "pointer", borderRadius: "6px" }}>Delete</button>
         </div>
       </div>
 
-      <div className="rounded border border-white/10 bg-white/[0.02]">
-        <div className="border-b border-white/10 px-5 py-4">
-          <h3 className="text-sm font-medium uppercase tracking-wider text-white/50">
-            Entity Details
-          </h3>
+      <div className="dashboard-card" style={{ padding: 0 }}>
+        <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(139, 92, 246, 0.1)" }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(246, 246, 246, 0.5)" }}>Entity Details</span>
         </div>
-        <div className="divide-y divide-white/[0.05] px-5">
-          {entity.fqan && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 items-start sm:items-center gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">FQAN</dt>
-              <dd className="sm:col-span-9 flex items-center justify-between border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/[0.04] px-3 py-2 overflow-hidden">
-                <span className="font-mono text-sm text-[var(--color-accent)] truncate">{entity.fqan}</span>
-                <CopyButton text={entity.fqan} />
-              </dd>
+        <div style={{ padding: "0 24px" }}>
+          {rows.map((row) => row.value && (
+            <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "start", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.03)", gap: "16px" }}>
+              <span style={{ fontSize: "13px", color: "rgba(246, 246, 246, 0.4)", minWidth: "120px", flexShrink: 0 }}>{row.label}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "flex-end" }}>
+                <span style={{ fontSize: "14px", color: row.label === "FQAN" ? "var(--color-accent)" : "#fff", fontFamily: row.mono ? "monospace" : "inherit", wordBreak: "break-all", textAlign: "right" }}>{row.value}</span>
+                {row.copyable && (
+                  <button onClick={() => handleCopy(row.value!, row.label)} style={{ background: "none", border: "none", cursor: "pointer", color: copied === row.label ? "var(--color-accent)" : "rgba(246, 246, 246, 0.3)", fontSize: "12px", padding: "4px", flexShrink: 0 }}>
+                    {copied === row.label ? "✓" : "⎘"}
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-          {entity.entity_id && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 items-start sm:items-center gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Entity ID</dt>
-              <dd className="sm:col-span-9 flex items-center justify-between border border-white/10 bg-white/5 px-3 py-2 overflow-hidden">
-                <span className="font-mono text-sm text-white truncate">{entity.entity_id}</span>
-                <CopyButton text={entity.entity_id} />
-              </dd>
-            </div>
-          )}
-          {entity.developer_handle && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Developer</dt>
-              <dd className="sm:col-span-9 text-sm text-white font-mono">@{entity.developer_handle}</dd>
-            </div>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-            <dt className="sm:col-span-3 text-sm text-white/40">Description</dt>
-            <dd className="sm:col-span-9 text-sm text-white">
-              {entity.description || entity.summary || (
-                <span className="italic text-white/25">No description provided</span>
-              )}
-            </dd>
-          </div>
-          {entity.entity_url && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Entity URL</dt>
-              <dd className="sm:col-span-9 text-sm text-white break-all">{entity.entity_url}</dd>
-            </div>
-          )}
-          {entity.category && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Category</dt>
-              <dd className="sm:col-span-9 text-sm text-white">{entity.category}</dd>
-            </div>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-            <dt className="sm:col-span-3 text-sm text-white/40">Status</dt>
-            <dd className="sm:col-span-9">
-              <Badge variant={getStatusVariant(entity.status)}>
-                {entity.status.toUpperCase()}
-              </Badge>
-            </dd>
-          </div>
+          ))}
           {entity.tags && entity.tags.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Tags</dt>
-              <dd className="sm:col-span-9 flex flex-wrap gap-1.5">
-                {entity.tags.map((tag) => (
-                  <Badge key={tag} variant="active">{tag}</Badge>
-                ))}
-              </dd>
-            </div>
-          )}
-          {entity.home_registry && (
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-0 py-4">
-              <dt className="sm:col-span-3 text-sm text-white/40">Registry</dt>
-              <dd className="sm:col-span-9 text-sm text-white/60 font-mono">{entity.home_registry}</dd>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.03)", gap: "16px" }}>
+              <span style={{ fontSize: "13px", color: "rgba(246, 246, 246, 0.4)", minWidth: "120px", flexShrink: 0 }}>Tags</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "flex-end" }}>
+                {entity.tags.map((tag) => <span key={tag} className="dashboard-badge badge-active" style={{ fontSize: "10px" }}>{tag}</span>)}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      <Dialog
-        open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        title="Delete Entity?"
-      >
-        <p className="text-sm text-white/50">
-          This action cannot be undone. This will permanently delete the entity
-          &ldquo;{entity.name}&rdquo;.
-        </p>
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={() => setShowDeleteConfirm(false)}
-            className="cursor-pointer border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition-colors hover:bg-white/[0.06]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            className="cursor-pointer bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
-          >
-            Delete
-          </button>
+      {showDeleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0.7)", zIndex: 999 }} onClick={() => setShowDeleteConfirm(false)}>
+          <div className="dashboard-card" style={{ maxWidth: "420px", width: "90%", margin: 0 }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 12px 0" }}>Delete Entity?</h3>
+            <p style={{ fontSize: "14px", color: "rgba(246, 246, 246, 0.5)" }}>This action cannot be undone. This will permanently delete &ldquo;{entity.name}&rdquo;.</p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button onClick={() => setShowDeleteConfirm(false)} style={{ padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "14px", cursor: "pointer", borderRadius: "6px" }}>Cancel</button>
+              <button onClick={handleDelete} style={{ padding: "8px 16px", backgroundColor: "#dc2626", border: "none", color: "#fff", fontSize: "14px", cursor: "pointer", borderRadius: "6px" }}>Delete</button>
+            </div>
+          </div>
         </div>
-      </Dialog>
+      )}
     </div>
   );
 }

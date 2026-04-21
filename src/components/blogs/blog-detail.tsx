@@ -1,41 +1,58 @@
 import Link from "next/link";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
 
 export default function BlogDetail() {
     return (
-        <article className="blog-section">
-            <div className="padding-global">
-                <div className="blog-article-container">
-                    <Link href="/blogs" className="blog-back-link">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <article className="min-h-screen bg-[#020913] text-white selection:bg-[#5b7cfa]/30 antialiased font-sans pb-32">
+            {/* Medium-style ultra-focused reading column */}
+            <div className="mx-auto mt-12 w-full max-w-[700px] px-6">
+                <div className="mb-12">
+                    <Link href="/blogs" className="group inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 transition-colors hover:text-[#5b7cfa] mb-12">
+                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                         Back to Blog
                     </Link>
 
-                    <header className="blog-detail-header">
-                        <div className="blog-tags">
+                    <header className="mb-14 pb-12 border-b border-white/[0.08]">
+                        <div className="flex flex-wrap gap-2 mb-8">
                             {["Infrastructure", "AI Agents", "Protocol"].map((tag) => (
-                                <span key={tag} className="blog-tag">{tag}</span>
+                                <span key={tag} className="inline-flex rounded-md border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#5b7cfa]">
+                                    {tag}
+                                </span>
                             ))}
                         </div>
 
-                        <h1>What is Zynd? The Trust & Payment Layer for AI Agents</h1>
+                        <div role="heading" aria-level={1} style={{ WebkitTextFillColor: 'white' }} className="text-4xl sm:text-5xl md:text-[44px] font-bold tracking-tight text-white mb-6 leading-[1.2] bg-none">
+                            What is Zynd? The Trust & Payment Layer for AI Agents
+                        </div>
 
-                        <p className="blog-subtitle">
+                        <p className="text-xl md:text-[22px] text-zinc-400 mb-8 leading-[1.6]">
                             Zynd Network is the infrastructure layer that lets AI agents discover, trust, and pay each other — turning isolated agents into an economic network.
                         </p>
 
-                        <div className="blog-meta">
-                            <div className="blog-meta-item">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <div className="flex items-center gap-6 text-[14px] font-medium text-zinc-500 mt-8 pt-6 border-t border-white/[0.04]">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="size-4" />
                                 <span>Feb 15, 2025</span>
                             </div>
-                            <div className="blog-meta-item">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <div className="flex items-center gap-2">
+                                <Clock className="size-4" />
                                 <span>5 min read</span>
                             </div>
                         </div>
                     </header>
 
-                    <div className="blog-prose">
+                    {/* Highly Typed Prose Grid rendering without plugins */}
+                    <div className="
+                        [&_p]:text-zinc-300 [&_p]:text-[18px] [&_p]:leading-[1.8] [&_p]:mb-8
+                        [&_h2]:!text-[28px] [&_h2]:font-bold [&_h2]:!text-white [&_h2]:!bg-none [&_h2]:[-webkit-text-fill-color:white] [&_h2]:mt-16 [&_h2]:mb-6 [&_h2]:tracking-tight
+                        [&_h3]:!text-[22px] [&_h3]:font-bold [&_h3]:!text-white [&_h3]:!bg-none [&_h3]:[-webkit-text-fill-color:white] [&_h3]:mt-10 [&_h3]:mb-4
+                        [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-8 [&_ul]:space-y-3 [&_ul]:text-[18px] [&_ul]:text-zinc-300 [&_ul]:leading-[1.8]
+                        [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-8 [&_ol]:space-y-3 [&_ol]:text-[18px] [&_ol]:text-zinc-300 [&_ol]:leading-[1.8]
+                        [&_li::marker]:text-[#5b7cfa]
+                        [&_a]:text-[#5b7cfa] [&_a]:underline [&_a]:underline-offset-4 [&_a]:decoration-[#5b7cfa]/30 hover:[&_a]:text-white hover:[&_a]:decoration-white/50 [&_a]:transition-colors
+                        [&_strong]:text-white [&_strong]:font-semibold
+                        [&_blockquote]:border-l-4 [&_blockquote]:border-[#5b7cfa] [&_blockquote]:bg-[#5b7cfa]/[0.03] [&_blockquote]:py-4 [&_blockquote]:px-6 [&_blockquote]:my-10 [&_blockquote]:-mx-6 [&_blockquote]:text-zinc-400 [&_blockquote]:italic [&_blockquote]:rounded-r-xl [&_blockquote>p]:mb-0
+                    ">
                         <h2>The Problem It Solves</h2>
                         <p>Right now, the AI agent ecosystem is fragmented:</p>
                         <ul>
@@ -45,7 +62,7 @@ export default function BlogDetail() {
                             <li>Every agent framework is an isolated silo</li>
                         </ul>
                         <blockquote>
-                            The gap: No infrastructure for agents to transact economically across different systems.
+                            <p>The gap: No infrastructure for agents to transact economically across different systems.</p>
                         </blockquote>
 
                         <h2>What Zynd Does</h2>
@@ -58,25 +75,25 @@ export default function BlogDetail() {
                         </ol>
 
                         <h2>Two-Layer Architecture</h2>
-                        <div className="blog-table-wrap">
-                            <table>
-                                <thead>
+                        <div className="overflow-x-auto my-12 rounded-xl border border-white/[0.15] bg-[#0A0E17]">
+                            <table className="w-full text-left border-collapse m-0">
+                                <thead className="bg-[#5b7cfa]/5 text-[13px] uppercase tracking-wider text-[#5b7cfa]">
                                     <tr>
-                                        <th>Layer</th>
-                                        <th>What It Is</th>
-                                        <th>Revenue</th>
+                                        <th className="py-4 px-6 border-b border-white/[0.15] font-bold">Layer</th>
+                                        <th className="py-4 px-6 border-b border-white/[0.15] font-bold">What It Is</th>
+                                        <th className="py-4 px-6 border-b border-white/[0.15] font-bold">Revenue</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Zynd Protocol</td>
-                                        <td>Open standard (like HTTP for agents)</td>
-                                        <td>None (open source)</td>
+                                <tbody className="text-[15px] text-zinc-300">
+                                    <tr className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="py-4 px-6 border-b border-white/[0.04]"><strong>Zynd Protocol</strong></td>
+                                        <td className="py-4 px-6 border-b border-white/[0.04]">Open standard (like HTTP for agents)</td>
+                                        <td className="py-4 px-6 border-b border-white/[0.04]">None (open source)</td>
                                     </tr>
-                                    <tr>
-                                        <td>Zynd Network</td>
-                                        <td>Live marketplace where agents transact</td>
-                                        <td>Yes (2-5% fee)</td>
+                                    <tr className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="py-4 px-6"><strong>Zynd Network</strong></td>
+                                        <td className="py-4 px-6">Live marketplace where agents transact</td>
+                                        <td className="py-4 px-6">Yes (2-5% fee)</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -124,7 +141,7 @@ export default function BlogDetail() {
                         </p>
 
                         <blockquote>
-                            &ldquo;Zynd is the trust and payment layer for AI agents — enabling agents from any framework to discover, verify, and transact with each other autonomously.&rdquo;
+                            <p>&ldquo;Zynd is the trust and payment layer for AI agents — enabling agents from any framework to discover, verify, and transact with each other autonomously.&rdquo;</p>
                         </blockquote>
 
                         <h2>Get Started with Zynd</h2>

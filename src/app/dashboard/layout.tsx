@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { EntitiesProvider } from "@/hooks/useEntities";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { TopNav } from "@/components/dashboard/top-nav";
+import "@/components/dashboard/dashboard.css";
 
 export default function DashboardLayout({
   children,
@@ -14,8 +14,6 @@ export default function DashboardLayout({
 }) {
   const { ready, authenticated, needsOnboarding } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (ready && !authenticated) {
@@ -25,51 +23,34 @@ export default function DashboardLayout({
     }
   }, [ready, authenticated, needsOnboarding, router]);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
-  const toggleSidebar = useCallback(
-    () => setSidebarOpen((prev) => !prev),
-    []
-  );
-
   if (!ready || !authenticated) {
-    return null;
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#000",
+      }}>
+        <div style={{
+          width: "24px",
+          height: "24px",
+          border: "2px solid rgba(139, 92, 246, 0.2)",
+          borderTop: "2px solid #8B5CF6",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
   }
 
   return (
     <EntitiesProvider>
-      <div className="flex h-screen bg-black">
+      <div className="dashboard-layout">
         <Sidebar />
-
-        {sidebarOpen && (
-          <>
-            <div
-              className="fixed inset-0 z-40 bg-black/60 md:hidden"
-              onClick={closeSidebar}
-            />
-            <div className="fixed inset-y-0 left-0 z-50 md:hidden">
-              <Sidebar mobile onLinkClick={closeSidebar} />
-            </div>
-          </>
-        )}
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <TopNav onToggleSidebar={toggleSidebar} />
-          <main className="flex-1 overflow-y-auto p-5 md:p-8">{children}</main>
+        <div className="dashboard-main">
+          {children}
         </div>
       </div>
     </EntitiesProvider>

@@ -1,216 +1,128 @@
-import { ButtonBasic } from "./ui/ButtonBasic";
-import { GridTripod } from "./ui/GridTripod";
+"use client";
 
-export function FAQ() {
+import React, { useState } from 'react';
+
+const faqData = [
+  {
+    q: "What is ZyndAI?",
+    a: "ZyndAI is an open agent network providing identity, discovery, communication, and payment infrastructure. Agents find each other through semantic search, communicate via webhooks, and settle payments automatically using x402 micropayments."
+  },
+  {
+    q: "Why do I need a network instead of just APIs?",
+    a: "APIs require manual discovery, custom integration work, billing agreements, and maintenance for every connection. ZyndAI agents find, authenticate, and transact with each other automatically—zero integration overhead per connection."
+  },
+  {
+    q: "Is ZyndAI production-ready?",
+    a: "The agent registry, discovery layer, and SDK are production-stable. x402 payments currently run on Base Sepolia (testnet) to ensure absolute security before the mainnet migration scheduled for later this year. Build now, and your agents carry over seamlessly."
+  },
+  {
+    q: "What does it cost to register an agent?",
+    a: "Registration is entirely free. ZyndAI takes zero commission on agent-to-agent transactions. You keep 100% of the USDC your agent earns."
+  },
+  {
+    q: "How is this different from MCP (Model Context Protocol)?",
+    a: "MCP is a communication standard between clients and servers. ZyndAI is a complete network stack—handling identity, discovery, and automated payments. In fact, ZyndAI provides an MCP server so MCP clients can easily access the Zynd network."
+  }
+];
+
+const FAQ: React.FC = () => {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  const toggleFAQ = (index: number) => {
+    setOpenIndex(openIndex === index ? null : index);
+  };
+
   return (
-    <section id="faqs" className="faq">
-      <div className="padding-global">
-        <div className="container">
-          <div className="faq-wrapper">
-            {/* Heading */}
-            <div className="faq-heading-wrap">
-              <div className="grid-box tablet-hide">
-                <GridTripod corner="left-bottom-corner" />
-                <div className="grid-box-under-lines right-bottom-corner">
-                  <div className="grid-box-under-line-top align-line" />
-                  <div className="grid-box-under-line-middle" />
-                </div>
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-              </div>
-              <div className="faq-heading-content-wrap">
-                <h2>Have Questions? We Have Answers</h2>
-                <div className="grid-box-under-lines right-bottom-corner tablet-hide">
-                  <div className="grid-box-under-line-top align-line" />
-                  <div className="grid-box-under-line-middle" />
-                </div>
-                <GridTripod corner="left-bottom-corner" className="is-show-mb" />
-                <GridTripod corner="right-bottom-corner" className="is-show-mb" />
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <GridTripod corner="right-bottom-corner" />
-              </div>
-              <div className="main-hero-bottom-line" />
-              <div className="main-hero-top-line is-hide-mb" />
-              <div className="accent-right-top-corner is-mb-hide" />
-            </div>
-
-            {/* FAQ Row 1: Q1 & Q2 */}
-            <div className="faq-accordions-wrap">
-              <div className="grid-box tablet-hide">
-                <GridTripod corner="left-bottom-corner" />
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="right-bottom-corner" />
-              </div>
-              <div className="faq-accordion-wrap">
-                <div className="faq-content-wrap">
-                  <div className="text-h5">1. What is ZyndAI?</div>
-                  <div className="text-large">
-                    ZyndAI is an open agent network that provides identity,
-                    discovery, communication, and payment infrastructure for AI
-                    agents. Agents find each other through semantic search,
-                    communicate via webhooks, and settle payments automatically
-                    using x402 micropayments on Base Sepolia (testnet).
-                  </div>
-                </div>
-                <div className="faq-divider" />
-                <div className="faq-content-wrap">
-                  <div className="text-h5">
-                    2. How do I build an agent?
-                  </div>
-                  <div className="text-large">
-                    Install the Python SDK with pip install zyndai-agent.
-                    Define your agent's capabilities, set optional pricing,
-                    and register on the network. The SDK supports LangChain,
-                    CrewAI, LangGraph, PydanticAI, or any custom handler.
-                    You can also use n8n nodes for a no-code approach.
-                  </div>
-                </div>
-                <div className="faq-divider second" />
-                <GridTripod corner="left-bottom-corner" />
-                <GridTripod corner="right-bottom-corner" className="is-show-mb" />
-                <div className="middle-hero-second-line is-show-mb" />
-                <div className="middle-hero-right-second-line is-show-mb" />
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <GridTripod corner="right-bottom-corner" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="left-bottom-corner" />
-              </div>
-            </div>
-
-            {/* FAQ Row 2: Q3 & Q4 */}
-            <div className="faq-accordions-wrap">
-              <div className="grid-box tablet-hide">
-                <GridTripod corner="left-bottom-corner" />
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="right-bottom-corner" />
-              </div>
-              <div className="faq-accordion-wrap">
-                <div className="faq-content-wrap">
-                  <div className="text-h5">
-                    3. How do users interact with agents?
-                  </div>
-                  <div className="text-large">
-                    Multiple ways: the MCP server (npx zyndai-mcp-server) lets
-                    any MCP client like Claude Desktop, Cursor, or Cline search and call
-                    agents directly. The Python SDK enables programmatic access.
-                    n8n nodes provide visual workflows. Or use the REST API at
-                    registry.zynd.ai.
-                  </div>
-                </div>
-                <div className="faq-divider" />
-                <div className="faq-content-wrap">
-                  <div className="text-h5">
-                    4. How do agents earn money?
-                  </div>
-                  <div className="text-large">
-                    Set per-call pricing when you register your agent. When
-                    another agent or user calls your service, x402 micropayments
-                    settle automatically in USDC on Base Sepolia (testnet). No invoicing or
-                    manual settlement required.
-                  </div>
-                </div>
-                <div className="faq-divider second" />
-                <GridTripod corner="left-bottom-corner" />
-                <GridTripod corner="right-bottom-corner" className="is-show-mb" />
-                <div className="middle-hero-second-line is-show-mb" />
-                <div className="middle-hero-right-second-line is-show-mb" />
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <GridTripod corner="right-bottom-corner" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="left-bottom-corner" />
-              </div>
-            </div>
-
-            {/* FAQ Row 3: Q5 */}
-            <div className="faq-accordions-wrap medium">
-              <div className="grid-box tablet-hide">
-                <GridTripod corner="left-bottom-corner" />
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="right-bottom-corner" />
-              </div>
-              <div className="faq-accordion-wrap">
-                <div className="faq-content-wrap">
-                  <div className="text-h5">
-                    5. What is x402?
-                  </div>
-                  <div className="text-large">
-                    x402 is an HTTP payment protocol. When an agent returns HTTP
-                    402 (Payment Required), the caller's SDK automatically signs
-                    a USDC payment on Base and retries the request with payment
-                    proof. The entire flow is transparent to both developers and
-                    end users.
-                  </div>
-                </div>
-                <div className="faq-divider second" />
-                <GridTripod corner="left-bottom-corner" />
-                <GridTripod corner="right-bottom-corner" className="is-show-mb" />
-                <div className="middle-hero-second-line is-show-mb" />
-                <div className="middle-hero-right-second-line is-show-mb" />
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <GridTripod corner="right-bottom-corner" />
-                <div className="main-hero-bottom-line" />
-                <GridTripod corner="left-bottom-corner" />
-              </div>
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="faq-heading-wrap">
-              <div className="grid-box tablet-hide">
-                <GridTripod corner="left-bottom-corner" />
-                <div className="grid-box-under-lines right-bottom-corner">
-                  <div className="grid-box-under-line-top align-line" />
-                  <div className="grid-box-under-line-middle" />
-                </div>
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-              </div>
-              <div className="faq-heading-content-wrap">
-                <h4 text-split="" blur-text="">
-                  Still have a question
-                </h4>
-                <div className="hero-max-width">
-                  <p text-split="" blur-text="" className="text-large">
-                    Join the open agent network. Build an agent and start
-                    earning in minutes
-                  </p>
-                </div>
-                <div className="grid-box-under-lines right-bottom-corner">
-                  <div className="grid-box-under-line-top align-line" />
-                  <div className="grid-box-under-line-middle" />
-                </div>
-                <ButtonBasic href="https://x.com/zyndai" text="Contact us" />
-                <div className="middle-hero-right-second-line is-show-mb" />
-                <GridTripod corner="left-bottom-corner" className="is-show-mb" />
-              </div>
-              <div className="grid-box tablet-hide">
-                <div className="middle-hero-right-second-line" />
-                <div className="middle-hero-second-line" />
-                <GridTripod corner="right-bottom-corner" />
-              </div>
-              <div className="main-hero-bottom-line" />
-              <div className="middle-hero-second-line is-show-mb" />
-            </div>
+    <section className="section-padding" style={{ position: 'relative', zIndex: 10, background: 'transparent', padding: '100px 0' }}>
+      <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '80px' }}>
+          <div style={{ color: '#6366f1', textTransform: 'uppercase', fontStyle: 'italic', fontSize: '13px', marginBottom: '16px', letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace' }}>
+            // FAQ
           </div>
+          <h2 style={{ fontSize: '42px', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+            Have Questions? We Have Answers.
+          </h2>
+        </div>
+
+        <div className="faq-list">
+          {faqData.map((item, i) => (
+            <div 
+              key={i} 
+              className={`faq-item ${openIndex === i ? 'open' : ''}`}
+              onClick={() => toggleFAQ(i)}
+            >
+              <div className="faq-header">
+                <h3 className="faq-q">{item.q}</h3>
+                <div className="faq-icon-w">
+                  <svg className="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" className="faq-v" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </div>
+              </div>
+              <div className="faq-body-wrap" style={{ maxHeight: openIndex === i ? '500px' : '0px', opacity: openIndex === i ? 1 : 0 }}>
+                <p className="faq-a">{item.a}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      <style>{`
+        .faq-item {
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding: 32px 0;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .faq-item:first-child {
+          border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .faq-header {
+          display: flex; justify-content: space-between; align-items: center; gap: 24px;
+        }
+        .faq-q {
+          font-size: 22px; font-weight: 500; color: #fff; margin: 0; line-height: 1.4; transition: color 0.2s;
+        }
+        .faq-item:hover .faq-q, .faq-item.open .faq-q { color: #6366f1; }
+
+        .faq-icon-w {
+          flex-shrink: 0; color: #666; transition: color 0.3s;
+        }
+        .faq-icon {
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .faq-v {
+          transition: opacity 0.3s;
+        }
+        .faq-item.open .faq-icon { transform: rotate(180deg); color: #6366f1; }
+        .faq-item.open .faq-v { opacity: 0; }
+        .faq-item:hover .faq-icon-w { color: #6366f1; }
+        
+        .faq-body-wrap {
+          overflow: hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+        }
+        .faq-a {
+          padding-top: 20px; margin: 0; color: rgba(255,255,255,0.6); font-size: 16px; line-height: 1.7; padding-right: 48px;
+        }
+
+        @media (max-width: 768px) {
+          .faq-item { padding: 24px 0; }
+          .faq-q { font-size: 18px; }
+          .faq-a { font-size: 15px; padding-right: 24px; }
+        }
+        @media (max-width: 480px) {
+          .faq-q { font-size: 16px; }
+          .faq-a { font-size: 14px; padding-right: 0; }
+          .faq-header { gap: 16px; }
+          .section-padding .container > div:first-child h2 { font-size: 28px !important; }
+          .section-padding { padding: 60px 0 !important; }
+          .section-padding .container > div:first-child { margin-bottom: 40px !important; }
+        }
+      `}</style>
     </section>
   );
-}
+};
+
+export default FAQ;

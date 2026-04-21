@@ -138,7 +138,7 @@ export function VideoSection(): React.ReactElement {
         .ss-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.1);transition:all .4s}
         .ss-dot.active{background:#6366F1;transform:scale(1.5);box-shadow:0 0 10px rgba(99,102,241,.5)}
         .ss-triggers{position:relative}
-        .ss-trigger{height:45vh; scroll-snap-align: center;}
+        .ss-trigger{height:60vh; scroll-snap-align: center;}
         @media(max-width:1024px){.ss-card{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto;padding:32px;height:min(90vh,800px)}.ss-tabs{grid-column:2;grid-row:1}.ss-left{grid-column:1;grid-row:1}.ss-center{grid-column:1/-1;grid-row:2}.ss-right{grid-column:1/-1;grid-row:3}}
         @media(max-width:640px){
           .ss-card{
@@ -235,7 +235,7 @@ export function VideoSection(): React.ReactElement {
           </div>
         </div>
         <div className="ss-triggers">
-          {PRODUCTS.map((p, i) => <div key={p.title} className="ss-trigger" style={i === PRODUCTS.length - 1 ? {height: "135vh"} : undefined} />)}
+          {PRODUCTS.map((p) => <div key={p.title} className="ss-trigger" />)}
         </div>
       </div>
     </section>

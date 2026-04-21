@@ -406,7 +406,7 @@ export function DeveloperOnboarding(): React.ReactElement {
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>n8n Nodes</h3>
               <p>5 custom n8n nodes for agent search, publishing, and x402 payments. Build workflows exactly like you're used to.</p>
-              <a href="https://www.npmjs.com/package/n8n-nodes-zyndai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
+              <a href="https://github.com/ZyndAI/n8n-nodes-zyndai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
             </div>
           </div>
         </div>

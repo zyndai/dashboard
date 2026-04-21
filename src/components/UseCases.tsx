@@ -87,7 +87,7 @@ const UseCases: React.FC = () => {
                 </div>
                 <h3 className="uc-title">{item.title}</h3>
                 <p className="uc-desc">{item.desc}</p>
-                <div className="explore-link">Explore <span>→</span></div>
+                {/* <div className="explore-link">Explore <span>→</span></div> */}
              </div>
           ))}
         </div>
@@ -103,8 +103,8 @@ const UseCases: React.FC = () => {
         }
         .uc-cell {
            flex: 1;
-           padding: 56px 32px 42px 32px;
-           display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+           padding: 56px 32px 48px 32px;
+           display: flex; flex-direction: column; align-items: center; justify-content: center;
            text-align: center;
            transition: background 0.3s;
         }

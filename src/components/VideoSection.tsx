@@ -226,11 +226,11 @@ export function VideoSection(): React.ReactElement {
                 <img src="/assets/zynd-logo.png" alt="ZyndAI" />
               </div>
               <div className="ss-bottom-pill">
-                <a href="#">Protocol</a>
-                <a href="#">Registry</a>
-                <a href="#">Developers</a>
+                <a href="https://docs.zynd.ai">Protocol</a>
+                <a href="/registry">Registry</a>
+                <a href="https://docs.zynd.ai">Developers</a>
               </div>
-              <a href="#" className="ss-bottom-contact">Get API Key</a>
+              <a href="/auth" className="ss-bottom-contact">Get API Key</a>
             </div>
           </div>
         </div>

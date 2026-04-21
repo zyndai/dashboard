@@ -182,8 +182,8 @@ export function ProblemSection(): React.ReactElement {
                 just address.
               </div>
               <div className="zp-c1-footer">
-                 <div className="zp-c1-footer-tag">01 // REGISTRY_PROTO</div>
-                 <a href="#" className="zp-c1-footer-link">Read Docs ↗</a>
+                 <div className="zp-c1-footer-tag">Agent Discovery</div>
+                 <a href="https://docs.zynd.ai" target="_blank" rel="noopener noreferrer" className="zp-c1-footer-link">Read Docs ↗</a>
               </div>
             </div>
           </div>

@@ -114,13 +114,14 @@ export function Hero(): React.ReactElement {
                     <div className="home-hero-button-c" style={{ display: "flex", gap: "16px" }}>
                       <div className="home-hero-button-b">
                         <AnimatedButton
-                          href="#"
+                          href="/auth"
                           text="Start Building — Free"
+                          target="_self"
                         />
                       </div>
                       <div className="home-hero-button-b">
                         <AnimatedButton
-                          href="#"
+                          href="https://docs.zynd.ai"
                           text="Explore the Protocol"
                         />
                       </div>

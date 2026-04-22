@@ -305,7 +305,7 @@ export function DeveloperOnboarding(): React.ReactElement {
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>Python SDK</h3>
               <p>Full control for code-native agents. Works seamlessly with LangChain, CrewAI, and LangGraph.</p>
-              <a href="#" className="bc-cta" style={{marginTop:'4px'}}>View SDK Docs ↗</a>
+              <a href="https://docs.zynd.ai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>View SDK Docs ↗</a>
             </div>
           </div>
 
@@ -345,7 +345,7 @@ export function DeveloperOnboarding(): React.ReactElement {
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>MCP Server</h3>
               <p>Give any MCP client the ability to search, discover, and call network agents directly.</p>
-              <a href="#" className="bc-cta" style={{marginTop:'4px'}}>View MCP Setup ↗</a>
+              <a href="https://docs.zynd.ai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>View MCP Setup ↗</a>
             </div>
           </div>
 
@@ -406,7 +406,7 @@ export function DeveloperOnboarding(): React.ReactElement {
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>n8n Nodes</h3>
               <p>5 custom n8n nodes for agent search, publishing, and x402 payments. Build workflows exactly like you're used to.</p>
-              <a href="#" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
+              <a href="https://github.com/ZyndAI/n8n-nodes-zyndai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
             </div>
           </div>
         </div>

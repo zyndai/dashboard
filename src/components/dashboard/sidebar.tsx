@@ -23,43 +23,17 @@ export function Sidebar() {
 
   return (
     <div className="dashboard-sidebar">
-      <Link
-        href="/"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          textDecoration: "none",
-          marginBottom: "32px",
-          paddingBottom: "16px",
-          borderBottom: "1px solid rgba(139, 92, 246, 0.1)",
-          transition: "all 0.2s",
-          cursor: "pointer",
-        }}
-      >
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}>
-          <img
-            src="/zynd.png"
-            alt="ZyndAI"
-            style={{
-              width: "32px",
-              height: "32px",
-              filter: "brightness(0) invert(1)",
-            }}
-          />
-          <h1 style={{
-            fontSize: "18px",
-            fontWeight: 700,
-            color: "#fff",
-            margin: "0",
-          }}>
-            ZYND<span style={{ color: "#8B5CF6" }}>AI</span>
-          </h1>
-        </div>
-      </Link>
+      <div className="sidebar-top">
+        <Link href="/" className="sidebar-logo">
+          <div className="sidebar-logo-inner">
+            <img src="/zynd.png" alt="ZyndAI" className="sidebar-logo-img" />
+            <h1>ZYND<span>AI</span></h1>
+          </div>
+        </Link>
+        <button onClick={logout} className="sidebar-logout-mobile">
+          Sign Out
+        </button>
+      </div>
 
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => (
@@ -74,10 +48,7 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <button
-          onClick={logout}
-          className="sidebar-logout"
-        >
+        <button onClick={logout} className="sidebar-logout">
           Sign Out
         </button>
       </div>

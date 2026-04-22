@@ -176,6 +176,7 @@ export function RegistryPage(): React.ReactElement {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState<"all" | "agent" | "service">("all");
   const [agents, setAgents] = useState<DisplayAgent[]>([]);
   const [retryKey, setRetryKey] = useState(0);
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -207,16 +208,18 @@ export function RegistryPage(): React.ReactElement {
         setLoading(true);
         const catParam = selectedCategory !== "All" ? selectedCategory : undefined;
 
+        const typeParam = typeFilter !== "all" ? typeFilter : undefined;
+
         if (debouncedQuery) {
           const res = await searchAgents(debouncedQuery, {
             category: catParam,
-            entity_type: "agent",
+            entity_type: typeParam,
             max_results: 200,
           }, signal);
           setAgents(res.results);
         } else {
           const res = await listEntities({
-            type: "agent",
+            type: typeParam,
             category: catParam,
             limit: 200,
           }, signal);
@@ -232,7 +235,7 @@ export function RegistryPage(): React.ReactElement {
     })();
 
     return () => controller.abort();
-  }, [debouncedQuery, selectedCategory, retryKey]);
+  }, [debouncedQuery, selectedCategory, typeFilter, retryKey]);
 
   const filteredAgents = agents.filter((agent) => {
     const agentStatus = (agent.status || "active").toUpperCase();
@@ -276,7 +279,7 @@ export function RegistryPage(): React.ReactElement {
               Agent Registry
             </h1>
             <p style={{ fontSize: "15px", color: "rgba(226,232,240,.5)", margin: 0 }}>
-              Discover and connect with {agents.length} agents on the ZyndAI network
+              Discover and connect with {agents.length} entities on the ZyndAI network
             </p>
           </div>
 
@@ -295,11 +298,21 @@ export function RegistryPage(): React.ReactElement {
             </div>
 
             <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value as "all" | "agent" | "service")}
+              className="pg-select"
+            >
+              <option value="all">All Types</option>
+              <option value="agent">Agents</option>
+              <option value="service">Services</option>
+            </select>
+
+            <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
               className="pg-select"
             >
-              <option value="All">All Agents</option>
+              <option value="All">All Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>

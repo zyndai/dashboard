@@ -1,4 +1,4 @@
-const AGENTDNS_BASE = process.env.NEXT_PUBLIC_AGENTDNS_URL || process.env.AGENTDNS_REGISTRY_URL || "";
+const AGENTDNS_BASE = "/api/registry";
 
 export interface CapabilitySummary {
   skills: string[];
@@ -107,7 +107,7 @@ export async function listEntities(
   params?: { type?: string; category?: string; limit?: number; offset?: number },
   signal?: AbortSignal,
 ): Promise<ListEntitiesResponse> {
-  const url = buildUrl("/v1/entities", {
+  const url = buildUrl("/entities", {
     type: params?.type,
     category: params?.category,
     limit: params?.limit,
@@ -117,7 +117,7 @@ export async function listEntities(
 }
 
 export async function getEntity(entityId: string, signal?: AbortSignal): Promise<EntityRecord> {
-  return fetchJSON<EntityRecord>(`${AGENTDNS_BASE}/v1/entities/${encodeURIComponent(entityId)}`, { signal });
+  return fetchJSON<EntityRecord>(`${AGENTDNS_BASE}/entities/${encodeURIComponent(entityId)}`, { signal });
 }
 
 export async function searchAgents(
@@ -125,7 +125,7 @@ export async function searchAgents(
   params?: { category?: string; entity_type?: string; max_results?: number; offset?: number },
   signal?: AbortSignal,
 ): Promise<SearchResponse> {
-  return fetchJSON<SearchResponse>(`${AGENTDNS_BASE}/v1/search`, {
+  return fetchJSON<SearchResponse>(`${AGENTDNS_BASE}/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -140,15 +140,15 @@ export async function searchAgents(
 }
 
 export async function getCategories(signal?: AbortSignal): Promise<string[]> {
-  const res = await fetchJSON<{ categories: string[] }>(`${AGENTDNS_BASE}/v1/categories`, { signal });
+  const res = await fetchJSON<{ categories: string[] }>(`${AGENTDNS_BASE}/categories`, { signal });
   return res.categories;
 }
 
 export async function getTags(signal?: AbortSignal): Promise<string[]> {
-  const res = await fetchJSON<{ tags: string[] }>(`${AGENTDNS_BASE}/v1/tags`, { signal });
+  const res = await fetchJSON<{ tags: string[] }>(`${AGENTDNS_BASE}/tags`, { signal });
   return res.tags;
 }
 
 export async function getNetworkStatus(signal?: AbortSignal): Promise<NetworkStatus> {
-  return fetchJSON<NetworkStatus>(`${AGENTDNS_BASE}/v1/network/status`, { signal });
+  return fetchJSON<NetworkStatus>(`${AGENTDNS_BASE}/network/status`, { signal });
 }

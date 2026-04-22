@@ -80,12 +80,6 @@ export function Navbar(): React.ReactElement {
                           >
                             Registry
                           </Link>
-                          <Link
-                            href="/services"
-                            className="navbar-link w-nav-link"
-                          >
-                            Services
-                          </Link>
                           <a
                             href="https://docs.zynd.ai"
                             target="_blank"

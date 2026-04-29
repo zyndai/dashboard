@@ -7,6 +7,7 @@ import { ProblemSection } from "@/components/ProblemSection";
 import { VisionSection } from "@/components/VisionSection";
 import { VideoSection } from "@/components/VideoSection";
 import { AgentEconomy } from "@/components/AgentEconomy";
+import { AgentDirectoryMarquee } from "@/components/landing/AgentDirectoryMarquee";
 import { DeveloperOnboarding } from "@/components/DeveloperOnboarding";
 import Roadmap from "@/components/Roadmap";
 import UseCases from "@/components/UseCases";
@@ -86,6 +87,7 @@ export default function Home() {
         <VisionSection />
         <VideoSection />
         <AgentEconomy />
+        <AgentDirectoryMarquee />
         <DeveloperOnboarding />
         <Roadmap />
         <UseCases />

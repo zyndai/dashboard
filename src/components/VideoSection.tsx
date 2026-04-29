@@ -111,7 +111,7 @@ export function VideoSection(): React.ReactElement {
         .ss-title-group{position:relative;min-height:120px}
         .ss-title-item{position:absolute;top:0;left:0;opacity:0;transform:translateY(15px);pointer-events:none;transition:all .6s cubic-bezier(.16,1,.3,1)}
         .ss-title-item.active{opacity:1;transform:translateY(0);pointer-events:auto}
-        .ss-title{font-size:clamp(40px,5vw,64px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:12px;background:linear-gradient(to right,#fff,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .ss-title{font-size:clamp(36px,4.5vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:12px;background:linear-gradient(to right,#fff,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .ss-subtitle{font-size:14px;font-weight:600;color:#6366F1;letter-spacing:.02em}
         .ss-center{grid-column:2;grid-row:1/-1;display:flex;align-items:center;justify-content:center;position:relative}
         .ss-media-wrapper{position:relative;width:100%;height:100%;min-height:0}

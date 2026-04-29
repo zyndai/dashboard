@@ -64,7 +64,13 @@ export function AgentEconomy(): React.ReactElement {
   return (
     <section className="ae">
       <style>{`
-        .ae { padding: 90px 0 60px; font-family: 'Space Grotesk', sans-serif; }
+        .ae {
+          padding: 100px 0;
+          font-family: 'Space Grotesk', sans-serif;
+          position: relative;
+          z-index: 5;
+          background: #000;
+        }
         .ae-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
         .ae-header { text-align: center; margin-bottom: 60px; }
         
@@ -233,7 +239,7 @@ export function AgentEconomy(): React.ReactElement {
 
         /* ── Mobile: scale the desktop graph to fit ── */
         @media (max-width: 768px) {
-          .ae { padding: 50px 0 30px; }
+          .ae { padding: 50px 0 80px; }
           .ae-inner { padding: 0 8px; }
           .ae-header { margin-bottom: 24px; }
           .ae-heading { font-size: 22px; }

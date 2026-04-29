@@ -7,7 +7,7 @@ export function ProblemSection(): React.ReactElement {
   return (
     <section className="zp" style={{ background: 'transparent' }}>
       <style>{`
-        .zp { padding: 0 0 120px; position: relative; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .zp { padding: 100px 0; position: relative; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .zp-inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 10; }
         
         /* Header */

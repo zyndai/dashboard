@@ -61,7 +61,7 @@ const Roadmap: React.FC = () => {
              <div style={{ color: '#6366f1', textTransform: 'uppercase', fontStyle: 'italic', fontSize: '13px', marginBottom: '16px', letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace' }}>
                // ROADMAP
              </div>
-             <h2 style={{ fontSize: '42px', fontWeight: 600, letterSpacing: '-0.02em', margin: 0, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#fff' }}>
+             <h2 className="roadmap-heading" style={{ fontSize: '42px', fontWeight: 600, letterSpacing: '-0.02em', margin: 0, color: '#fff' }}>
                What&apos;s Next
              </h2>
            </div>

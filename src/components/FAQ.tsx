@@ -39,7 +39,7 @@ const FAQ: React.FC = () => {
           <div style={{ color: '#6366f1', textTransform: 'uppercase', fontStyle: 'italic', fontSize: '13px', marginBottom: '16px', letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace' }}>
             // FAQ
           </div>
-          <h2 style={{ fontSize: '42px', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+          <h2 className="faq-heading" style={{ fontSize: '42px', fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>
             Have Questions? We Have Answers.
           </h2>
         </div>

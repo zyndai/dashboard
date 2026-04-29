@@ -13,9 +13,9 @@ export function Navbar(): React.ReactElement {
           color: #fff !important;
           cursor: pointer !important;
           border-radius: 16px !important;
-          padding: 11px 24px !important;
-          font-size: 14px !important;
-          font-weight: 500 !important;
+          padding: 9px 22px !important;
+          font-size: 15px !important;
+          font-weight: 700 !important;
           text-decoration: none !important;
           display: inline-flex !important;
           align-items: center !important;
@@ -61,11 +61,11 @@ export function Navbar(): React.ReactElement {
                         />
                         <span style={{
                           fontSize: "28px",
-                          fontWeight: 800,
-                          letterSpacing: "-0.02em",
+                          fontWeight: 700,
+                          letterSpacing: "0.005em",
                           textTransform: "uppercase" as const,
                           color: "#fff",
-                          fontFamily: "'Space Grotesk', sans-serif",
+                          fontFamily: "'Chakra Petch', 'Space Grotesk', sans-serif",
                         }}>ZYND<span style={{ color: "#6366F1" }}>AI</span></span>
                       </div>
                     </a>

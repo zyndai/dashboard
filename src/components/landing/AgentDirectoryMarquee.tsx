@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useFeaturedAgents, uniqueCategories, DEMO_AGENTS, type FeaturedAgent } from "@/lib/landing/featuredAgents";
+import { useFeaturedAgents, uniqueCategories, FALLBACK_AGENTS, type FeaturedAgent } from "@/lib/landing/featuredAgents";
 import { AgentCard, AgentCardStyles, dotColorFor } from "./AgentCard";
 
 function CategoryDot({ category }: { category: string }): React.ReactElement {
@@ -17,18 +17,18 @@ function padRow(arr: FeaturedAgent[], min = 6): FeaturedAgent[] {
   return out;
 }
 
-export function AgentDirectoryMarquee(): React.ReactElement {
+export function AgentDirectoryMarquee(): React.ReactElement | null {
   const { agents } = useFeaturedAgents(28);
   const categories = useMemo(() => uniqueCategories(agents).slice(0, 8), [agents]);
 
   const { agentRow, serviceRow } = useMemo(() => {
     const liveAgents = agents.filter((x) => x.entityType === "agent");
     const liveServices = agents.filter((x) => x.entityType === "service");
-    const demoAgents = DEMO_AGENTS.filter((x) => x.entityType === "agent");
-    const demoServices = DEMO_AGENTS.filter((x) => x.entityType === "service");
     return {
-      agentRow: padRow(liveAgents.length > 0 ? liveAgents : demoAgents),
-      serviceRow: padRow(liveServices.length > 0 ? liveServices : demoServices),
+      // Row 1: real agents from the registry, fall back to demos until we
+      // have agent-type entities live (services keep using real data only).
+      agentRow: padRow(liveAgents.length > 0 ? liveAgents : FALLBACK_AGENTS),
+      serviceRow: padRow(liveServices),
     };
   }, [agents]);
 
@@ -196,17 +196,19 @@ export function AgentDirectoryMarquee(): React.ReactElement {
           <div className="adm-row row-a">
             {[...agentRow, ...agentRow].map((a, i) => (
               <div key={`a-${a.id}-${i}`} className="adm-cell">
-                <AgentCard agent={a} />
+                <AgentCard agent={a} interactive={false} />
               </div>
             ))}
           </div>
-          <div className="adm-row row-b">
-            {[...serviceRow, ...serviceRow].map((a, i) => (
-              <div key={`b-${a.id}-${i}`} className="adm-cell">
-                <AgentCard agent={a} />
-              </div>
-            ))}
-          </div>
+          {serviceRow.length > 0 && (
+            <div className="adm-row row-b">
+              {[...serviceRow, ...serviceRow].map((a, i) => (
+                <div key={`b-${a.id}-${i}`} className="adm-cell">
+                  <AgentCard agent={a} interactive={false} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

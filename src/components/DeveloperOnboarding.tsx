@@ -266,7 +266,7 @@ export function DeveloperOnboarding(): React.ReactElement {
       
       <div className="dev-inner">
         <div className="dev-header">
-          <span className="dev-label">Developer Onboarding</span>
+          <span className="dev-label">// Developer Onboarding</span>
           <h2 className="dev-heading">Start Building in Minutes</h2>
           <p className="dev-sub">
             Connect to the network using the tools you already know. Choose your integration path:

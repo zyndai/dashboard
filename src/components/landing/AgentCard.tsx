@@ -128,16 +128,21 @@ export function CategoryDot({ category }: { category: string }): React.ReactElem
   return <span className="zac-cat-dot" style={{ background: c }} aria-hidden />;
 }
 
-export function AgentCard({ agent }: { agent: FeaturedAgent }): React.ReactElement {
+export function AgentCard({
+  agent,
+  interactive = true,
+}: {
+  agent: FeaturedAgent;
+  interactive?: boolean;
+}): React.ReactElement {
   const active = isAgentActive(agent.status);
   const age = relativeAge(agent.lastHeartbeat);
   const iconColor = dotColorFor(agent.category);
-  return (
-    <Link
-      href={`/registry/${encodeURIComponent(agent.id)}`}
-      className="zac-card"
-      style={{ ["--icon-accent" as string]: iconColor }}
-    >
+  const className = `zac-card${interactive ? "" : " zac-card--static"}`;
+  const style = { ["--icon-accent" as string]: iconColor };
+
+  const inner = (
+    <>
       <span className="zac-card-grid" aria-hidden />
       <span className="zac-card-glow" aria-hidden />
 
@@ -173,6 +178,24 @@ export function AgentCard({ agent }: { agent: FeaturedAgent }): React.ReactEleme
           {agent.price && <span className="zac-price">{agent.price}</span>}
         </div>
       </div>
+    </>
+  );
+
+  if (!interactive) {
+    return (
+      <article className={className} style={style}>
+        {inner}
+      </article>
+    );
+  }
+
+  return (
+    <Link
+      href={`/registry/${encodeURIComponent(agent.id)}`}
+      className={className}
+      style={style}
+    >
+      {inner}
     </Link>
   );
 }
@@ -224,6 +247,10 @@ export function AgentCardStyles(): React.ReactElement {
       }
       .zac-card:hover .zac-card-grid { opacity: 1; }
       .zac-card:hover .zac-card-glow { opacity: 0.7; }
+
+      .zac-card--static { cursor: default; }
+      .zac-card--static:hover { transform: none; }
+      .zac-card--static:hover .zac-icon { transform: none; }
 
       .zac-card-top { display: flex; align-items: center; gap: 12px; }
       .zac-icon {

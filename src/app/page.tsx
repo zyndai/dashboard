@@ -86,8 +86,8 @@ export default function Home() {
         <ProblemSection />
         <VisionSection />
         <VideoSection />
-        <AgentEconomy />
         <AgentDirectoryMarquee />
+        <AgentEconomy />
         <DeveloperOnboarding />
         <Roadmap />
         <UseCases />

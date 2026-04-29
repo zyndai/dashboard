@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
+import { zns } from "@/lib/zns";
 
 export async function GET() {
   const supabase = await createClient();
@@ -19,9 +18,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!REGISTRY_URL) {
-    return NextResponse.json({ error: "Registry not configured" }, { status: 500 });
-  }
+  const REGISTRY_URL = zns();
 
   // Get developer key
   const devKey = await prisma.developerKey.findUnique({

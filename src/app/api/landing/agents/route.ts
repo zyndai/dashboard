@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
-
-const UPSTREAM =
-  process.env.AGENTDNS_PUBLIC_URL ||
-  process.env.NEXT_PUBLIC_AGENTDNS_URL ||
-  "https://dns01.zynd.ai";
+import { zns } from "@/lib/zns";
 
 export const revalidate = 60;
 
 export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "30", 10), 100);
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "80", 10), 200);
 
   try {
-    const res = await fetch(`${UPSTREAM}/v1/entities?limit=${limit * 2}`, {
+    // Fetch a wider window upstream so both `agent` and `service` rows have
+    // material — sliced down to `limit` after filtering invalid records.
+    const upstreamLimit = Math.max(limit * 2, 200);
+    const res = await fetch(`${zns()}/v1/entities?limit=${upstreamLimit}`, {
       headers: { accept: "application/json" },
       signal: AbortSignal.timeout(8000),
       next: { revalidate: 60 },

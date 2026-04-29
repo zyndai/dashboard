@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const REGISTRY_URL =
-  process.env.AGENTDNS_REGISTRY_URL || "http://localhost:8080";
+import { zns } from "@/lib/zns";
 
 export async function GET(
   _req: Request,
@@ -32,7 +30,7 @@ export async function GET(
     if (localEntity.entityId) {
       try {
         const res = await fetch(
-          `${REGISTRY_URL}/v1/entities/${localEntity.entityId}`,
+          `${zns()}/v1/entities/${encodeURIComponent(localEntity.entityId)}`,
           { signal: AbortSignal.timeout(5000) }
         );
         if (res.ok) {
@@ -78,7 +76,7 @@ export async function GET(
   if (byEntityId && byEntityId.userId === user.id) {
     let registryData: Record<string, unknown> | null = null;
     try {
-      const res = await fetch(`${REGISTRY_URL}/v1/entities/${id}`, {
+      const res = await fetch(`${zns()}/v1/entities/${encodeURIComponent(id)}`, {
         signal: AbortSignal.timeout(5000),
       });
       if (res.ok) {

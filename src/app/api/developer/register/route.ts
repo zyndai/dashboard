@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { encryptPrivateKey, decryptPrivateKey } from "@/lib/pki";
 import { prisma } from "@/lib/prisma";
+import { zns } from "@/lib/zns";
 import crypto from "crypto";
 import nacl from "tweetnacl";
 import { Buffer } from "buffer";
 
-const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
 const WEBHOOK_SECRET = process.env.AGENTDNS_WEBHOOK_SECRET;
 
 /** JSON.stringify with sorted keys to match Go's json.Marshal on map[string]string. */
@@ -61,10 +61,11 @@ async function lookupCountry(ip: string | null): Promise<string | null> {
 export async function POST(req: NextRequest) {
   console.log("[developer/register] called");
 
-  if (!REGISTRY_URL || !WEBHOOK_SECRET) {
-    console.error("[developer/register] Registry not configured");
+  if (!WEBHOOK_SECRET) {
+    console.error("[developer/register] Webhook secret not configured");
     return NextResponse.json({ error: "Registry not configured" }, { status: 500 });
   }
+  const REGISTRY_URL = zns();
 
   // Verify Supabase session
   const supabase = await createClient();

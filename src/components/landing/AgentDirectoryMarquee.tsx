@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useFeaturedAgents, uniqueCategories, FALLBACK_AGENTS, type FeaturedAgent } from "@/lib/landing/featuredAgents";
+import { useMemo, useState } from "react";
+import { useFeaturedAgents, uniqueCategories, DEMO_AGENTS, type FeaturedAgent } from "@/lib/landing/featuredAgents";
 import { AgentCard, AgentCardStyles, dotColorFor } from "./AgentCard";
 
 function CategoryDot({ category }: { category: string }): React.ReactElement {
@@ -18,19 +18,48 @@ function padRow(arr: FeaturedAgent[], min = 6): FeaturedAgent[] {
 }
 
 export function AgentDirectoryMarquee(): React.ReactElement | null {
-  const { agents } = useFeaturedAgents(28);
-  const categories = useMemo(() => uniqueCategories(agents).slice(0, 8), [agents]);
+  const { agents } = useFeaturedAgents(120);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  // Until ZNS is populated we fall back to a hand-curated demo set so the
+  // marquee always has both an agent row and a service row to render. The
+  // "All" view and any category filter both look at the combined set
+  // (live ∪ demo, deduped by id) so clicking "AI" finds demo cards too.
+  const combined = useMemo(() => {
+    const seen = new Set(agents.map((a) => a.id));
+    return [...agents, ...DEMO_AGENTS.filter((d) => !seen.has(d.id))];
+  }, [agents]);
+
+  const display = useMemo(
+    () =>
+      activeCategory
+        ? combined.filter((a) => a.category === activeCategory)
+        : combined,
+    [combined, activeCategory],
+  );
+
+  const categories = useMemo(() => uniqueCategories(combined).slice(0, 10), [combined]);
 
   const { agentRow, serviceRow } = useMemo(() => {
-    const liveAgents = agents.filter((x) => x.entityType === "agent");
-    const liveServices = agents.filter((x) => x.entityType === "service");
-    return {
-      // Row 1: real agents from the registry, fall back to demos until we
-      // have agent-type entities live (services keep using real data only).
-      agentRow: padRow(liveAgents.length > 0 ? liveAgents : FALLBACK_AGENTS),
-      serviceRow: padRow(liveServices),
-    };
-  }, [agents]);
+    const liveAgents = display.filter((x) => x.entityType === "agent");
+    const liveServices = display.filter((x) => x.entityType === "service");
+    return { agentRow: padRow(liveAgents), serviceRow: padRow(liveServices) };
+  }, [display]);
+
+  const noResults = agentRow.length === 0 && serviceRow.length === 0;
+
+  // Switch to a static centered grid when a filtered category has only a
+  // handful of entities — looping the same 1-3 cards reads as broken.
+  const STATIC_GRID_THRESHOLD = 6;
+  const useStaticGrid =
+    activeCategory !== null && display.length > 0 && display.length < STATIC_GRID_THRESHOLD;
+
+  // Linear scaling of duration with item count keeps on-screen px/s constant
+  // — no minimum, otherwise filtered rows scroll noticeably slower than the
+  // full set.
+  const SECONDS_PER_CARD = 4;
+  const agentDur = `${Math.max(1, agentRow.length) * SECONDS_PER_CARD}s`;
+  const serviceDur = `${Math.max(1, serviceRow.length) * SECONDS_PER_CARD}s`;
 
   return (
     <section className="adm">
@@ -96,6 +125,7 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
           font-size: 11px; font-weight: 500;
           font-family: 'JetBrains Mono', ui-monospace, monospace;
           letter-spacing: 0.04em;
+          cursor: pointer;
           transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
         }
         .adm-cat-tab:hover {
@@ -103,7 +133,35 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
           color: rgba(255,255,255,0.95);
           background: rgba(255,255,255,0.05);
         }
+        .adm-cat-tab.active {
+          border-color: rgba(99,102,241,0.55);
+          color: #fff;
+          background: rgba(99,102,241,0.12);
+          box-shadow: 0 0 0 1px rgba(99,102,241,0.25) inset;
+        }
+        .adm-cat-tab.all { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
+        .adm-cat-tab.all.active { border-color: rgba(99,102,241,0.55); background: rgba(99,102,241,0.12); }
         .adm-cat-dot-tab { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+
+        .adm-empty {
+          text-align: center;
+          padding: 36px 20px;
+          color: rgba(255,255,255,0.45);
+          font-size: 13.5px;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          letter-spacing: 0.02em;
+        }
+
+        .adm-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 360px));
+          gap: 16px;
+          justify-content: center;
+          padding: 12px 8px;
+        }
+        @media (max-width: 640px) {
+          .adm-grid { grid-template-columns: 1fr; gap: 12px; padding: 8px; }
+        }
 
         .adm-marquee-wrap {
           position: relative;
@@ -114,8 +172,8 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
         }
 
         .adm-row { display: flex; width: max-content; gap: 16px; padding: 8px 0; }
-        .adm-row.row-a { animation: admScrollA 90s linear infinite; }
-        .adm-row.row-b { animation: admScrollB 110s linear infinite; }
+        .adm-row.row-a { animation: admScrollA var(--row-dur, 120s) linear infinite; }
+        .adm-row.row-b { animation: admScrollB var(--row-dur, 200s) linear infinite; }
         .adm-marquee-wrap:hover .adm-row { animation-play-state: paused; }
         @keyframes admScrollA {
           from { transform: translateX(0); }
@@ -147,17 +205,24 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
             max-width: 36ch;
           }
           .adm-cat-row {
-            margin: 16px auto 8px;
-            gap: 5px;
+            margin: 16px -18px 8px;
+            padding: 4px 18px;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            justify-content: flex-start;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
           }
-          .adm-cat-tab {
-            font-size: 10.5px; padding: 4px 9px;
-          }
+          .adm-cat-row::-webkit-scrollbar { display: none; }
+          .adm-cat-tab { flex: 0 0 auto; scroll-snap-align: start; font-size: 10.5px; padding: 4px 9px; }
 
           .adm-row { gap: 12px; }
-          .adm-row.row-a { animation-duration: 75s; }
-          .adm-row.row-b { animation-duration: 90s; }
-
           .adm-cell { flex-basis: 78vw; max-width: 300px; }
 
           .adm-marquee-wrap {
@@ -183,33 +248,63 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
           </p>
 
           <div className="adm-cat-row">
+            <button
+              type="button"
+              className={`adm-cat-tab all${activeCategory === null ? " active" : ""}`}
+              onClick={() => setActiveCategory(null)}
+            >
+              All
+            </button>
             {categories.map((c) => (
-              <span key={c} className="adm-cat-tab">
+              <button
+                type="button"
+                key={c}
+                className={`adm-cat-tab${activeCategory === c ? " active" : ""}`}
+                onClick={() => setActiveCategory((prev) => (prev === c ? null : c))}
+              >
                 <CategoryDot category={c} />
                 {c}
-              </span>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="adm-marquee-wrap">
-          <div className="adm-row row-a">
-            {[...agentRow, ...agentRow].map((a, i) => (
-              <div key={`a-${a.id}-${i}`} className="adm-cell">
-                <AgentCard agent={a} interactive={false} />
-              </div>
+        {noResults ? (
+          <div className="adm-empty">No entities in {activeCategory} yet.</div>
+        ) : useStaticGrid ? (
+          <div className="adm-grid">
+            {display.map((a) => (
+              <AgentCard key={a.id} agent={a} />
             ))}
           </div>
-          {serviceRow.length > 0 && (
-            <div className="adm-row row-b">
-              {[...serviceRow, ...serviceRow].map((a, i) => (
-                <div key={`b-${a.id}-${i}`} className="adm-cell">
-                  <AgentCard agent={a} interactive={false} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        ) : (
+          <div className="adm-marquee-wrap">
+            {agentRow.length > 0 && (
+              <div
+                className="adm-row row-a"
+                style={{ ["--row-dur" as string]: agentDur }}
+              >
+                {[...agentRow, ...agentRow].map((a, i) => (
+                  <div key={`a-${a.id}-${i}`} className="adm-cell">
+                    <AgentCard agent={a} interactive={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+            {serviceRow.length > 0 && (
+              <div
+                className="adm-row row-b"
+                style={{ ["--row-dur" as string]: serviceDur }}
+              >
+                {[...serviceRow, ...serviceRow].map((a, i) => (
+                  <div key={`b-${a.id}-${i}`} className="adm-cell">
+                    <AgentCard agent={a} interactive={false} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

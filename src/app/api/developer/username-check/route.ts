@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
+import { zns } from "@/lib/zns";
 
 /**
  * GET /api/developer/username-check?username=acme-corp
@@ -63,24 +62,24 @@ export async function GET(req: NextRequest) {
     // DB unavailable — fall through to registry check
   }
 
-  // Check registry (if configured)
-  if (REGISTRY_URL) {
-    try {
-      const res = await fetch(
-        `${REGISTRY_URL}/v1/handles/${encodeURIComponent(username)}/available`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (!data.available) {
-          return NextResponse.json({
-            available: false,
-            reason: data.reason || "Username is already taken on the registry",
-          });
-        }
+  // Cross-check the registry. Failures are swallowed so registry downtime
+  // doesn't block sign-ups when the local DB has already cleared the name.
+  try {
+    const res = await fetch(
+      `${zns()}/v1/handles/${encodeURIComponent(username)}/available`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.available) {
+        return NextResponse.json({
+          available: false,
+          reason: data.reason || "Username is already taken on the registry",
+        });
       }
-    } catch {
-      // Registry check failed — don't block, local check passed
     }
+  } catch {
+    // Registry check failed — don't block, local check passed
   }
 
   return NextResponse.json({ available: true });

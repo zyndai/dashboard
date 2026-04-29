@@ -2,9 +2,7 @@ import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const REGISTRY_URL =
-  process.env.AGENTDNS_REGISTRY_URL || "http://localhost:8080";
+import { zns } from "@/lib/zns";
 
 interface RegistryEntity {
   entity_id: string;
@@ -73,7 +71,7 @@ export async function POST() {
   let registryEntities: RegistryEntity[] = [];
   try {
     const res = await fetch(
-      `${REGISTRY_URL}/v1/developers/${devKey.developerId}/entities`,
+      `${zns()}/v1/developers/${encodeURIComponent(devKey.developerId)}/entities`,
       { signal: AbortSignal.timeout(5000) }
     );
     if (res.ok) {

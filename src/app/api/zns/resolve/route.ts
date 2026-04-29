@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-const REGISTRY_URL = process.env.AGENTDNS_REGISTRY_URL;
+import { zns } from "@/lib/zns";
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -18,15 +17,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!REGISTRY_URL) {
-    return NextResponse.json({ error: "Registry not configured" }, { status: 500 });
-  }
+  const REGISTRY_URL = zns();
 
   const { searchParams } = new URL(req.url);
   let developer = searchParams.get("developer");
   let entity = searchParams.get("entity");
 
-  // Support ?fqan=registry/developer/entity or dns01.zynd.ai/developer/entity
+  // Support ?fqan=registry/developer/entity or registry.zynd.ai/developer/entity
   const fqan = searchParams.get("fqan");
   if (fqan) {
     const parts = fqan.split("/");

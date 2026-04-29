@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-
-const REGISTRY_URL =
-  process.env.AGENTDNS_REGISTRY_URL || "http://localhost:8080";
+import { zns } from "@/lib/zns";
 
 export async function GET(
   _req: Request,
@@ -14,7 +12,7 @@ export async function GET(
 
   try {
     const res = await fetch(
-      `${REGISTRY_URL}/v1/entities/${encodeURIComponent(id)}`,
+      `${zns()}/v1/entities/${encodeURIComponent(id)}`,
       {
         headers: { accept: "application/json" },
         signal: AbortSignal.timeout(10000),
@@ -25,7 +23,12 @@ export async function GET(
     const body = await res.text();
     return new NextResponse(body, {
       status: res.status,
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        // Prevent browsers from caching upstream errors so a transient ZNS
+        // outage doesn't surface as a permanent "not found" in the tab.
+        "cache-control": "no-store",
+      },
     });
   } catch (err) {
     return NextResponse.json(
@@ -33,7 +36,7 @@ export async function GET(
         error: "Registry unreachable",
         detail: err instanceof Error ? err.message : String(err),
       },
-      { status: 502 }
+      { status: 502, headers: { "cache-control": "no-store" } }
     );
   }
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import {
@@ -11,167 +10,12 @@ import {
   type EntityRecord,
   type SearchResult,
 } from "../lib/api/agentdns";
+import { AgentCard, AgentCardStyles, dotColorFor } from "./landing/AgentCard";
+import { entityToFeatured, type FeaturedAgent } from "@/lib/landing/featuredAgents";
 
 type DisplayAgent = EntityRecord | SearchResult;
 
-function entityId(a: DisplayAgent): string {
-  return "entity_id" in a ? a.entity_id : a.agent_id;
-}
-
-const CATEGORY_KEYWORDS: Record<string, string> = {
-  data: "Data", database: "Data", storage: "Data", extraction: "Extraction", extract: "Extraction",
-  ai: "AI", llm: "AI", ml: "AI", model: "AI", intelligence: "AI",
-  analysis: "Analysis", analytics: "Analysis", scoring: "Scoring", score: "Scoring", ranking: "Scoring",
-  integration: "Integration", api: "Integration", webhook: "Integration", connect: "Integration",
-  automation: "Automation", workflow: "Automation", pipeline: "Automation",
-  verification: "Verification", verify: "Verification", validate: "Verification", compliance: "Verification",
-  parsing: "Parsing", parse: "Parsing", nlp: "NLP", language: "NLP", text: "NLP",
-  orchestration: "Orchestration", agent: "Orchestration", multi: "Orchestration",
-  hiring: "Fair Hiring", recruitment: "Fair Hiring", resume: "Fair Hiring", candidate: "Fair Hiring",
-  bias: "Bias Detection", fairness: "Bias Detection", equity: "Bias Detection",
-  search: "Search", rag: "Search", retrieval: "Search",
-  security: "Security", auth: "Security",
-  communication: "Communication", email: "Communication", chat: "Communication",
-  finance: "Finance", payment: "Finance", crypto: "Finance",
-};
-
-import { COLOR_MAP } from "../lib/categoryTheme";
-
-function resolveIconCategory(category: string | null, tags: string[] | null): string {
-  if (category && COLOR_MAP[category]) return category;
-  if (!tags || tags.length === 0) return category || "AI";
-  for (const tag of tags) {
-    const lower = tag.toLowerCase().replace(/[^a-z]/g, "");
-    for (const [keyword, cat] of Object.entries(CATEGORY_KEYWORDS)) {
-      if (lower.includes(keyword)) return cat;
-    }
-  }
-  return category || "AI";
-}
-
-function CategoryIcon({ category, size = 22 }: { category: string; size?: number }): React.ReactElement {
-  const props = {
-    width: size, height: size, viewBox: "0 0 24 24",
-    fill: "none", stroke: "currentColor", strokeWidth: 1.5,
-    strokeLinecap: "round" as const, strokeLinejoin: "round" as const
-  };
-
-  switch (category) {
-    case "Extraction":
-    case "Data":
-      return (
-        <svg {...props}>
-          <ellipse cx="12" cy="5" rx="9" ry="3" />
-          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-        </svg>
-      );
-    case "AI":
-      return (
-        <svg {...props}>
-          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.44-3.14Z" />
-          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.44-3.14Z" />
-        </svg>
-      );
-    case "Analysis":
-    case "Scoring":
-      return (
-        <svg {...props}>
-          <path d="M3 3v16a2 2 0 0 0 2 2h16" />
-          <path d="m7 16 4-8 4 5 4-7" />
-        </svg>
-      );
-    case "Integration":
-      return (
-        <svg {...props}>
-          <rect x="2" y="2" width="20" height="8" rx="2" />
-          <rect x="2" y="14" width="20" height="8" rx="2" />
-          <path d="M6 6h.01M6 18h.01" />
-        </svg>
-      );
-    case "Automation":
-      return (
-        <svg {...props}>
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-      );
-    case "Verification":
-      return (
-        <svg {...props}>
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <path d="m9 12 2 2 4-4" />
-        </svg>
-      );
-    case "Parsing":
-    case "NLP":
-      return (
-        <svg {...props}>
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-        </svg>
-      );
-    case "Orchestration":
-      return (
-        <svg {...props}>
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="4" cy="6" r="2" />
-          <circle cx="20" cy="6" r="2" />
-          <circle cx="4" cy="18" r="2" />
-          <circle cx="20" cy="18" r="2" />
-          <path d="M6 6h4M14 6h4M6 18h4M14 18h4M12 10v4" />
-        </svg>
-      );
-    case "Fair Hiring":
-    case "Bias Detection":
-      return (
-        <svg {...props}>
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      );
-    case "Search":
-      return (
-        <svg {...props}>
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-      );
-    case "Security":
-      return (
-        <svg {...props}>
-          <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-      );
-    case "Communication":
-      return (
-        <svg {...props}>
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      );
-    case "Finance":
-      return (
-        <svg {...props}>
-          <line x1="12" y1="1" x2="12" y2="23" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...props}>
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <path d="M8 21h8M12 17v4" />
-        </svg>
-      );
-  }
-}
-
 export function RegistryPage(): React.ReactElement {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -186,9 +30,9 @@ export function RegistryPage(): React.ReactElement {
 
   useEffect(() => {
     const controller = new AbortController();
-    getCategories(controller.signal).then(cats => {
-      setCategories(["All", ...cats]);
-    }).catch(() => {});
+    getCategories(controller.signal)
+      .then((cats) => setCategories(["All", ...cats]))
+      .catch(() => {});
     return () => controller.abort();
   }, []);
 
@@ -207,22 +51,20 @@ export function RegistryPage(): React.ReactElement {
         setError(null);
         setLoading(true);
         const catParam = selectedCategory !== "All" ? selectedCategory : undefined;
-
         const typeParam = typeFilter !== "all" ? typeFilter : undefined;
 
         if (debouncedQuery) {
-          const res = await searchAgents(debouncedQuery, {
-            category: catParam,
-            entity_type: typeParam,
-            max_results: 200,
-          }, signal);
+          const res = await searchAgents(
+            debouncedQuery,
+            { category: catParam, entity_type: typeParam, max_results: 200 },
+            signal,
+          );
           setAgents(res.results);
         } else {
-          const res = await listEntities({
-            type: typeParam,
-            category: catParam,
-            limit: 200,
-          }, signal);
+          const res = await listEntities(
+            { type: typeParam, category: catParam, limit: 200 },
+            signal,
+          );
           setAgents(res.entities);
         }
       } catch (err) {
@@ -237,165 +79,344 @@ export function RegistryPage(): React.ReactElement {
     return () => controller.abort();
   }, [debouncedQuery, selectedCategory, typeFilter, retryKey]);
 
-  const filteredAgents = agents.filter((agent) => {
-    const agentStatus = (agent.status || "active").toUpperCase();
-    const statusMap: Record<string, string> = { "All": "All", "Active": "ACTIVE", "Inactive": "INACTIVE" };
-    return statusFilter === "All" || agentStatus === statusMap[statusFilter];
-  });
+  const filteredAgents = useMemo(() => {
+    return agents.filter((agent) => {
+      const agentStatus = (agent.status || "active").toUpperCase();
+      if (statusFilter === "All") return true;
+      if (statusFilter === "Active") return agentStatus === "ACTIVE";
+      if (statusFilter === "Inactive") return agentStatus !== "ACTIVE";
+      return true;
+    });
+  }, [agents, statusFilter]);
+
+  const featured: FeaturedAgent[] = useMemo(
+    () => filteredAgents.map(entityToFeatured),
+    [filteredAgents],
+  );
+
+  const counts = useMemo(() => {
+    const a = agents.filter((x) => (x.entity_type || "agent") === "agent").length;
+    const s = agents.filter((x) => x.entity_type === "service").length;
+    return { agents: a, services: s };
+  }, [agents]);
 
   return (
-    <div style={{ background: "#080f1a", minHeight: "100vh", color: "#e2e8f0" }}>
+    <div className="reg-page">
+      <AgentCardStyles />
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .pg-input { background: #0d1522; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #f8fafc; font-size: 15px; width: 100%; padding: 12px 40px; outline: none; box-sizing: border-box; font-family: inherit; transition: border-color .15s ease; }
-        .pg-input::placeholder { color: rgba(255,255,255,.3); }
-        .pg-input:focus { border-color: #5b7cfa; }
+        .reg-page {
+          background: #060912; min-height: 100vh; color: #e2e8f0;
+          font-family: 'Space Grotesk', sans-serif;
+          position: relative;
+        }
+        .reg-page::before {
+          content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+          background:
+            radial-gradient(50% 40% at 50% 0%, rgba(99,102,241,0.07), transparent 60%),
+            radial-gradient(60% 50% at 100% 100%, rgba(192,132,252,0.04), transparent 60%);
+        }
+        .reg-wrap {
+          position: relative; z-index: 1;
+          max-width: 1320px; margin: 0 auto;
+          padding: 32px 28px 72px;
+        }
 
-        .pg-select { background: #0d1522; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #f8fafc; font-size: 14px; padding: 0 36px 0 16px; outline: none; font-family: inherit; transition: border-color .15s ease; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; cursor: pointer; height: 45px; }
-        .pg-select:focus { border-color: #5b7cfa; }
+        @keyframes regSpin { to { transform: rotate(360deg); } }
+        @keyframes regPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(0.7); opacity: 0.55; }
+        }
 
-        .pg-pill { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0; font-family: inherit; transition: all .15s ease; }
+        .reg-hero { margin: 14px 0 32px; }
+        .reg-eyebrow {
+          display: inline-block;
+          font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase;
+          font-style: italic; font-family: ui-monospace, monospace;
+          color: #6366f1; margin-bottom: 14px;
+        }
+        .reg-title-row {
+          display: flex; align-items: flex-end; justify-content: space-between;
+          gap: 24px; flex-wrap: wrap;
+        }
+        .reg-title {
+          font-size: clamp(36px, 5vw, 56px) !important;
+          line-height: 1.05;
+          color: #fff; margin: 0;
+        }
+        .reg-stats {
+          display: flex; align-items: center; gap: 14px;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          font-size: 12px; color: rgba(255,255,255,0.55);
+          letter-spacing: 0.04em;
+          flex-wrap: wrap;
+        }
+        .reg-stat {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 6px 12px; border-radius: 999px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.07);
+        }
+        .reg-stat strong { color: #fff; font-weight: 600; }
+        .reg-stat-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .reg-stat-dot.live { background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.6); animation: regPulse 2.4s ease-in-out infinite; }
+        .reg-stat-dot.idle { background: #818cf8; }
+        .reg-stat-dot.svc  { background: #c084fc; }
 
-        .reg-card { background: #0c1421; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; transition: all .15s ease; cursor: pointer; }
-        .reg-card:hover { border-color: rgba(255,255,255,0.12); background: #111b2b; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        /* Filter strip */
+        .reg-controls {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .reg-search {
+          position: relative;
+        }
+        .reg-search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: rgba(255,255,255,0.32); pointer-events: none;
+        }
+        .reg-input {
+          width: 100%; box-sizing: border-box;
+          background: rgba(8,11,22,0.7);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 10px;
+          color: #f8fafc; font-size: 15px;
+          padding: 12px 40px;
+          outline: none; font-family: inherit;
+          transition: border-color 0.18s ease, background 0.18s ease;
+        }
+        .reg-input::placeholder { color: rgba(255,255,255,0.3); }
+        .reg-input:focus { border-color: rgba(99,102,241,0.55); background: rgba(10,13,24,0.85); }
+        .reg-clear {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer; padding: 4px;
+          display: flex; color: rgba(255,255,255,0.32);
+        }
+        .reg-clear:hover { color: #fff; }
 
-        .pg-tag { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #152033; color: #94a3b8; border: 1px solid rgba(255,255,255,0.04); transition: background .15s; }
-        .reg-card:hover .pg-tag { background: #1e2c44; color: #cbd5e1; }
-        .pg-tag.a2a { background: rgba(91,124,250,0.15); color: #5b7cfa; border: none; }
+        .reg-select {
+          background: rgba(8,11,22,0.7);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 10px;
+          color: #f8fafc; font-size: 13px;
+          font-family: inherit;
+          padding: 0 36px 0 14px; height: 45px;
+          outline: none; cursor: pointer;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 16px;
+          letter-spacing: 0.02em;
+          transition: border-color 0.18s ease;
+        }
+        .reg-select:focus { border-color: rgba(99,102,241,0.55); }
 
-        .reg-btn { width: 100%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s ease; background: #152033; border: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; margin-top: auto; }
-        .reg-card:hover .reg-btn { background: #5b7cfa; border-color: #5b7cfa; color: #fff; }
+        /* Category pill row */
+        .reg-pills {
+          display: flex; gap: 8px;
+          overflow-x: auto;
+          padding-bottom: 16px; margin-bottom: 24px;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          scrollbar-width: none;
+        }
+        .reg-pills::-webkit-scrollbar { display: none; }
+        .reg-pill {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 7px 14px; border-radius: 8px;
+          font-size: 13px; font-weight: 500;
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.07);
+          color: rgba(255,255,255,0.7);
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          letter-spacing: 0.02em;
+          white-space: nowrap; flex-shrink: 0;
+          cursor: pointer;
+          transition: all 0.18s ease;
+        }
+        .reg-pill:hover { color: #fff; border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.05); }
+        .reg-pill.active {
+          background: rgba(99,102,241,0.14);
+          border-color: rgba(99,102,241,0.45);
+          color: #fff;
+          box-shadow: 0 0 24px rgba(99,102,241,0.2);
+        }
+        .reg-pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-        .pg-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; }
+        /* Grid */
+        .reg-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+          gap: 16px;
+        }
+
+        /* Loading / error / empty */
+        .reg-loading {
+          text-align: center; padding: 80px 20px;
+        }
+        .reg-spin {
+          width: 28px; height: 28px;
+          border: 2px solid rgba(255,255,255,0.08);
+          border-top: 2px solid rgba(255,255,255,0.4);
+          border-radius: 50%;
+          animation: regSpin 1s linear infinite;
+          margin: 0 auto;
+        }
+        .reg-loading p { margin-top: 14px; color: rgba(255,255,255,0.32); font-size: 13px; font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
+
+        .reg-error {
+          text-align: center; padding: 60px 20px;
+          border: 1px solid rgba(239,68,68,0.15);
+          border-radius: 12px;
+          background: rgba(239,68,68,0.04);
+        }
+        .reg-error p { font-size: 14px; color: rgba(248,113,113,0.85); margin: 0 0 14px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        .reg-retry {
+          padding: 9px 22px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 8px;
+          color: #fff; font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: inherit;
+          transition: all 0.18s ease;
+        }
+        .reg-retry:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.22); }
+
+        .reg-empty {
+          text-align: center; padding: 100px 20px;
+          color: rgba(255,255,255,0.32); font-size: 14px;
+          font-family: 'JetBrains Mono', ui-monospace, monospace;
+          letter-spacing: 0.04em;
+        }
+
+        @media (max-width: 768px) {
+          .reg-wrap { padding: 18px 16px 56px; }
+          .reg-controls { grid-template-columns: 1fr; }
+          .reg-stats { font-size: 11px; }
+        }
       `}</style>
 
       <Navbar />
 
-      <div className="page-padd" style={{ padding: "32px 0 80px" }}>
-        <div className="page-container">
+      <div className="reg-wrap">
+        <div className="reg-hero">
+          <div className="reg-eyebrow">// REGISTRY</div>
 
-          <div style={{ marginBottom: "32px" }}>
-            <h1 style={{ fontSize: "clamp(36px,5vw,52px)", fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.03em", color: "#f1f5f9" }}>
-              Agent Registry
-            </h1>
-            <p style={{ fontSize: "15px", color: "rgba(226,232,240,.5)", margin: 0 }}>
-              Discover and connect with {agents.length} entities on the ZyndAI network
-            </p>
+          <div className="reg-title-row">
+            <h1 className="reg-title">Registry</h1>
+
+            <div className="reg-stats">
+              <span className="reg-stat">
+                <span className="reg-stat-dot live" />
+                <strong>{filteredAgents.length}</strong> visible
+              </span>
+              <span className="reg-stat">
+                <span className="reg-stat-dot idle" />
+                <strong>{counts.agents}</strong> agents
+              </span>
+              <span className="reg-stat">
+                <span className="reg-stat-dot svc" />
+                <strong>{counts.services}</strong> services
+              </span>
+            </div>
           </div>
-
-          {/* Search */}
-          <div style={{ display: "flex", gap: "16px", marginBottom: "14px" }}>
-            <div style={{ position: "relative", flex: 1 }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(226,232,240,.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-              </svg>
-              <input className="pg-input" type="text" placeholder="Search agents..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery("")} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", color: "rgba(226,232,240,.3)" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              )}
-            </div>
-
-            <select
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value as "all" | "agent" | "service")}
-              className="pg-select"
-            >
-              <option value="all">All Types</option>
-              <option value="agent">Agents</option>
-              <option value="service">Services</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-              className="pg-select"
-            >
-              <option value="All">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-
-          {/* Pills */}
-          <div className="hide-scrollbar" style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "20px", marginBottom: "28px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            {categories.map(cat => {
-              const active = selectedCategory === cat;
-              return (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className="pg-pill" style={{
-                  background: active ? "#5b7cfa" : "#0d1522",
-                  border: active ? "1px solid #5b7cfa" : "1px solid rgba(255,255,255,0.1)",
-                  color: active ? "#ffffff" : "rgba(255,255,255,0.7)",
-                }}>
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
-
-          {loading && (
-            <div style={{ textAlign: "center", padding: "80px 20px" }}>
-              <div style={{ width: "28px", height: "28px", border: "2px solid rgba(255,255,255,0.08)", borderTop: "2px solid rgba(255,255,255,0.4)", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto" }} />
-              <p style={{ marginTop: "14px", color: "rgba(226,232,240,.3)", fontSize: "13px" }}>Loading agents...</p>
-            </div>
-          )}
-
-          {error && (
-            <div style={{ textAlign: "center", padding: "60px 20px", border: "1px solid rgba(239,68,68,0.15)", borderRadius: "10px", background: "#0d1625" }}>
-              <p style={{ fontSize: "14px", color: "rgba(239,68,68,0.7)", margin: "0 0 14px" }}>{error}</p>
-              <button onClick={() => setRetryKey(k => k + 1)} style={{ padding: "8px 20px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "7px", color: "#e2e8f0", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Retry</button>
-            </div>
-          )}
-
-          {!loading && !error && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: "24px" }}>
-              {filteredAgents.map(agent => {
-                const cat = resolveIconCategory(agent.category, agent.tags);
-                const themeColor = COLOR_MAP[cat] || "#5b7cfa";
-                const id = entityId(agent);
-
-                return (
-                <div key={id} className="reg-card" onClick={() => router.push(`/registry/${id}`)}>
-                  <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", marginBottom: "16px" }}>
-                    <div className="pg-icon" style={{ backgroundColor: `${themeColor}1a`, color: themeColor }}>
-                      <CategoryIcon category={cat} size={22} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0, paddingTop: "2px" }}>
-                      <h3 style={{ fontSize: "16px", fontWeight: 600, margin: "0 0 4px", color: "#f8fafc", letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {agent.name}
-                      </h3>
-                      <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 500 }}>{agent.category || "General"}</span>
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize: "14px", color: "#cbd5e1", margin: "0 0 20px", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", flex: 1 }}>
-                    {agent.summary || "No description provided"}
-                  </p>
-
-                  {agent.tags && agent.tags.length > 0 && (
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
-                      {agent.tags.slice(0, 5).map(tag => (
-                        <span key={tag} className={`pg-tag${tag.toLowerCase() === "a2a" ? " a2a" : ""}`}>{tag}</span>
-                      ))}
-                    </div>
-                  )}
-
-                  <button className="reg-btn" onClick={e => { e.stopPropagation(); router.push(`/registry/${id}`); }}>
-                    View Agent
-                  </button>
-                </div>
-              )})}
-            </div>
-          )}
-
-          {!loading && !error && filteredAgents.length === 0 && (
-            <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(226,232,240,.25)", fontSize: "14px" }}>
-              No agents match your search.
-            </div>
-          )}
-
         </div>
+
+        <div className="reg-controls">
+          <div className="reg-search">
+            <svg
+              className="reg-search-icon"
+              width="16" height="16"
+              viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              className="reg-input"
+              type="text"
+              placeholder="Search agents and services…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="reg-clear" aria-label="Clear">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as "all" | "agent" | "service")}
+            className="reg-select"
+          >
+            <option value="all">All Types</option>
+            <option value="agent">Agents</option>
+            <option value="service">Services</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="reg-select"
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Idle</option>
+          </select>
+        </div>
+
+        <div className="reg-pills">
+          {categories.map((cat) => {
+            const active = selectedCategory === cat;
+            const dot = cat === "All" ? "#818cf8" : dotColorFor(cat);
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`reg-pill ${active ? "active" : ""}`}
+              >
+                <span className="reg-pill-dot" style={{ background: dot }} />
+                {cat}
+              </button>
+            );
+          })}
+        </div>
+
+        {loading && (
+          <div className="reg-loading">
+            <div className="reg-spin" />
+            <p>LOADING REGISTRY…</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="reg-error">
+            <p>{error}</p>
+            <button onClick={() => setRetryKey((k) => k + 1)} className="reg-retry">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && featured.length > 0 && (
+          <div className="reg-grid">
+            {featured.map((a) => (
+              <AgentCard key={a.id} agent={a} />
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && featured.length === 0 && (
+          <div className="reg-empty">No agents match your search.</div>
+        )}
       </div>
 
       <Footer />

@@ -117,7 +117,19 @@ export async function listEntities(
 }
 
 export async function getEntity(entityId: string, signal?: AbortSignal): Promise<EntityRecord> {
-  return fetchJSON<EntityRecord>(`${AGENTDNS_BASE}/entities/${encodeURIComponent(entityId)}`, { signal });
+  // Next 16's useParams() surfaces the URL-encoded id (e.g. `zns%3A…`);
+  // re-encoding that produces `zns%253A…` and dns01 then 404s. Normalize so
+  // the URL is encoded exactly once regardless of how the caller got the id.
+  let normalized = entityId;
+  try {
+    normalized = decodeURIComponent(entityId);
+  } catch {
+    // entityId already contained a literal `%` — fall back to the raw form.
+  }
+  return fetchJSON<EntityRecord>(
+    `${AGENTDNS_BASE}/entities/${encodeURIComponent(normalized)}`,
+    { signal },
+  );
 }
 
 export async function searchAgents(

@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
+// Prefer the public AgentDNS endpoint (the same one the marquee reads from).
+// AGENTDNS_REGISTRY_URL points at an internal registry that isn't reachable
+// in dev/prod, so falling back to it would serve stale "Agent not found".
 const REGISTRY_URL =
-  process.env.AGENTDNS_REGISTRY_URL || "http://localhost:8080";
+  process.env.AGENTDNS_PUBLIC_URL ||
+  process.env.NEXT_PUBLIC_AGENTDNS_URL ||
+  process.env.AGENTDNS_REGISTRY_URL ||
+  "https://dns01.zynd.ai";
 
 export async function GET(
   _req: Request,
@@ -25,7 +31,13 @@ export async function GET(
     const body = await res.text();
     return new NextResponse(body, {
       status: res.status,
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        // Prevent browsers from caching upstream errors (e.g. an old 502 from
+        // when AGENTDNS_REGISTRY_URL pointed at localhost). Detail pages must
+        // always reflect the current state of dns01.
+        "cache-control": "no-store",
+      },
     });
   } catch (err) {
     return NextResponse.json(

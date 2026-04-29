@@ -93,7 +93,7 @@ export function AgentDetailPage(): React.ReactElement {
         setAgent(rec);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Failed to load agent");
+        setError(err instanceof Error ? err.message : "Failed to load entity");
       } finally {
         setLoading(false);
       }
@@ -118,7 +118,7 @@ export function AgentDetailPage(): React.ReactElement {
       <div style={pageStyle}>
         <Navbar />
         <PageStyles />
-        <div className="page-padd" style={{ padding: "80px 0" }}>
+        <div className="page-padd" style={{ paddingTop: "40px", paddingBottom: "40px" }}>
           <div className="page-container" style={{ maxWidth: "1000px" }}>
              <div className="ad-skeleton animate-pulse" style={{ height: "40px", width: "40%", borderRadius: "8px", marginBottom: "16px" }} />
              <div className="ad-skeleton animate-pulse" style={{ height: "20px", width: "25%", borderRadius: "6px", marginBottom: "40px" }} />
@@ -140,7 +140,7 @@ export function AgentDetailPage(): React.ReactElement {
       <div style={pageStyle}>
         <Navbar />
         <PageStyles />
-        <div className="page-padd" style={{ padding: "120px 0", minHeight: "60vh", display: "flex", alignItems: "center" }}>
+        <div className="page-padd" style={{ paddingTop: "80px", paddingBottom: "80px", minHeight: "60vh", display: "flex", alignItems: "center" }}>
           <div className="page-container" style={{ textAlign: "center" }}>
             <div style={{ display: "inline-flex", padding: "20px", background: "rgba(239,68,68,0.1)", borderRadius: "50%", marginBottom: "20px" }}>
                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -149,8 +149,8 @@ export function AgentDetailPage(): React.ReactElement {
                      <line x1="12" y1="16" x2="12.01" y2="16" />
                  </svg>
             </div>
-            <h1 style={{ fontSize: "24px", fontWeight: 600, margin: "0 0 12px", color: C.text }}>Agent Not Found</h1>
-            <p style={{ fontSize: "15px", color: C.textMuted, margin: "0 0 30px", maxWidth: "400px", marginInline: "auto", lineHeight: 1.6 }}>We couldn't load this agent. It may have been removed or there was a network error.</p>
+            <h1 style={{ fontSize: "24px", fontWeight: 600, margin: "0 0 12px", color: C.text }}>Entity Not Found</h1>
+            <p style={{ fontSize: "15px", color: C.textMuted, margin: "0 0 30px", maxWidth: "400px", marginInline: "auto", lineHeight: 1.6 }}>We couldn&apos;t load this entity. It may have been removed or there was a network error.</p>
             <button type="button" onClick={() => router.push("/registry")} className="ad-btn-primary" style={{ padding: "12px 24px", fontSize: "15px", borderRadius: "10px" }}>Return to Registry</button>
           </div>
         </div>
@@ -162,13 +162,16 @@ export function AgentDetailPage(): React.ReactElement {
   const isActive = (agent.status || "active").toUpperCase() === "ACTIVE";
   const statusColor = isActive ? C.green : C.red;
   const themeColor = resolveCategoryTheme(agent.category);
+  const isService = (agent.entity_type || "agent").toLowerCase() === "service";
+  const entityNoun = isService ? "service" : "agent";
+  const EntityNoun = isService ? "Service" : "Agent";
 
   return (
     <div style={pageStyle}>
       <Navbar />
       <PageStyles />
 
-      <div className="page-padd" style={{ padding: "40px 0 100px", position: "relative", zIndex: 1 }}>
+      <div className="page-padd" style={{ paddingTop: "16px", paddingBottom: "80px", position: "relative", zIndex: 1 }}>
         <div className="page-container" style={{ maxWidth: "1100px" }}>
 
           <nav aria-label="Breadcrumb" className="fade-in dl-1" style={{ marginBottom: "32px" }}>
@@ -178,34 +181,40 @@ export function AgentDetailPage(): React.ReactElement {
             </button>
           </nav>
 
-          <header className="fade-in dl-2" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "24px", marginBottom: "40px", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 500px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                 <div style={{ padding: "6px 12px", background: `${themeColor}1a`, border: `1px solid ${themeColor}4d`, color: themeColor, borderRadius: "20px", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px" }}>
-                     {agent.category || "General AI"}
-                 </div>
-                 <div style={{ display: "flex", alignItems: "center", gap: "6px", color: statusColor, fontSize: "13px", fontWeight: 500, background: `${statusColor}10`, padding: "6px 12px", borderRadius: "20px", border: `1px solid ${statusColor}33` }}>
-                     <div style={{ width: "8px", height: "8px", background: statusColor, borderRadius: "50%" }} />
-                     {isActive ? "Operational" : "Offline"}
-                 </div>
+          <header className="fade-in dl-2 ad-header" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", columnGap: "24px", rowGap: "16px", alignItems: "start", marginBottom: "40px", textAlign: "left" }}>
+            <div style={{ minWidth: 0, gridColumn: "1" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <span style={{ padding: "5px 11px", background: `${themeColor}1a`, border: `1px solid ${themeColor}4d`, color: themeColor, borderRadius: "999px", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {agent.category || "General"}
+                </span>
+                <span style={{ padding: "5px 11px", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, color: C.textMuted, borderRadius: "999px", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {EntityNoun}
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: statusColor, fontSize: "11px", fontWeight: 600, background: `${statusColor}14`, padding: "5px 11px", borderRadius: "999px", border: `1px solid ${statusColor}33`, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <span style={{ width: "6px", height: "6px", background: statusColor, borderRadius: "50%" }} />
+                  {isActive ? "Operational" : "Offline"}
+                </span>
               </div>
-              <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 700, margin: "0 0 12px", letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.1 }}>
+              <h1 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.02em", color: "#fff", lineHeight: 1.1, textAlign: "left" }}>
                 {agent.name}
               </h1>
-              <p style={{ fontSize: "16px", color: C.textMuted, margin: 0, display: "flex", alignItems: "center", gap: "8px", fontFamily: C.mono }}>
-                 <span style={{ color: C.textFaint }}>ID:</span> {agent.entity_id}
+              <p style={{ fontSize: "13px", color: C.textMuted, margin: 0, fontFamily: C.mono, wordBreak: "break-all" }}>
+                <span style={{ color: C.textFaint }}>ID:</span> {agent.entity_id}
               </p>
             </div>
 
-            <div style={{ flexShrink: 0, display: "flex", gap: "12px" }}>
-                <button type="button" onClick={() => navigator.clipboard.writeText(agent.entity_id)} className="ad-btn-primary" style={{ height: "40px", padding: "0 20px", fontSize: "14px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                    Copy Entity ID
-                </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(agent.entity_id)}
+              className="ad-btn-primary"
+              style={{ gridColumn: "2", justifySelf: "end", height: "38px", padding: "0 16px", fontSize: "13px", fontWeight: 600, borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+              Copy {EntityNoun} ID
+            </button>
           </header>
 
-          <div className="fade-in dl-3" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "32px" }}>
+          <div className="fade-in dl-3 ad-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "32px" }}>
               <BentoStat label="capabilities" value={String(agent.tags?.length || 0)} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>} />
               <BentoStat label="registered" value={formatDate(agent.registered_at)} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
               <BentoStat label="category module" value={agent.category || "General"} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>} />
@@ -220,7 +229,7 @@ export function AgentDetailPage(): React.ReactElement {
                     System Description
                  </h2>
                  <p style={{ fontSize: "15px", color: C.textMuted, lineHeight: 1.7, margin: 0 }}>
-                    {agent.summary || "This agent does not have a comprehensive description provided. It is designed to act on its defined capabilities and core category attributes."}
+                    {agent.summary || `This ${entityNoun} does not have a comprehensive description provided. It is designed to act on its defined capabilities and core category attributes.`}
                  </p>
               </BentoCard>
 
@@ -244,7 +253,7 @@ export function AgentDetailPage(): React.ReactElement {
                     Configuration & Identity
                  </h2>
                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                    <DetailRow label="Agent ID" value={agent.entity_id} mono />
+                    <DetailRow label={`${EntityNoun} ID`} value={agent.entity_id} mono />
                     <DetailRow label="Owner" value={agent.owner || "N/A"} mono={!!agent.owner} />
                     <DetailRow label="Home Registry" value={agent.home_registry || "N/A"} mono={!!agent.home_registry} />
                     <DetailRow label="Status" value={isActive ? "ACTIVE" : "INACTIVE"} color={statusColor} />
@@ -258,7 +267,7 @@ export function AgentDetailPage(): React.ReactElement {
                   <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${C.border}` }}>
                       <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>Developer Engine</h3>
                       <p style={{ fontSize: "13px", color: C.textMuted, margin: 0, lineHeight: 1.5 }}>
-                          Communicate securely with this agent via its decentralized identifier and webhook.
+                          Communicate securely with this {entityNoun} via its decentralized identifier and webhook.
                       </p>
                   </div>
                   <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px", background: "rgba(0,0,0,0.15)" }}>
@@ -272,7 +281,7 @@ export function AgentDetailPage(): React.ReactElement {
                        <button className="ad-btn-secondary" onClick={() => navigator.clipboard.writeText(agent.entity_id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
-                              Copy Agent ID
+                              Copy {EntityNoun} ID
                            </span>
                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                        </button>
@@ -463,6 +472,68 @@ function PageStyles() {
       @media (max-width: 900px) {
           .ad-grid { grid-template-columns: 1fr !important; }
           .ad-sidebar { position: static !important; }
+      }
+
+      /* ----- Mobile (<= 640px) ----- */
+      @media (max-width: 640px) {
+          /* Header: stack pills/title/ID and span Copy button full width */
+          .ad-header {
+              grid-template-columns: 1fr !important;
+              row-gap: 14px !important;
+              margin-bottom: 28px !important;
+          }
+          .ad-header .ad-btn-primary {
+              grid-column: 1 !important;
+              justify-self: stretch !important;
+              width: 100% !important;
+              justify-content: center !important;
+              height: 42px !important;
+          }
+
+          /* Stats: 2-up compact grid instead of 1-column tower */
+          .ad-stats {
+              grid-template-columns: 1fr 1fr !important;
+              gap: 10px !important;
+              margin-bottom: 24px !important;
+          }
+          .ad-stat-card { padding: 14px !important; }
+          .ad-stat-card > div:first-child { margin-bottom: 10px !important; }
+          .ad-stat-card > div:nth-child(2) { font-size: 18px !important; }
+          .ad-stat-card > div:last-child { font-size: 10.5px !important; letter-spacing: 0.6px !important; }
+
+          /* Cards: tighter padding */
+          .ad-bento { padding: 18px !important; border-radius: 10px !important; }
+
+          /* Detail rows: stack label above value so long IDs are readable */
+          .ad-detail-row {
+              flex-direction: column !important;
+              align-items: flex-start !important;
+              gap: 6px !important;
+              padding: 10px 12px !important;
+          }
+          .ad-detail-row > span:first-child {
+              min-width: 0 !important;
+              font-size: 11.5px !important;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: ${C.textFaint} !important;
+          }
+          .ad-detail-row > div {
+              width: 100%;
+              overflow: visible !important;
+          }
+          .ad-detail-row > div > span,
+          .ad-detail-row > div > a {
+              white-space: normal !important;
+              overflow: visible !important;
+              text-overflow: clip !important;
+              word-break: break-all;
+              font-size: 13px !important;
+              flex: 1;
+          }
+
+          /* Sidebar buttons: slightly tighter */
+          .ad-btn-secondary { padding: 10px 14px !important; font-size: 13px !important; }
       }
     `}</style>
   );

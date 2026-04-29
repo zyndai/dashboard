@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 const REGISTRY_URL =
-  process.env.AGENTDNS_REGISTRY_URL || "http://localhost:8080";
+  process.env.AGENTDNS_PUBLIC_URL ||
+  process.env.NEXT_PUBLIC_AGENTDNS_URL ||
+  process.env.AGENTDNS_REGISTRY_URL ||
+  "https://dns01.zynd.ai";
 
 export async function GET() {
   try {

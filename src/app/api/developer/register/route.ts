@@ -19,6 +19,26 @@ function jsonSortedStringify(obj: Record<string, string>): string {
   );
 }
 
+// Auto-verify handle without real verification flow.
+// TODO: replace with real DNS or OAuth verification UI later.
+async function autoVerifyHandle(registryUrl: string, handle: string): Promise<void> {
+  try {
+    const res = await fetch(`${registryUrl}/v1/handles/${handle}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method: "github", proof: handle }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.ok) {
+      console.log("[developer/register] Handle auto-verified:", handle);
+    } else {
+      console.error("[developer/register] Auto-verify failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("[developer/register] Auto-verify error:", (err as Error).message);
+  }
+}
+
 async function getClientIp(req: NextRequest): Promise<string | null> {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
@@ -129,6 +149,7 @@ export async function POST(req: NextRequest) {
             });
             if (claimRes.ok) {
               console.log("[developer/register] Handle retry claim succeeded:", effectiveUsername);
+              await autoVerifyHandle(REGISTRY_URL, effectiveUsername);
             } else {
               console.error("[developer/register] Handle retry claim failed:", claimRes.status, await claimRes.text());
             }
@@ -272,6 +293,7 @@ export async function POST(req: NextRequest) {
         
         if (claimRes.ok) {
           console.log("[developer/register] Handle claimed successfully:", username);
+          await autoVerifyHandle(REGISTRY_URL, username);
         } else {
           const claimText = await claimRes.text();
           console.error("[developer/register] Handle claim failed:", claimRes.status, claimText);

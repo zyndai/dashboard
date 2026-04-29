@@ -118,7 +118,7 @@ export function RegistryPage(): React.ReactElement {
         .reg-wrap {
           position: relative; z-index: 1;
           max-width: 1320px; margin: 0 auto;
-          padding: 32px 28px 72px;
+          padding: 0 28px 72px;
         }
 
         @keyframes regSpin { to { transform: rotate(360deg); } }
@@ -127,13 +127,7 @@ export function RegistryPage(): React.ReactElement {
           50% { transform: scale(0.7); opacity: 0.55; }
         }
 
-        .reg-hero { margin: 14px 0 32px; }
-        .reg-eyebrow {
-          display: inline-block;
-          font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase;
-          font-style: italic; font-family: ui-monospace, monospace;
-          color: #6366f1; margin-bottom: 14px;
-        }
+        .reg-hero { margin: 0 0 32px; }
         .reg-title-row {
           display: flex; align-items: flex-end; justify-content: space-between;
           gap: 24px; flex-wrap: wrap;
@@ -301,8 +295,6 @@ export function RegistryPage(): React.ReactElement {
 
       <div className="reg-wrap">
         <div className="reg-hero">
-          <div className="reg-eyebrow">// REGISTRY</div>
-
           <div className="reg-title-row">
             <h1 className="reg-title">Registry</h1>
 

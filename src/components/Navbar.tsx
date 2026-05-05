@@ -94,6 +94,12 @@ export function Navbar(): React.ReactElement {
                           >
                             Blogs
                           </Link>
+                          <Link
+                            href="/team"
+                            className="navbar-link w-nav-link"
+                          >
+                            Team
+                          </Link>
                           {authenticated && (
                             <Link
                               href="/dashboard"

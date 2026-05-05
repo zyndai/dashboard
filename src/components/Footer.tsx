@@ -68,6 +68,7 @@ const Footer: React.FC = () => {
                   <a href="https://discord.gg/zyndai" target="_blank" rel="noopener noreferrer">Discord</a>
                   <a href="https://x.com/zyndai" target="_blank" rel="noopener noreferrer">Twitter / X</a>
                   <a href="https://www.zynd.ai/blogs" target="_blank" rel="noopener noreferrer">Blog</a>
+                  <a href="/team">Team</a>
                </div>
 
                <div className="footer-col">

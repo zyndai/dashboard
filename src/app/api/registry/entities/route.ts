@@ -1,51 +1,63 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { zns } from "@/lib/zns";
 
-export async function GET(req: Request) {
+export const revalidate = 60;
+
+function intParam(raw: string | null, fallback: number, min: number, max: number): number {
+  const n = raw === null ? NaN : Number(raw);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(Math.max(Math.trunc(n), min), max);
+}
+
+export async function GET(req: Request): Promise<NextResponse> {
   const url = new URL(req.url);
-  const type = url.searchParams.get("type");
-  const category = url.searchParams.get("category");
-  const limit = Math.min(parseInt(url.searchParams.get("limit") || "200", 10), 500);
-  const offset = parseInt(url.searchParams.get("offset") || "0", 10);
+  const limit = intParam(url.searchParams.get("limit"), 200, 1, 500);
+  const offset = intParam(url.searchParams.get("offset"), 0, 0, 100_000);
+  const type = url.searchParams.get("type") || "";
+  const category = url.searchParams.get("category") || "";
 
-  const where: Record<string, unknown> = { entityId: { not: null } };
-  if (type) where.entityType = type;
-  if (category) where.category = category;
+  const upstream = new URL(`${zns()}/v1/entities`);
+  upstream.searchParams.set("limit", String(limit));
+  if (offset > 0) upstream.searchParams.set("offset", String(offset));
+  if (type) upstream.searchParams.set("type", type);
+  if (category) upstream.searchParams.set("category", category);
 
-  const [rows, total] = await Promise.all([
-    prisma.entity.findMany({
-      where,
-      orderBy: { updatedAt: "desc" },
-      skip: offset,
-      take: limit,
-    }),
-    prisma.entity.count({ where }),
-  ]);
+  try {
+    const res = await fetch(upstream, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+      next: { revalidate: 60 },
+    });
 
-  const entities = rows.map((e) => ({
-    entity_id: e.entityId!,
-    name: e.name,
-    owner: e.userId,
-    entity_url: e.entityUrl || "",
-    category: e.category || "general",
-    tags: e.tags || [],
-    summary: e.summary || "",
-    capability_summary: null,
-    public_key: "",
-    home_registry: "",
-    schema_version: "1.0",
-    registered_at: e.createdAt.toISOString(),
-    updated_at: e.updatedAt.toISOString(),
-    ttl: 0,
-    status: e.status,
-    last_heartbeat: e.updatedAt.toISOString(),
-    entity_type: e.entityType || "agent",
-    service_endpoint: e.serviceEndpoint || undefined,
-    openapi_url: e.openapiUrl || undefined,
-    entity_pricing: e.entityPricing || null,
-    developer_id: null,
-    fqan: e.fqan || null,
-  }));
+    if (!res.ok) {
+      return NextResponse.json(
+        { entities: [], count: 0, source: "upstream-error", status: res.status },
+        { status: 200, headers: { "cache-control": "public, max-age=10" } },
+      );
+    }
 
-  return NextResponse.json({ entities, count: total });
+    const data = (await res.json()) as { entities?: unknown[]; count?: number };
+    const raw = Array.isArray(data.entities) ? data.entities : [];
+
+    const entities = raw.filter((e: unknown): e is Record<string, unknown> => {
+      if (!e || typeof e !== "object") return false;
+      const r = e as Record<string, unknown>;
+      return typeof r.entity_id === "string" && typeof r.name === "string";
+    });
+
+    return NextResponse.json(
+      { entities, count: data.count ?? entities.length },
+      { headers: { "cache-control": "public, s-maxage=60, stale-while-revalidate=300" } },
+    );
+  } catch (err) {
+    return NextResponse.json(
+      {
+        entities: [],
+        count: 0,
+        source: "exception",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 200, headers: { "cache-control": "public, max-age=10" } },
+    );
+  }
 }

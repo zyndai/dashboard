@@ -56,13 +56,13 @@ export function RegistryPage(): React.ReactElement {
         if (debouncedQuery) {
           const res = await searchAgents(
             debouncedQuery,
-            { category: catParam, entity_type: typeParam, max_results: 200 },
+            { category: catParam, entity_type: typeParam, max_results: 500 },
             signal,
           );
           setAgents(res.results);
         } else {
           const res = await listEntities(
-            { type: typeParam, category: catParam, limit: 200 },
+            { type: typeParam, category: catParam, limit: 500 },
             signal,
           );
           setAgents(res.entities);

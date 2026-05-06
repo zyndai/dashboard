@@ -1,24 +1,15 @@
-import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { WebflowInit } from "@/components/WebflowInit";
 // import { Footer } from "@/components/Footer";
 import { TEAM_MEMBERS, type SocialPlatform } from "@/data/team";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Team — The People Behind ZyndAI",
   description:
     "Engineers and operators behind the open network for AI agents. Meet the team building ZyndAI.",
-  alternates: {
-    canonical: "https://www.zynd.ai/team",
-  },
-  openGraph: {
-    title: "Team — The People Behind ZyndAI",
-    description:
-      "Engineers and operators behind the open network for AI agents.",
-    url: "https://www.zynd.ai/team",
-    type: "website",
-  },
-};
+  path: "/team",
+});
 
 const SOCIAL_LABELS: Record<SocialPlatform, string> = {
   linkedin: "in",

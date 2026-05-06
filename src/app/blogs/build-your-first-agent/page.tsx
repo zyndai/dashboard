@@ -1,22 +1,18 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import BlogShell from "@/components/blogs/blog-shell";
 import { getPost } from "@/lib/blogs/posts";
+import { pageMetadata } from "@/lib/seo";
 
 const post = getPost("build-your-first-agent")!;
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: `${post.title} — ZyndAI Blog`,
   description: post.description,
-  alternates: { canonical: `https://www.zynd.ai/blogs/${post.slug}` },
-  openGraph: {
-    title: post.title,
-    description: post.description,
-    url: `https://www.zynd.ai/blogs/${post.slug}`,
-    type: "article",
-  },
-};
+  path: `/blogs/${post.slug}`,
+  type: "article",
+  publishedTime: post.iso,
+});
 
 export default function QuickstartPostPage(): React.ReactElement {
   return (

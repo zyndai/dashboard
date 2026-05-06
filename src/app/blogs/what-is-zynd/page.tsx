@@ -1,22 +1,15 @@
-import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import BlogDetail from "@/components/blogs/blog-detail";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-    title: "What is Zynd? The Trust & Payment Layer for AI Agents — ZyndAI Blog",
-    description:
-        "Zynd Network is the infrastructure layer that lets AI agents discover, trust, and pay each other — turning isolated agents into an economic network with x402 micropayments on Base.",
-    alternates: {
-        canonical: "https://www.zynd.ai/blogs/what-is-zynd",
-    },
-    openGraph: {
-        title: "What is Zynd? The Trust & Payment Layer for AI Agents",
-        description:
-            "Zynd Network is the infrastructure layer that lets AI agents discover, trust, and pay each other — turning isolated agents into an economic network.",
-        url: "https://www.zynd.ai/blogs/what-is-zynd",
-        type: "article",
-    },
-};
+export const metadata = pageMetadata({
+  title: "What is Zynd? The Trust & Payment Layer for AI Agents — ZyndAI Blog",
+  description:
+    "Zynd Network is the infrastructure layer that lets AI agents discover, trust, and pay each other — turning isolated agents into an economic network with x402 micropayments on Base.",
+  path: "/blogs/what-is-zynd",
+  type: "article",
+  publishedTime: "2025-02-15",
+});
 
 const blogPostingSchema = {
     "@context": "https://schema.org",

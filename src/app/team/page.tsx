@@ -32,9 +32,9 @@ const TEAM_PAGE_CSS = `
    regardless of scroll position. */
 .team-page-w {
   background:
-    radial-gradient(ellipse 80% 60% at 50% 28%, #1d2570 0%, transparent 65%),
-    radial-gradient(ellipse 100% 80% at 50% 100%, #2a1f5a 0%, transparent 70%),
-    #050913;
+    radial-gradient(ellipse 70% 55% at 50% 28%, rgba(29, 37, 112, 0.40) 0%, transparent 65%),
+    radial-gradient(ellipse 90% 70% at 50% 100%, rgba(42, 31, 90, 0.28) 0%, transparent 70%),
+    #02060d;
   background-attachment: fixed;
   min-height: 100vh;
 }

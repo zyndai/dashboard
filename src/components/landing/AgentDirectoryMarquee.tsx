@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useFeaturedAgents, uniqueCategories, DEMO_AGENTS, type FeaturedAgent } from "@/lib/landing/featuredAgents";
+import { useFeaturedAgents, uniqueCategories, type FeaturedAgent } from "@/lib/landing/featuredAgents";
 import { AgentCard, AgentCardStyles, dotColorFor } from "./AgentCard";
 
 function CategoryDot({ category }: { category: string }): React.ReactElement {
@@ -18,27 +18,15 @@ function padRow(arr: FeaturedAgent[], min = 6): FeaturedAgent[] {
 }
 
 export function AgentDirectoryMarquee(): React.ReactElement | null {
-  const { agents } = useFeaturedAgents(120);
+  const { agents, loading } = useFeaturedAgents(300);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Until ZNS is populated we fall back to a hand-curated demo set so the
-  // marquee always has both an agent row and a service row to render. The
-  // "All" view and any category filter both look at the combined set
-  // (live ∪ demo, deduped by id) so clicking "AI" finds demo cards too.
-  const combined = useMemo(() => {
-    const seen = new Set(agents.map((a) => a.id));
-    return [...agents, ...DEMO_AGENTS.filter((d) => !seen.has(d.id))];
-  }, [agents]);
-
   const display = useMemo(
-    () =>
-      activeCategory
-        ? combined.filter((a) => a.category === activeCategory)
-        : combined,
-    [combined, activeCategory],
+    () => (activeCategory ? agents.filter((a) => a.category === activeCategory) : agents),
+    [agents, activeCategory],
   );
 
-  const categories = useMemo(() => uniqueCategories(combined).slice(0, 10), [combined]);
+  const categories = useMemo(() => uniqueCategories(agents).slice(0, 10), [agents]);
 
   const { agentRow, serviceRow } = useMemo(() => {
     const liveAgents = display.filter((x) => x.entityType === "agent");
@@ -238,7 +226,7 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
 
       <div className="adm-inner">
         <div className="adm-header">
-          <div className="adm-eyebrow">// AGENT DIRECTORY</div>
+          <div className="adm-eyebrow">{"// AGENT DIRECTORY"}</div>
 
           <h2 className="adm-heading">
             One network — every <span className="adm-heading-em">agent &amp; service</span> you need
@@ -269,8 +257,12 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
           </div>
         </div>
 
-        {noResults ? (
-          <div className="adm-empty">No entities in {activeCategory} yet.</div>
+        {loading && agents.length === 0 ? (
+          <div className="adm-empty">Loading registry…</div>
+        ) : noResults ? (
+          <div className="adm-empty">
+            {activeCategory ? `No entities in ${activeCategory} yet.` : "Registry is currently unreachable."}
+          </div>
         ) : useStaticGrid ? (
           <div className="adm-grid">
             {display.map((a) => (
@@ -286,7 +278,7 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
               >
                 {[...agentRow, ...agentRow].map((a, i) => (
                   <div key={`a-${a.id}-${i}`} className="adm-cell">
-                    <AgentCard agent={a} interactive={false} />
+                    <AgentCard agent={a} />
                   </div>
                 ))}
               </div>
@@ -298,7 +290,7 @@ export function AgentDirectoryMarquee(): React.ReactElement | null {
               >
                 {[...serviceRow, ...serviceRow].map((a, i) => (
                   <div key={`b-${a.id}-${i}`} className="adm-cell">
-                    <AgentCard agent={a} interactive={false} />
+                    <AgentCard agent={a} />
                   </div>
                 ))}
               </div>

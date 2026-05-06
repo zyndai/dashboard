@@ -38,28 +38,6 @@ function shortOwner(o: string | null | undefined): string {
   return `@${String(o).slice(0, 12)}`;
 }
 
-// Static seed data for the landing-page marquee. Used while the ZNS registry
-// (registry.zynd.ai) has no live agents/services or is otherwise unreachable.
-// Drop or trim once the network has enough live entities to fill both rows.
-export const DEMO_AGENTS: FeaturedAgent[] = [
-  { id: "demo-research", name: "ResearchPilot", category: "AI", tags: ["research", "rag", "openai"], summary: "Multi-step research agent that browses, summarises, and cites sources for any topic.", status: "ACTIVE", owner: "@zynd", price: "0.02 USDC", entityType: "agent" },
-  { id: "demo-translate", name: "TranslateFlow", category: "NLP", tags: ["translation", "language", "nlp"], summary: "Production translation across 50+ languages with tone and terminology controls.", status: "ACTIVE", owner: "@dev/lingua", price: "0.01 USDC", entityType: "agent" },
-  { id: "demo-codereview", name: "CodeReviewer", category: "AI", tags: ["code", "review", "github"], summary: "Reviews pull requests for bugs, security issues, and style violations in seconds.", status: "ACTIVE", owner: "@buildlab", price: "0.03 USDC", entityType: "agent" },
-  { id: "demo-extractor", name: "DataExtractor", category: "Extraction", tags: ["scraping", "data", "html"], summary: "Structured extraction from any URL — handles JS rendering, pagination, anti-bot.", status: "ACTIVE", owner: "@scrapeio", price: "0.012 USDC", entityType: "agent" },
-  { id: "demo-resume", name: "ResumeMatcher", category: "Fair Hiring", tags: ["hiring", "matching", "bias"], summary: "Bias-audited resume scoring against job specs with explainable rationales.", status: "ACTIVE", owner: "@equityhr", price: "0.025 USDC", entityType: "agent" },
-  { id: "demo-route", name: "RouteOptimizer", category: "Automation", tags: ["logistics", "routing", "ortools"], summary: "Multi-stop vehicle routing with capacity, time-window, and traffic constraints.", status: "ACTIVE", owner: "@geowave", price: "0.05 USDC", entityType: "agent" },
-  { id: "demo-triage", name: "SupportTriage", category: "Communication", tags: ["support", "classification", "routing"], summary: "Auto-classifies and routes support tickets — multilingual, with sentiment scoring.", status: "ACTIVE", owner: "@helpyard", price: "0.008 USDC", entityType: "agent" },
-  { id: "demo-legal", name: "LegalSummarizer", category: "Parsing", tags: ["legal", "contract", "summary"], summary: "Contract clause extraction, redline summary, and risk-flag scoring under 30s.", status: "ACTIVE", owner: "@lexcore", price: "0.06 USDC", entityType: "agent" },
-  { id: "demo-weather", name: "WeatherSense", category: "Data", tags: ["weather", "forecast", "rest"], summary: "Real-time weather + 7-day forecast with hyperlocal precision for any coordinates.", status: "ACTIVE", owner: "@zynd", price: "0.005 USDC", entityType: "service" },
-  { id: "demo-oracle", name: "PriceOracle", category: "Finance", tags: ["crypto", "price", "feed"], summary: "On-chain price feed for 800+ tokens with sub-second updates and median aggregation.", status: "ACTIVE", owner: "@onchainco", price: "0.004 USDC", entityType: "service" },
-  { id: "demo-sentiment", name: "SentimentScout", category: "Analysis", tags: ["sentiment", "news", "social"], summary: "Real-time sentiment over news + social with brand and ticker-level breakdowns.", status: "ACTIVE", owner: "@marketmind", price: "0.018 USDC", entityType: "service" },
-  { id: "demo-kyc", name: "KYCVerifier", category: "Verification", tags: ["kyc", "identity", "compliance"], summary: "Identity & document verification with AML screening for 200+ jurisdictions.", status: "ACTIVE", owner: "@trustkit", price: "0.4 USDC", entityType: "service" },
-  { id: "demo-vision", name: "VisionTagger", category: "AI", tags: ["vision", "image", "labelling"], summary: "Image & video tagging with custom taxonomies and confidence-thresholded outputs.", status: "ACTIVE", owner: "@pixelnet", price: "0.015 USDC", entityType: "service" },
-  { id: "demo-charts", name: "ChartGen", category: "Finance", tags: ["chart", "stocks", "viz"], summary: "Generates publication-grade financial charts from a JSON spec — SVG or PNG.", status: "ACTIVE", owner: "@quantforge", price: "0.005 USDC", entityType: "service" },
-  { id: "demo-calendar", name: "CalendarMaestro", category: "Automation", tags: ["calendar", "scheduling", "gcal"], summary: "Negotiates meeting times across timezones, calendars, and human preferences.", status: "ACTIVE", owner: "@flowtime", price: "0.006 USDC", entityType: "service" },
-  { id: "demo-social", name: "SocialComposer", category: "NLP", tags: ["copy", "marketing", "brand"], summary: "On-brand posts for X, LinkedIn, and IG — adapts tone, length, and hashtags.", status: "ACTIVE", owner: "@brandvoice", price: "0.009 USDC", entityType: "service" },
-];
-
 function fromEntity(e: EntityRecord): FeaturedAgent {
   const price = e.entity_pricing?.base_price_usd
     ? `${e.entity_pricing.base_price_usd} ${e.entity_pricing.currency || "USDC"}`

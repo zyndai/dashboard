@@ -141,37 +141,58 @@ export function AgentCard({
   const className = `zac-card${interactive ? "" : " zac-card--static"}`;
   const style = { ["--icon-accent" as string]: iconColor };
 
+  const tags = (agent.tags || []).slice(0, 3);
+
   const inner = (
     <>
       <span className="zac-card-grid" aria-hidden />
       <span className="zac-card-glow" aria-hidden />
+      <span className="zac-card-ring" aria-hidden />
 
       <div className="zac-card-top">
         <div className="zac-icon">
-          <CategoryGlyph category={agent.category} size={18} />
+          <CategoryGlyph category={agent.category} size={20} />
+          <span className="zac-icon-shine" aria-hidden />
         </div>
         <div className="zac-meta">
-          <div className="zac-name">{agent.name}</div>
+          <div className="zac-name-row">
+            <div className="zac-name">{agent.name}</div>
+            <span className={`zac-type-tag ${agent.entityType === "service" ? "service" : "agent"}`}>
+              {agent.entityType === "service" ? "SVC" : "AGT"}
+            </span>
+          </div>
           <div className="zac-owner">{agent.owner}</div>
         </div>
-        <div className="zac-chips">
-          <span className={`zac-type ${agent.entityType === "service" ? "service" : "agent"}`}>
-            <span className="zac-type-dot" aria-hidden />
-            {agent.entityType.toUpperCase()}
+        {interactive && (
+          <span className="zac-arrow" aria-hidden>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="9 7 17 7 17 15" />
+            </svg>
           </span>
-          <span className={`zac-status ${active ? "active" : "idle"}`}>
-            <span className="zac-status-dot" />
-            <span>{active ? "LIVE" : "IDLE"}</span>
-          </span>
-        </div>
+        )}
       </div>
 
       <p className="zac-summary">{agent.summary}</p>
 
+      {tags.length > 0 && (
+        <div className="zac-tags">
+          {tags.map((t) => (
+            <span key={t} className="zac-tag">{t}</span>
+          ))}
+        </div>
+      )}
+
       <div className="zac-card-foot">
-        <div className="zac-cat-pill">
-          <CategoryDot category={agent.category} />
-          {agent.category}
+        <div className="zac-foot-left">
+          <div className="zac-cat-pill">
+            <CategoryDot category={agent.category} />
+            {agent.category}
+          </div>
+          <span className={`zac-status ${active ? "active" : "idle"}`}>
+            <span className="zac-status-dot" />
+            <span>{active ? "LIVE" : "IDLE"}</span>
+          </span>
         </div>
         <div className="zac-foot-right">
           {age && <span className="zac-age">↻ {age}</span>}
@@ -204,101 +225,93 @@ export function AgentCardStyles(): React.ReactElement {
   return (
     <style>{`
       .zac-card {
+        --icon-accent: #818cf8;
         position: relative;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.008) 100%),
-          rgba(8,11,22,0.55);
+        background: rgba(8,11,22,0.55);
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 14px;
         padding: 16px 18px 14px;
-        display: flex; flex-direction: column; gap: 10px;
+        display: flex; flex-direction: column; gap: 12px;
         text-decoration: none;
-        isolation: isolate;
-        overflow: hidden;
-        transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.3, 1),
-                    border-color 0.28s ease,
-                    background 0.28s ease;
-        will-change: transform;
         font-family: 'Space Grotesk', sans-serif;
         box-sizing: border-box;
         height: 100%;
-      }
-      .zac-card-grid {
-        position: absolute; inset: 0; pointer-events: none; z-index: -1;
-        background:
-          linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px) 0 0/22px 22px,
-          linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px) 0 0/22px 22px;
-        mask-image: radial-gradient(80% 80% at 100% 0%, #000, transparent 80%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-      .zac-card-glow {
-        position: absolute; inset: -40%; pointer-events: none; z-index: -1;
-        background: radial-gradient(35% 50% at 80% 0%, rgba(99,102,241,0.22), transparent 70%);
-        filter: blur(20px); opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: border-color 0.18s ease, background 0.18s ease;
       }
       .zac-card:hover {
-        transform: translateY(-3px);
         border-color: rgba(255,255,255,0.14);
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%),
-          rgba(10,13,24,0.7);
+        background: rgba(10,13,24,0.7);
       }
-      .zac-card:hover .zac-card-grid { opacity: 1; }
-      .zac-card:hover .zac-card-glow { opacity: 0.7; }
+      .zac-card-grid,
+      .zac-card-glow,
+      .zac-card-ring,
+      .zac-icon-shine { display: none; }
 
       .zac-card--static { cursor: default; }
-      .zac-card--static:hover { transform: none; }
-      .zac-card--static:hover .zac-icon { transform: none; }
 
-      .zac-card-top { display: flex; align-items: center; gap: 12px; }
+      .zac-card-top {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center; gap: 12px;
+      }
       .zac-icon {
-        --icon-accent: #818cf8;
-        width: 38px; height: 38px; border-radius: 10px;
+        width: 38px; height: 38px; border-radius: 9px;
         display: flex; align-items: center; justify-content: center;
         color: var(--icon-accent);
-        background: color-mix(in oklab, var(--icon-accent) 12%, rgba(255,255,255,0.02));
-        border: 1px solid color-mix(in oklab, var(--icon-accent) 24%, transparent);
+        background: color-mix(in oklab, var(--icon-accent) 10%, rgba(255,255,255,0.02));
+        border: 1px solid color-mix(in oklab, var(--icon-accent) 22%, transparent);
         flex-shrink: 0;
-        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.3, 1),
-                    background 0.3s ease, border-color 0.3s ease;
-      }
-      .zac-card:hover .zac-icon {
-        transform: scale(1.04);
-        background: color-mix(in oklab, var(--icon-accent) 20%, rgba(255,255,255,0.02));
-        border-color: color-mix(in oklab, var(--icon-accent) 40%, transparent);
       }
 
-      .zac-meta { flex: 1; min-width: 0; }
+      .zac-meta { min-width: 0; }
+      .zac-name-row {
+        display: flex; align-items: center; gap: 8px; min-width: 0;
+      }
       .zac-name {
         font-family: 'Chakra Petch', 'Space Grotesk', sans-serif;
-        font-size: 16px; font-weight: 700;
-        color: #fff; letter-spacing: 0.005em;
+        font-size: 15.5px; font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.005em;
         line-height: 1.2;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         text-transform: uppercase;
+        min-width: 0;
+      }
+      .zac-type-tag {
+        flex-shrink: 0;
+        font-size: 8.5px; font-weight: 600;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        letter-spacing: 0.14em;
+        padding: 3px 6px;
+        border-radius: 4px;
+        line-height: 1;
+        border: 1px solid;
+      }
+      .zac-type-tag.agent {
+        color: rgba(165,180,252,0.85);
+        background: rgba(99,102,241,0.07);
+        border-color: rgba(99,102,241,0.2);
+      }
+      .zac-type-tag.service {
+        color: rgba(216,180,254,0.85);
+        background: rgba(168,85,247,0.07);
+        border-color: rgba(168,85,247,0.2);
       }
       .zac-owner {
         font-size: 11px; color: rgba(255,255,255,0.42);
         font-family: 'JetBrains Mono', ui-monospace, monospace;
-        margin-top: 2px; letter-spacing: 0.02em;
+        margin-top: 3px; letter-spacing: 0.02em;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
 
-      .zac-chips {
-        display: inline-flex; align-items: center; gap: 8px;
+      .zac-arrow {
         flex-shrink: 0;
+        width: 26px; height: 26px;
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,0.28);
+        transition: color 0.18s ease;
       }
-      .zac-type {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 9.5px; font-family: 'JetBrains Mono', ui-monospace, monospace;
-        letter-spacing: 0.14em; font-weight: 500;
-        color: rgba(255,255,255,0.42);
-      }
-      .zac-type-dot { width: 4px; height: 4px; border-radius: 50%; }
-      .zac-type.agent .zac-type-dot { background: #818cf8; }
-      .zac-type.service .zac-type-dot { background: #c084fc; }
+      .zac-card:hover .zac-arrow { color: rgba(255,255,255,0.7); }
 
       .zac-status {
         display: inline-flex; align-items: center; gap: 6px;
@@ -330,18 +343,40 @@ export function AgentCardStyles(): React.ReactElement {
       }
 
       .zac-summary {
-        margin: 0; font-size: 13px; line-height: 1.5;
-        color: rgba(255,255,255,0.55);
+        margin: 0; font-size: 13px; line-height: 1.55;
+        color: rgba(255,255,255,0.62);
         display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         overflow: hidden;
-        min-height: 39px;
+        min-height: 40px;
+      }
+
+      .zac-tags {
+        display: flex; flex-wrap: wrap; gap: 5px;
+      }
+      .zac-tag {
+        font-size: 10.5px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        color: rgba(255,255,255,0.55);
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        padding: 3px 7px;
+        border-radius: 4px;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .zac-card-foot {
         display: flex; align-items: center; justify-content: space-between;
         gap: 10px; margin-top: auto;
-        padding-top: 8px;
-        border-top: 1px solid rgba(255,255,255,0.04);
+        padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+      }
+      .zac-foot-left {
+        display: inline-flex; align-items: center; gap: 8px;
+        min-width: 0;
       }
       .zac-cat-pill {
         display: inline-flex; align-items: center; gap: 6px;
@@ -353,14 +388,18 @@ export function AgentCardStyles(): React.ReactElement {
         font-family: 'JetBrains Mono', ui-monospace, monospace;
         letter-spacing: 0.04em;
         white-space: nowrap;
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .zac-cat-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+      .zac-cat-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
       .zac-foot-right {
         display: flex; align-items: center; gap: 10px;
         font-family: 'JetBrains Mono', ui-monospace, monospace;
+        flex-shrink: 0;
       }
       .zac-age {
-        font-size: 10.5px; color: rgba(255,255,255,0.32);
+        font-size: 10.5px; color: rgba(255,255,255,0.36);
         letter-spacing: 0.04em;
       }
       .zac-price {
@@ -369,16 +408,16 @@ export function AgentCardStyles(): React.ReactElement {
       }
 
       @media (max-width: 768px) {
-        .zac-card { padding: 14px 14px 12px; gap: 8px; }
+        .zac-card { padding: 14px 14px 12px; gap: 10px; border-radius: 14px; }
         .zac-name { font-size: 15px; }
         .zac-summary { font-size: 12.5px; min-height: 36px; }
-        .zac-icon { width: 34px; height: 34px; border-radius: 9px; }
-        .zac-status { padding: 3px 6px; }
-        .zac-cat-pill { font-size: 10.5px; padding: 3px 8px; }
+        .zac-icon { width: 38px; height: 38px; border-radius: 10px; }
+        .zac-status { padding: 3px 7px; }
+        .zac-cat-pill { font-size: 10.5px; padding: 3px 8px; max-width: 110px; }
         .zac-age { font-size: 10px; }
         .zac-price { font-size: 11px; }
-        .zac-chips { gap: 6px; }
-        .zac-type { font-size: 9px; }
+        .zac-tag { font-size: 10px; max-width: 110px; }
+        .zac-arrow { width: 26px; height: 26px; }
       }
     `}</style>
   );

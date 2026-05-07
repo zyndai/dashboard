@@ -1,14 +1,14 @@
 "use client";
 
-import { type ReactNode, useState, useEffect } from "react";
+import { type ReactNode } from "react";
+import { AuthProvider, type AuthSnapshot } from "@/hooks/useAuth";
 
-export function Providers({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return null;
-  }
-
-  return <>{children}</>;
+export function Providers({
+  initialAuth,
+  children,
+}: {
+  initialAuth?: AuthSnapshot;
+  children: ReactNode;
+}) {
+  return <AuthProvider initial={initialAuth}>{children}</AuthProvider>;
 }

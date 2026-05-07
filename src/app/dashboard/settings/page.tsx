@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function SettingsPage() {
-  const { user, developer } = useAuth();
+  const { user, developer, refresh } = useAuth();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("success");
@@ -40,6 +40,7 @@ export default function SettingsPage() {
       if (res.ok) {
         setMessageType("success");
         setMessage("Profile updated successfully!");
+        await refresh();
         setTimeout(() => setMessage(""), 3000);
       } else {
         const data = await res.json();

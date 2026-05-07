@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Providers } from "@/components/providers";
+import { getServerAuth } from "@/lib/auth/server";
 import "./globals.css";
 import "@/zynd-ui.css";
 import Script from "next/script";
@@ -170,12 +171,13 @@ const webSiteSchema = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const GA_ID = process.env.NEXT_PUBLIC_ANALYTICS_ID;
+  const { user, developer } = await getServerAuth();
   return (
     <html lang="en" className="w-mod-js" data-wf-domain="app.zynd.ai" data-wf-page="644340149db6917510d9c0b1" data-wf-site="644340149db691bd8cd9c0b0">
       <head>
@@ -211,7 +213,7 @@ export default function RootLayout({
             gtag('config', '${GA_ID}');
           `}
         </Script>
-        <Providers>{children}</Providers>
+        <Providers initialAuth={{ user, developer }}>{children}</Providers>
         <Script src="/assets/js/jquery.min.js" strategy="beforeInteractive" />
         <Script src="/assets/js/zynd-ui.js" strategy="beforeInteractive" />
       </body>

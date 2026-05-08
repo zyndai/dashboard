@@ -5,12 +5,6 @@ import { useState, useMemo } from "react";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { BLOG_POSTS, type BlogPostMeta } from "@/lib/blogs/posts";
 
-const ALL_TAGS = (() => {
-  const set = new Set<string>();
-  for (const p of BLOG_POSTS) for (const t of p.tags) set.add(t);
-  return Array.from(set);
-})();
-
 function PostCard({ post, large = false }: { post: BlogPostMeta; large?: boolean }): React.ReactElement {
   return (
     <Link
@@ -68,12 +62,22 @@ function PostCard({ post, large = false }: { post: BlogPostMeta; large?: boolean
   );
 }
 
-export default function BlogList(): React.ReactElement {
+export default function BlogList({
+  posts = BLOG_POSTS,
+}: {
+  posts?: BlogPostMeta[];
+}): React.ReactElement {
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of posts) for (const t of p.tags) set.add(t);
+    return Array.from(set);
+  }, [posts]);
+
   const visible = useMemo(
-    () => (activeTag ? BLOG_POSTS.filter((p) => p.tags.includes(activeTag)) : BLOG_POSTS),
-    [activeTag],
+    () => (activeTag ? posts.filter((p) => p.tags.includes(activeTag)) : posts),
+    [activeTag, posts],
   );
 
   const featured = activeTag ? null : visible.find((p) => p.featured) ?? null;
@@ -127,7 +131,7 @@ export default function BlogList(): React.ReactElement {
             >
               All
             </button>
-            {ALL_TAGS.map((tag) => {
+            {allTags.map((tag) => {
               const active = activeTag === tag;
               return (
                 <button

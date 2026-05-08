@@ -7,10 +7,11 @@
     "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/patch-payload-loadenv.mjs",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap"
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "seed:blog-posts": "tsx scripts/seed-blog-posts.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -72,6 +73,7 @@
     "eslint-config-next": "^16.2.6",
     "prisma": "^7.5.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

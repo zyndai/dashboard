@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Entities", href: "/dashboard/entities" },
   { name: "Names", href: "/dashboard/names" },
-  { name: "Admin", href: "/dashboard/admin" },
   { name: "Settings", href: "/dashboard/settings" },
 ];
 

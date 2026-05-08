@@ -31,6 +31,27 @@ model Subscriber {
   @@map("subscribers")
 }
 
+model BlogPost {
+  id             String    @id @default(uuid()) @db.Uuid
+  slug           String    @unique
+  title          String
+  excerpt        String?
+  body           String    @default("")
+  coverImage     String?   @map("cover_image")
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  status         String    @default("draft")
+  tags           String[]  @default([])
+  authorEmail    String?   @map("author_email")
+  seoTitle       String?   @map("seo_title")
+  seoDescription String?   @map("seo_description")
+  ogImage        String?   @map("og_image")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@map("blog_posts")
+}
+
 model Entity {
   id          String   @id @default(uuid()) @db.Uuid
   userId      String   @map("user_id")

@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
+import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { getServerAuth } from "@/lib/auth/server";
-import "./globals.css";
+import "../globals.css";
 import "@/zynd-ui.css";
-import Script from "next/script";
 
 const SITE_URL = "https://www.zynd.ai";
 const SITE_NAME = "ZyndAI";
@@ -11,11 +11,6 @@ const TITLE = "ZyndAI | The Open Agent Network";
 const DESCRIPTION =
   "ZyndAI is the open agent network for AI developers. Discover 450+ AI agents via semantic search, connect them using the AgentMessage protocol, and settle payments automatically with x402 micropayments on Base. Supports LangChain, CrewAI, LangGraph, MCP Server, and n8n.";
 const OG_IMAGE = "/assets/images/zyndai-og.png";
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -170,34 +165,41 @@ const webSiteSchema = {
   },
 };
 
+const wfBootstrap = `!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js";n.setAttribute("data-wf-domain","app.zynd.ai");n.setAttribute("data-wf-page","644340149db6917510d9c0b1");n.setAttribute("data-wf-site","644340149db691bd8cd9c0b0");("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);`;
 
-export default async function RootLayout({
+export default async function SiteLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const GA_ID = process.env.NEXT_PUBLIC_ANALYTICS_ID;
   const { user, developer } = await getServerAuth();
+
   return (
     <html lang="en" className="w-mod-js" data-wf-domain="app.zynd.ai" data-wf-page="644340149db6917510d9c0b1" data-wf-site="644340149db691bd8cd9c0b0">
       <head>
-        <Script id="wf-mod" strategy="beforeInteractive">{`!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js",("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);`}</Script>
+        <Script id="wf-mod" strategy="beforeInteractive">
+          {wfBootstrap}
+        </Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&display=swap"
+          rel="stylesheet"
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
-        />
+        <Script id="schema-organization" type="application/ld+json" strategy="beforeInteractive">
+          {JSON.stringify(organizationSchema)}
+        </Script>
+        <Script id="schema-software" type="application/ld+json" strategy="beforeInteractive">
+          {JSON.stringify(softwareApplicationSchema)}
+        </Script>
+        <Script id="schema-website" type="application/ld+json" strategy="beforeInteractive">
+          {JSON.stringify(webSiteSchema)}
+        </Script>
       </head>
       <body>
         <div className="zm-page-bg"></div>
@@ -205,7 +207,7 @@ export default async function RootLayout({
           strategy="lazyOnload"
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         />
-        <Script strategy="lazyOnload">
+        <Script id="gtag-config" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

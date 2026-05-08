@@ -1,14 +1,88 @@
 "use client";
 
 import Link from "next/link";
-import { LottieAnimation } from "./LottieAnimation";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar(): React.ReactElement {
   const { authenticated, login, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Lock body scroll while the mobile menu is open
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
+
   return (
     <div className="navbar-w">
       <style>{`
+        .zynd-mobile-toggle {
+          display: none;
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          padding: 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          align-items: center;
+          justify-content: center;
+        }
+        .zynd-mobile-toggle:hover { border-color: rgba(255,255,255,0.2); }
+        @media (max-width: 991px) {
+          .zynd-mobile-toggle { display: inline-flex; }
+        }
+        .zynd-mobile-sheet {
+          position: fixed;
+          inset: 0;
+          z-index: 9000;
+          background: rgba(8, 11, 19, 0.96);
+          backdrop-filter: blur(8px);
+          display: flex;
+          flex-direction: column;
+          padding: 24px 24px 40px;
+          gap: 12px;
+          overflow-y: auto;
+        }
+        .zynd-mobile-sheet__header {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 28px;
+        }
+        .zynd-mobile-sheet__close {
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.1);
+          color: #fff;
+          padding: 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          display: inline-flex;
+        }
+        .zynd-mobile-sheet a {
+          color: #fff;
+          font-size: 22px;
+          font-weight: 600;
+          padding: 16px 8px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          text-decoration: none;
+          letter-spacing: -0.01em;
+        }
+        .zynd-mobile-sheet a:hover { color: #6366F1; }
+        .zynd-mobile-sheet button {
+          margin-top: 18px;
+          background: #182644;
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.08);
+          padding: 14px 20px;
+          font-size: 16px;
+          font-weight: 700;
+          border-radius: 12px;
+          cursor: pointer;
+        }
+
         .zynd-nav-cta {
           color: #fff !important;
           cursor: pointer !important;
@@ -140,30 +214,56 @@ export function Navbar(): React.ReactElement {
                       </div>
                     </div>
                   </nav>
-                  <div className="navbar-hamb-menu w-nav-button">
-                    <div className="menu_container">
-                      <img
-                        src="/assets/images/hamburger-menu.svg"
-                        loading="lazy"
-                        alt=""
-                        className="hamburger-menu_wrap"
-                      />
-                      <LottieAnimation
-                        src="/assets/lottie/hamburger-menu.json"
-                        loop={false}
-                        autoplay={false}
-                        className="mobile-menu_lottie"
-                        dataWId="80f7cef5-2b81-674e-8a87-6e8bbf2e3d1e"
-                        dataIsIx2Target="1"
-                      />
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    className="zynd-mobile-toggle"
+                    aria-label="Open menu"
+                    aria-expanded={mobileOpen}
+                    onClick={() => setMobileOpen(true)}
+                  >
+                    <Menu size={20} />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {mobileOpen && (
+        <div
+          className="zynd-mobile-sheet"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setMobileOpen(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ display: "contents" }}>
+            <div className="zynd-mobile-sheet__header">
+              <button
+                type="button"
+                className="zynd-mobile-sheet__close"
+                aria-label="Close menu"
+                onClick={() => setMobileOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <Link href="/registry" onClick={() => setMobileOpen(false)}>Registry</Link>
+            <a href="https://docs.zynd.ai" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Docs</a>
+            <Link href="/blogs" onClick={() => setMobileOpen(false)}>Blogs</Link>
+            <Link href="/team" onClick={() => setMobileOpen(false)}>Team</Link>
+            {authenticated && (
+              <Link href="/dashboard" onClick={() => setMobileOpen(false)} style={{ color: "#6366F1" }}>
+                Dashboard
+              </Link>
+            )}
+            {authenticated ? (
+              <button type="button" onClick={() => { setMobileOpen(false); logout(); }}>Sign Out</button>
+            ) : (
+              <button type="button" onClick={() => { setMobileOpen(false); login(); }}>Sign In</button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

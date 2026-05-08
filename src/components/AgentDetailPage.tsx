@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
+import { TestPlayground } from "./agent-detail/TestPlayground";
 import {
   getEntity,
   getNetworkStatus,
@@ -42,16 +43,114 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+async function copyToClipboard(value: string): Promise<boolean> {
+  // Modern API requires secure context (HTTPS or localhost). Fall back to a
+  // hidden textarea so prod previews behind a custom proxy still work.
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      // fall through
+    }
+  }
+  if (typeof document === "undefined") return false;
+  const ta = document.createElement("textarea");
+  ta.value = value;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function CopyEntityIdButton({
+  value,
+  label,
+  variant,
+  style,
+}: {
+  value: string;
+  label: string;
+  variant: "primary" | "secondary";
+  style?: React.CSSProperties;
+}): React.ReactElement {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+
+  const handle = async (): Promise<void> => {
+    const ok = await copyToClipboard(value);
+    setState(ok ? "copied" : "failed");
+    window.setTimeout(() => setState("idle"), 1500);
+  };
+
+  const className = variant === "primary" ? "ad-btn-primary" : "ad-btn-secondary";
+  const baseStyle: React.CSSProperties =
+    variant === "primary"
+      ? { display: "inline-flex", alignItems: "center", gap: "8px", ...style }
+      : { display: "flex", justifyContent: "space-between", alignItems: "center", ...style };
+
+  const isCopied = state === "copied";
+  const isFailed = state === "failed";
+  const displayLabel = isCopied ? "Copied!" : isFailed ? "Copy failed" : label;
+
+  const leadingIcon = (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 17 10 11 4 5" />
+      <line x1="12" y1="19" x2="20" y2="19" />
+    </svg>
+  );
+  const trailingIcon = isCopied ? (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      className={className}
+      style={baseStyle}
+      aria-label={label}
+    >
+      {variant === "primary" ? (
+        <>
+          {trailingIcon}
+          {displayLabel}
+        </>
+      ) : (
+        <>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {leadingIcon}
+            {displayLabel}
+          </span>
+          {trailingIcon}
+        </>
+      )}
+    </button>
+  );
+}
+
 function CopyButton({ value }: { value: string }): React.ReactElement {
   const [copied, setCopied] = useState(false);
   const handle = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // clipboard API may be unavailable
-    }
+    const ok = await copyToClipboard(value);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
   };
   return (
     <button
@@ -82,6 +181,7 @@ export function AgentDetailPage(): React.ReactElement {
   const [networkInfo, setNetworkInfo] = useState<NetworkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [playgroundOpen, setPlaygroundOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -203,15 +303,12 @@ export function AgentDetailPage(): React.ReactElement {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(agent.entity_id)}
-              className="ad-btn-primary"
-              style={{ gridColumn: "2", justifySelf: "end", height: "38px", padding: "0 16px", fontSize: "13px", fontWeight: 600, borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-              Copy {EntityNoun} ID
-            </button>
+            <CopyEntityIdButton
+              value={agent.entity_id}
+              label={`Copy ${EntityNoun} ID`}
+              variant="primary"
+              style={{ gridColumn: "2", justifySelf: "end", height: "38px", padding: "0 16px", fontSize: "13px", fontWeight: 600, borderRadius: "8px", whiteSpace: "nowrap" }}
+            />
           </header>
 
           <div className="fade-in dl-3 ad-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "32px" }}>
@@ -271,21 +368,30 @@ export function AgentDetailPage(): React.ReactElement {
                       </p>
                   </div>
                   <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px", background: "rgba(0,0,0,0.15)" }}>
-                       <button className="ad-btn-secondary" onClick={() => router.push("/dashboard")} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                       <button
+                         type="button"
+                         className="ad-btn-primary"
+                         onClick={() => setPlaygroundOpen((v) => !v)}
+                         aria-expanded={playgroundOpen}
+                         style={{ padding: "10px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                       >
                            <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
-                              Open in Dashboard
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+                              {playgroundOpen ? "Hide Playground" : "Test it"}
                            </span>
-                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: playgroundOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
+                              <polyline points="9 18 15 12 9 6" />
+                           </svg>
                        </button>
-                       <button className="ad-btn-secondary" onClick={() => navigator.clipboard.writeText(agent.entity_id)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
-                              Copy {EntityNoun} ID
-                           </span>
-                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                       </button>
+                       <CopyEntityIdButton
+                         value={agent.entity_id}
+                         label={`Copy ${EntityNoun} ID`}
+                         variant="secondary"
+                       />
                   </div>
+                  {playgroundOpen && (
+                    <TestPlayground agent={agent} onClose={() => setPlaygroundOpen(false)} />
+                  )}
               </BentoCard>
 
               <BentoCard>

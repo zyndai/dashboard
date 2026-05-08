@@ -1,26 +1,10 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+import { requireZyndAdminApi } from "@/lib/admin-zynd-auth";
 
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const email = user.email?.toLowerCase() ?? "";
-  if (!ADMIN_EMAILS.includes(email)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const unauth = await requireZyndAdminApi();
+  if (unauth) return unauth;
 
   // Fetch all developers
   const developers = await prisma.developerKey.findMany({

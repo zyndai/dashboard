@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getPayload } from "payload";
-import config from "@payload-config";
-import { RichText } from "@payloadcms/richtext-lexical/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Navbar } from "@/components/Navbar";
 import { pageMetadata } from "@/lib/seo";
+import { getCmsPost } from "@/lib/blogs/cms-posts";
 
 export const dynamic = "force-dynamic";
 
@@ -12,27 +12,14 @@ interface PageProps {
   searchParams: Promise<{ preview?: string }>;
 }
 
-async function fetchPost(slug: string, isPreview: boolean) {
-  const payload = await getPayload({ config });
-  const result = await payload.find({
-    collection: "blog-posts",
-    where: { slug: { equals: slug } },
-    limit: 1,
-    draft: isPreview,
-    overrideAccess: isPreview,
-  });
-  return result.docs[0] ?? null;
-}
-
 export async function generateMetadata({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
-  const post = await fetchPost(slug, sp.preview === "true");
+  const post = await getCmsPost(slug, { includeDrafts: sp.preview === "true" });
   if (!post) return {};
-  const seo = (post.seo ?? {}) as { title?: string; description?: string };
   return pageMetadata({
-    title: seo.title || (post.title as string),
-    description: seo.description || (post.excerpt as string) || "",
+    title: post.seoTitle || post.title,
+    description: post.seoDescription || post.excerpt || "",
     path: `/blogs/${slug}`,
     type: "article",
   });
@@ -43,14 +30,11 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
   const sp = await searchParams;
   const isPreview = sp.preview === "true";
 
-  const post = await fetchPost(slug, isPreview);
+  const post = await getCmsPost(slug, { includeDrafts: isPreview });
   if (!post) notFound();
 
-  const tags = Array.isArray(post.tags)
-    ? (post.tags as Array<{ tag?: string }>).map((t) => t.tag).filter(Boolean)
-    : [];
   const publishedAt = post.publishedAt
-    ? new Date(post.publishedAt as string).toLocaleDateString("en-US", {
+    ? new Date(post.publishedAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -71,7 +55,7 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
                 Draft preview
               </span>
               <a
-                href={`/admin/collections/blog-posts?where[slug][equals]=${encodeURIComponent(slug)}`}
+                href={`/dashboard/admin/blogs/${post.id}`}
                 className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-zinc-300 transition-colors hover:border-white/30 hover:text-white"
               >
                 ← Back to editor
@@ -80,11 +64,11 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
           )}
 
           <header className="mb-14 pb-10 border-b border-white/[0.08]">
-            {tags.length > 0 && (
+            {post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-7">
-                {tags.map((tag) => (
+                {post.tags.map((tag) => (
                   <span
-                    key={tag as string}
+                    key={tag}
                     className="inline-flex rounded-md border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-widest text-[#5b7cfa] leading-none"
                   >
                     {tag}
@@ -93,9 +77,6 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
               </div>
             )}
 
-            {/* Use a `div` with role="heading" to bypass globals.css's
-                `h1, h2 { text-transform: uppercase !important }`. The global rule
-                exists for the marketing pages and we don't want it on prose. */}
             <div
               role="heading"
               aria-level={1}
@@ -107,12 +88,12 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
                 textTransform: "none",
               }}
             >
-              {post.title as string}
+              {post.title}
             </div>
 
             {post.excerpt ? (
               <p className="text-zinc-400 mb-8 text-[18px] md:text-[20px]" style={{ lineHeight: 1.55 }}>
-                {post.excerpt as string}
+                {post.excerpt}
               </p>
             ) : null}
 
@@ -141,7 +122,9 @@ export default async function CmsPostPage({ params, searchParams }: PageProps) {
               [&_img]:rounded-lg [&_img]:my-8
             "
           >
-            <RichText data={post.body as Parameters<typeof RichText>[0]["data"]} />
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {post.body || ""}
+            </ReactMarkdown>
           </div>
         </div>
       </article>

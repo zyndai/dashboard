@@ -8,8 +8,10 @@ import { TestPlayground } from "./agent-detail/TestPlayground";
 import {
   getEntity,
   getNetworkStatus,
+  getEntityCard,
   type EntityRecord,
   type NetworkStatus,
+  type EntityCard,
 } from "../lib/api/agentdns";
 
 const C = {
@@ -176,6 +178,8 @@ function CopyButton({ value }: { value: string }): React.ReactElement {
 export function AgentDetailPage({ params }: { params: Promise<{ id: string }> }): React.ReactElement {
   const router = useRouter();
   const [agent, setAgent] = useState<EntityRecord | null>(null);
+  const [card, setCard] = useState<EntityCard | null>(null);
+  const [cardFetchFailed, setCardFetchFailed] = useState(false);
   const [networkInfo, setNetworkInfo] = useState<NetworkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -194,6 +198,16 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
       try {
         const rec = await getEntity(entityId, controller.signal);
         setAgent(rec);
+
+        const isActive = (rec.status || "active").toUpperCase() === "ACTIVE";
+        if (isActive) {
+          const cardData = await getEntityCard(entityId, controller.signal);
+          if (cardData) {
+            setCard(cardData);
+          } else {
+            setCardFetchFailed(true);
+          }
+        }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load entity");
@@ -314,8 +328,15 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
             />
           </header>
 
+          {cardFetchFailed && isActive && (
+            <div className="fade-in dl-3" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", marginBottom: "24px", fontSize: "13px", color: C.textMuted }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span>Agent card unavailable — showing basic entity information. The agent may be offline or its card endpoint is unreachable.</span>
+            </div>
+          )}
+
           <div className="fade-in dl-3 ad-stats" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px", marginBottom: "32px" }}>
-              <BentoStat label="capabilities" value={String(agent.tags?.length || 0)} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>} />
+              <BentoStat label="capabilities" value={String(card?.skills?.length || agent.tags?.length || 0)} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>} />
               <BentoStat label="registered" value={formatDate(agent.registered_at)} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
               <BentoStat label="category module" value={agent.category || "General"} icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>} />
           </div>
@@ -329,20 +350,23 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
                     System Description
                  </h2>
                  <p style={{ fontSize: "15px", color: C.textMuted, lineHeight: 1.7, margin: 0 }}>
-                    {agent.summary || `This ${entityNoun} does not have a comprehensive description provided. It is designed to act on its defined capabilities and core category attributes.`}
+                    {card?.description || agent.summary || `This ${entityNoun} does not have a comprehensive description provided. It is designed to act on its defined capabilities and core category attributes.`}
                  </p>
               </BentoCard>
 
-              {agent.tags && agent.tags.length > 0 && (
+              {(agent.tags && agent.tags.length > 0 || card?.skills && card.skills.length > 0) && (
                 <BentoCard className="fade-in dl-4">
                    <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#fff", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={themeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                       Operational Capabilities
                    </h2>
                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                     {agent.tags.map(tag => (
-                       <span key={tag} className="tech-tag">{tag}</span>
-                     ))}
+                     {(card?.skills || agent.tags)?.map(item => {
+                       const tag = typeof item === "string" ? item : item.name;
+                       return (
+                         <span key={tag} className="tech-tag">{tag}</span>
+                       );
+                     })}
                    </div>
                 </BentoCard>
               )}
@@ -356,6 +380,7 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
                     <DetailRow label={`${EntityNoun} ID`} value={agent.entity_id} mono />
                     <DetailRow label="Owner" value={agent.owner || "N/A"} mono={!!agent.owner} />
                     <DetailRow label="Home Registry" value={agent.home_registry || "N/A"} mono={!!agent.home_registry} />
+                    {card?.url && <DetailRow label="Service URL" value={card.url} mono link />}
                     <DetailRow label="Status" value={isActive ? "ACTIVE" : "INACTIVE"} color={statusColor} />
                  </div>
               </BentoCard>

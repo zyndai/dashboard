@@ -83,6 +83,45 @@ export interface NetworkStatus {
   node_type: string;
 }
 
+export interface EntityCard {
+  name: string;
+  description: string;
+  url: string;
+  version: string;
+  preferredTransport: string;
+  protocolVersion: string;
+  skills: Array<{
+    id: string;
+    name: string;
+    description: string;
+    tags: string[];
+  }>;
+  capabilities: {
+    pushNotifications: boolean;
+    stateTransitionHistory: boolean;
+    streaming: boolean;
+  };
+  defaultInputModes: string[];
+  defaultOutputModes: string[];
+  securitySchemes: Record<string, {
+    type: string;
+    scheme: string;
+    description: string;
+  }>;
+  "x-zynd"?: {
+    category: string;
+    entityId: string;
+    registry: string;
+    status: string;
+    tags: string[];
+    version: number;
+    lastUpdatedAt: string;
+    publicKey: string;
+    inputSchema: Record<string, unknown>;
+    outputSchema: Record<string, unknown>;
+  };
+}
+
 function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
   const url = `${AGENTDNS_BASE}${path}`;
   if (!params) return url;
@@ -160,4 +199,24 @@ export async function getTags(signal?: AbortSignal): Promise<string[]> {
 
 export async function getNetworkStatus(signal?: AbortSignal): Promise<NetworkStatus> {
   return fetchJSON<NetworkStatus>(`${AGENTDNS_BASE}/network/status`, { signal });
+}
+
+export async function getEntityCard(entityId: string, signal?: AbortSignal): Promise<EntityCard | null> {
+  let normalized = entityId;
+  try {
+    normalized = decodeURIComponent(entityId);
+  } catch (_e) {
+    // fallback
+  }
+  try {
+    return await fetchJSON<EntityCard>(
+      `${AGENTDNS_BASE}/entities/${encodeURIComponent(normalized)}/card`,
+      { signal },
+    );
+  } catch (err) {
+    if (err instanceof Error && err.name !== "AbortError") {
+      return null;
+    }
+    throw err;
+  }
 }

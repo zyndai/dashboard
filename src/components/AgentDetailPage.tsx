@@ -1,7 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
@@ -174,22 +173,26 @@ function CopyButton({ value }: { value: string }): React.ReactElement {
   );
 }
 
-export function AgentDetailPage(): React.ReactElement {
-  const { id } = useParams<{ id: string }>();
+export function AgentDetailPage({ params }: { params: Promise<{ id: string }> }): React.ReactElement {
   const router = useRouter();
   const [agent, setAgent] = useState<EntityRecord | null>(null);
   const [networkInfo, setNetworkInfo] = useState<NetworkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
+  const [entityId, setEntityId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    params.then((p) => setEntityId(p.id));
+  }, [params]);
+
+  useEffect(() => {
+    if (!entityId) return;
     const controller = new AbortController();
 
     (async () => {
       try {
-        const rec = await getEntity(id, controller.signal);
+        const rec = await getEntity(entityId, controller.signal);
         setAgent(rec);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
@@ -204,7 +207,7 @@ export function AgentDetailPage(): React.ReactElement {
       .catch(() => {});
 
     return () => controller.abort();
-  }, [id]);
+  }, [entityId]);
 
   const pageStyle: React.CSSProperties = {
     backgroundColor: C.bg,

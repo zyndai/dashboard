@@ -117,15 +117,11 @@ export async function listEntities(
 }
 
 export async function getEntity(entityId: string, signal?: AbortSignal): Promise<EntityRecord> {
-  // Next 16's useParams() surfaces the URL-encoded id (e.g. `zns%3A…`);
-  // re-encoding that produces `zns%253A…` and the upstream then 404s.
-  // Normalize so the URL is encoded exactly once regardless of how the
-  // caller obtained the id.
   let normalized = entityId;
   try {
     normalized = decodeURIComponent(entityId);
   } catch {
-    // entityId already contained a literal `%` — fall back to the raw form.
+    // fallback
   }
   return fetchJSON<EntityRecord>(
     `${AGENTDNS_BASE}/entities/${encodeURIComponent(normalized)}`,

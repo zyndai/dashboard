@@ -254,7 +254,7 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
             </div>
             <h1 style={{ fontSize: "24px", fontWeight: 600, margin: "0 0 12px", color: C.text }}>Entity Not Found</h1>
             <p style={{ fontSize: "15px", color: C.textMuted, margin: "0 0 30px", maxWidth: "400px", marginInline: "auto", lineHeight: 1.6 }}>We couldn&apos;t load this entity. It may have been removed or there was a network error.</p>
-            <button type="button" onClick={() => router.push("/registry")} className="ad-btn-primary" style={{ padding: "12px 24px", fontSize: "15px", borderRadius: "10px" }}>Return to Registry</button>
+            <button type="button" onClick={() => router.back()} className="ad-btn-primary" style={{ padding: "12px 24px", fontSize: "15px", borderRadius: "10px" }}>Return to Registry</button>
           </div>
         </div>
         <Footer />
@@ -278,7 +278,7 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
         <div className="page-container" style={{ maxWidth: "1100px" }}>
 
           <nav aria-label="Breadcrumb" className="fade-in dl-1" style={{ marginBottom: "32px" }}>
-            <button type="button" onClick={() => router.push("/registry")} className="ad-back">
+            <button type="button" onClick={() => router.back()} className="ad-back">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: "6px" }}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
               Back to Registry
             </button>

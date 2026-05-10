@@ -32,7 +32,6 @@ export function RegistryPage(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const isInitialMount = useRef(true);
 
   function updateUrlParams(q: string, cat: string, status: string, type: string) {
     const params = new URLSearchParams();
@@ -56,14 +55,19 @@ export function RegistryPage(): React.ReactElement {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-      if (isInitialMount.current) {
-        isInitialMount.current = false;
-        return;
-      }
-      updateUrlParams(searchQuery, selectedCategory, statusFilter, typeFilter);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [searchQuery, selectedCategory, statusFilter, typeFilter]);
+  }, [searchQuery]);
+
+  // Update URL params whenever filters change (skip on initial mount)
+  const hasMounted = useRef(false);
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    updateUrlParams(searchQuery, selectedCategory, statusFilter, typeFilter);
+  }, [debouncedQuery, selectedCategory, statusFilter, typeFilter]);
 
   useEffect(() => {
     const controller = new AbortController();

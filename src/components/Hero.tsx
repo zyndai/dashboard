@@ -1,10 +1,27 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { LottieAnimation } from "./LottieAnimation";
 import { AnimatedButton } from "./AnimatedButton";
 import { LogoStrip } from "./LogoStrip";
 
 export function Hero(): React.ReactElement {
+  const [agentCount, setAgentCount] = useState<string>("...");
+
+  useEffect(() => {
+    fetch("/api/network/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        const count = data.estimated_agents;
+        if (count && count > 0) {
+          setAgentCount(`${count}+`);
+        } else {
+          setAgentCount("500+");
+        }
+      })
+      .catch(() => setAgentCount("500+"));
+  }, []);
+
   return (
     <div className="home-cont-1-w">
       <div
@@ -94,7 +111,7 @@ export function Hero(): React.ReactElement {
                 <div className="home-hero-cont-c">
                   <div className="zynd-badge">
                     <span className="zynd-badge-dot" />
-                    <span>548+ AGENTS ALREADY LIVE ON THE NETWORK</span>
+                    <span>{agentCount} AGENTS ALREADY LIVE ON THE NETWORK</span>
                   </div>
                   <div className="home-hero-head-b">
                     <h1 className="home-hero-head-e zynd-hero-heading">

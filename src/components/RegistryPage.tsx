@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import {
@@ -16,17 +17,32 @@ import { entityToFeatured, type FeaturedAgent } from "@/lib/landing/featuredAgen
 type DisplayAgent = EntityRecord | SearchResult;
 
 export function RegistryPage(): React.ReactElement {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState<"all" | "agent" | "service">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [debouncedQuery, setDebouncedQuery] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("cat") || "All");
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "All");
+  const [typeFilter, setTypeFilter] = useState<"all" | "agent" | "service">((searchParams.get("type") as "all" | "agent" | "service") || "all");
   const [agents, setAgents] = useState<DisplayAgent[]>([]);
   const [retryKey, setRetryKey] = useState(0);
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const isInitialMount = useRef(true);
+
+  function updateUrlParams(q: string, cat: string, status: string, type: string) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (cat && cat !== "All") params.set("cat", cat);
+    if (status && status !== "All") params.set("status", status);
+    if (type && type !== "all") params.set("type", type);
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -38,9 +54,16 @@ export function RegistryPage(): React.ReactElement {
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+      updateUrlParams(searchQuery, selectedCategory, statusFilter, typeFilter);
+    }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory, statusFilter, typeFilter]);
 
   useEffect(() => {
     const controller = new AbortController();

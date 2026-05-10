@@ -80,8 +80,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ entities: [], count: 0, developerId: devKey.developerId, source: "upstream-error" });
     }
 
-    const data = await res.json() as { entities?: RegistryEntity[]; count?: number };
-    const entities = Array.isArray(data.entities) ? data.entities : [];
+    const data = await res.json() as { agents?: RegistryEntity[]; count?: number };
+    const entities = Array.isArray(data.agents) ? data.agents : [];
 
     return NextResponse.json({
       entities: entities.map((e) => ({

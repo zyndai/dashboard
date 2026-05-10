@@ -52,3 +52,5 @@ next-env.d.ts
 
 
 .superpowers/
+# Added by code-review-graph
+.code-review-graph/

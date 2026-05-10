@@ -25,7 +25,7 @@ const EntitiesContext = createContext<EntitiesContextValue>({
   refresh: async () => {},
 });
 
-const SYNC_INTERVAL = 20_000;
+const SYNC_INTERVAL = 30_000;
 
 export function EntitiesProvider({ children }: { children: React.ReactNode }) {
   const [entities, setEntities] = useState<EntityRecord[]>([]);
@@ -37,8 +37,8 @@ export function EntitiesProvider({ children }: { children: React.ReactNode }) {
   const sync = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const res = await fetch("/api/entities/sync", { method: "POST" });
-      if (!res.ok) throw new Error("Sync failed");
+      const res = await fetch("/api/entities/sync", { method: "GET" });
+      if (!res.ok) throw new Error("Failed to load entities");
       const { entities: synced } = await res.json();
       setEntities(synced || []);
       setError(null);

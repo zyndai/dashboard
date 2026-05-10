@@ -2,30 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 interface EntityDetail {
-  id: string;
-  user_id: string;
-  entity_id: string | null;
+  entity_id: string;
   name: string;
-  description: string | null;
-  entity_url: string | null;
-  category: string | null;
-  tags: string[] | null;
-  summary: string | null;
-  fqan: string | null;
-  developer_handle: string | null;
+  summary?: string | null;
+  entity_url?: string | null;
+  category?: string | null;
+  tags?: string[] | null;
+  fqan?: string | null;
+  developer_handle?: string | null;
   status: string;
   source: string;
-  created_at: string;
-  updated_at: string;
-  public_key: string | null;
-  trust_score: number | null;
-  developer_id: string | null;
-  home_registry: string | null;
+  registered_at?: string | null;
+  updated_at?: string | null;
+  capability_summary?: {
+    input_types?: string[];
+    languages?: string[];
+    models?: string[];
+    output_types?: string[];
+    protocols?: string[];
+    skills?: string[];
+  } | null;
+  developer_id?: string | null;
+  developer_proof?: {
+    entity_index?: number;
+    developer_public_key?: string;
+    developer_signature?: string;
+  };
+  home_registry?: string | null;
+  last_heartbeat?: string | null;
+  openapi_url?: string | null;
+  pricing_model?: {
+    base_price?: number;
+    currency?: string;
+    details?: string;
+    type?: string;
+    unit?: string;
+  };
+  public_key?: string | null;
+  schema_version?: string | null;
+  service_endpoint?: string | null;
+  signature?: string | null;
+  ttl?: number | null;
+  type?: string | null;
 }
 
 export default function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,14 +54,11 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entityId, setEntityId] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
-  const { authenticated } = useAuth();
 
   useEffect(() => { params.then((p) => setEntityId(p.id)); }, [params]);
 
   useEffect(() => {
-    if (!entityId || !authenticated) return;
+    if (!entityId) return;
     (async () => {
       try {
         setLoading(true);
@@ -52,22 +69,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
         setError(err instanceof Error ? err.message : "Failed to load entity details");
       } finally { setLoading(false); }
     })();
-  }, [entityId, authenticated]);
-
-  const handleDelete = async () => {
-    if (!entityId) return;
-    try {
-      const supabase = createClient();
-      await supabase.from("entities").delete().eq("id", entityId);
-      router.push("/dashboard/entities");
-    } catch (err) { console.error("Error deleting entity:", err); }
-  };
-
-  const handleCopy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
-  };
+  }, [entityId]);
 
   if (loading) {
     return (
@@ -93,15 +95,18 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const rows: { label: string; value: string | null; mono?: boolean; copyable?: boolean }[] = [
-    { label: "FQAN", value: entity.fqan, mono: true, copyable: true },
-    { label: "Entity ID", value: entity.entity_id, mono: true, copyable: true },
+  const rows: { label: string; value: string | null | undefined; mono?: boolean }[] = [
+    { label: "Entity ID", value: entity.entity_id, mono: true },
+    { label: "FQAN", value: entity.fqan, mono: true },
     { label: "Developer", value: entity.developer_handle ? `@${entity.developer_handle}` : null, mono: true },
-    { label: "Description", value: entity.description || entity.summary },
+    { label: "Summary", value: entity.summary },
     { label: "Entity URL", value: entity.entity_url, mono: true },
     { label: "Category", value: entity.category },
     { label: "Registry", value: entity.home_registry, mono: true },
-    { label: "Trust Score", value: entity.trust_score != null ? entity.trust_score.toFixed(3) : null },
+    { label: "Service Endpoint", value: entity.service_endpoint, mono: true },
+    { label: "Type", value: entity.type },
+    { label: "Registered", value: entity.registered_at },
+    { label: "Updated", value: entity.updated_at },
   ];
 
   return (
@@ -114,10 +119,6 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
           </div>
           <p style={{ marginTop: "4px", fontFamily: "monospace", fontSize: "12px", color: "rgba(246, 246, 246, 0.3)" }}>{entity.entity_id || entityId}</p>
         </div>
-        <div style={{ display: "flex", gap: "12px" }}>
-          <Link href={`/dashboard/entities/${entityId}/edit`} className="dashboard-button-secondary" style={{ textDecoration: "none", padding: "8px 16px", fontSize: "14px", borderRadius: "6px" }}>Edit</Link>
-          <button onClick={() => setShowDeleteConfirm(true)} style={{ padding: "8px 16px", fontSize: "14px", border: "1px solid rgba(239, 68, 68, 0.3)", background: "transparent", color: "rgba(239, 68, 68, 0.8)", cursor: "pointer", borderRadius: "6px" }}>Delete</button>
-        </div>
       </div>
 
       <div className="dashboard-card" style={{ padding: 0 }}>
@@ -128,14 +129,7 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
           {rows.map((row) => row.value && (
             <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "start", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.03)", gap: "16px" }}>
               <span style={{ fontSize: "13px", color: "rgba(246, 246, 246, 0.4)", minWidth: "120px", flexShrink: 0 }}>{row.label}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, justifyContent: "flex-end" }}>
-                <span style={{ fontSize: "14px", color: row.label === "FQAN" ? "var(--color-accent)" : "#fff", fontFamily: row.mono ? "monospace" : "inherit", wordBreak: "break-all", textAlign: "right" }}>{row.value}</span>
-                {row.copyable && (
-                  <button onClick={() => handleCopy(row.value!, row.label)} style={{ background: "none", border: "none", cursor: "pointer", color: copied === row.label ? "var(--color-accent)" : "rgba(246, 246, 246, 0.3)", fontSize: "12px", padding: "4px", flexShrink: 0 }}>
-                    {copied === row.label ? "✓" : "⎘"}
-                  </button>
-                )}
-              </div>
+              <span style={{ fontSize: "14px", color: row.label === "FQAN" ? "var(--color-accent)" : "#fff", fontFamily: row.mono ? "monospace" : "inherit", wordBreak: "break-all", textAlign: "right" }}>{row.value}</span>
             </div>
           ))}
           {entity.tags && entity.tags.length > 0 && (
@@ -146,21 +140,18 @@ export default function EntityDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
           )}
+          {entity.capability_summary && (
+            <div style={{ padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+              <span style={{ fontSize: "13px", color: "rgba(246, 246, 246, 0.4)", minWidth: "120px", flexShrink: 0, marginBottom: "8px", display: "block" }}>Capabilities</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {entity.capability_summary.models?.map((m) => <span key={m} className="dashboard-badge badge-active" style={{ fontSize: "10px" }}>{m}</span>)}
+                {entity.capability_summary.languages?.map((l) => <span key={l} className="dashboard-badge" style={{ fontSize: "10px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "rgba(139, 92, 246, 0.8)", border: "1px solid rgba(139, 92, 246, 0.2)" }}>{l}</span>)}
+                {entity.capability_summary.protocols?.map((p) => <span key={p} className="dashboard-badge" style={{ fontSize: "10px", backgroundColor: "rgba(255, 255, 255, 0.05)", color: "rgba(246, 246, 246, 0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>{p}</span>)}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {showDeleteConfirm && (
-        <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0, 0, 0, 0.7)", zIndex: 999 }} onClick={() => setShowDeleteConfirm(false)}>
-          <div className="dashboard-card" style={{ maxWidth: "420px", width: "90%", margin: 0 }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: "0 0 12px 0" }}>Delete Entity?</h3>
-            <p style={{ fontSize: "14px", color: "rgba(246, 246, 246, 0.5)" }}>This action cannot be undone. This will permanently delete &ldquo;{entity.name}&rdquo;.</p>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
-              <button onClick={() => setShowDeleteConfirm(false)} style={{ padding: "8px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: "14px", cursor: "pointer", borderRadius: "6px" }}>Cancel</button>
-              <button onClick={handleDelete} style={{ padding: "8px 16px", backgroundColor: "#dc2626", border: "none", color: "#fff", fontSize: "14px", cursor: "pointer", borderRadius: "6px" }}>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

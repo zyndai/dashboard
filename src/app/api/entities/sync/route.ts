@@ -19,6 +19,106 @@ interface RegistryEntity {
   service_endpoint?: string;
   openapi_url?: string;
   entity_pricing?: Record<string, unknown>;
+  pricing_model?: {
+    base_price?: number;
+    currency?: string;
+    details?: string;
+    type?: string;
+    unit?: string;
+  };
+  capability_summary?: {
+    input_types?: string[];
+    languages?: string[];
+    models?: string[];
+    output_types?: string[];
+    protocols?: string[];
+    skills?: string[];
+  };
+  developer_proof?: {
+    entity_index?: number;
+    developer_public_key?: string;
+    developer_signature?: string;
+  };
+  developer_id?: string;
+  home_registry?: string;
+  last_heartbeat?: string;
+  public_key?: string;
+  registered_at?: string;
+  schema_version?: string;
+  signature?: string;
+  ttl?: number;
+  type?: string;
+  updated_at?: string;
+}
+
+export async function GET(req: Request) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const devKey = await prisma.developerKey.findUnique({
+    where: { userId: user.id },
+    select: { developerId: true },
+  });
+
+  if (!devKey) {
+    return NextResponse.json({ entities: [], count: 0, developerId: null });
+  }
+
+  try {
+    const url = new URL(`${zns()}/v1/developers/${encodeURIComponent(devKey.developerId)}/entities`);
+    const res = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.error("[entities/sync] Registry returned", res.status, await res.text());
+      return NextResponse.json({ entities: [], count: 0, developerId: devKey.developerId, source: "upstream-error" });
+    }
+
+    const data = await res.json() as { entities?: RegistryEntity[]; count?: number };
+    const entities = Array.isArray(data.entities) ? data.entities : [];
+
+    return NextResponse.json({
+      entities: entities.map((e) => ({
+        entity_id: e.entity_id,
+        name: e.name,
+        entity_url: e.entity_url || null,
+        category: e.category || null,
+        tags: e.tags || [],
+        summary: e.summary || null,
+        entity_index: e.entity_index ?? null,
+        fqan: e.fqan || null,
+        developer_handle: e.developer_handle || null,
+        entity_type: e.entity_type || "agent",
+        service_endpoint: e.service_endpoint || null,
+        openapi_url: e.openapi_url || null,
+        entity_pricing: e.pricing_model || null,
+        status: e.status || "active",
+        source: "registry",
+        registered_at: e.registered_at || null,
+        updated_at: e.updated_at || null,
+        capability_summary: e.capability_summary || null,
+        developer_id: e.developer_id || null,
+        home_registry: e.home_registry || null,
+        last_heartbeat: e.last_heartbeat || null,
+        public_key: e.public_key || null,
+        schema_version: e.schema_version || null,
+        signature: e.signature || null,
+        ttl: e.ttl ?? null,
+        type: e.type || null,
+      })),
+      count: data.count ?? entities.length,
+      developerId: devKey.developerId,
+    });
+  } catch (err) {
+    console.error("[entities/sync] Failed to reach registry:", err);
+    return NextResponse.json({ entities: [], count: 0, developerId: devKey.developerId, source: "exception" });
+  }
 }
 
 export async function POST() {

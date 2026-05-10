@@ -22,9 +22,6 @@ export default function EntitiesPage() {
           <h1>Entities</h1>
           <p>Manage your registered entities</p>
         </div>
-        <Link href="/dashboard/entities/create" className="dashboard-button" style={{ textDecoration: "none" }}>
-          + Create Entity
-        </Link>
       </div>
 
       <div className="dashboard-card" style={{ padding: 0 }}>
@@ -77,13 +74,13 @@ export default function EntitiesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((entity) => (
-                  <tr key={entity.id}>
+                  {filtered.map((entity) => (
+                  <tr key={entity.entity_id}>
                     <td>
                       <div style={{ fontWeight: 500, color: "#fff" }}>{entity.name}</div>
-                      {entity.description && (
+                      {entity.summary && (
                         <div style={{ marginTop: "4px", fontSize: "12px", color: "rgba(246, 246, 246, 0.25)", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {entity.description}
+                          {entity.summary}
                         </div>
                       )}
                     </td>
@@ -116,15 +113,12 @@ export default function EntitiesPage() {
                             </span>
                           )}
                         </div>
-                      ) : <span style={{ fontSize: "12px", fontStyle: "italic", color: "rgba(246, 246, 246, 0.3)" }}>None</span>}
+                      ) : <span style={{ fontSize: "12px", fontStyle: "italic", color: "rgba(246, 246, 246, 0.3)" }}>—</span>}
                     </td>
                     <td>
                       <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-                        <Link href={`/dashboard/entities/${entity.id}`} className="dashboard-button-secondary" style={{ padding: "6px 12px", fontSize: "12px", textDecoration: "none", borderRadius: "4px" }}>
+                        <Link href={`/dashboard/entities/${entity.entity_id}`} className="dashboard-button-secondary" style={{ padding: "6px 12px", fontSize: "12px", textDecoration: "none", borderRadius: "4px" }}>
                           View
-                        </Link>
-                        <Link href={`/dashboard/entities/${entity.id}/edit`} style={{ padding: "6px 12px", fontSize: "12px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(246, 246, 246, 0.5)", borderRadius: "4px" }}>
-                          Edit
                         </Link>
                       </div>
                     </td>

@@ -199,7 +199,7 @@ export function Navbar(): React.ReactElement {
                                 </button>
                               ) : (
                                 <button
-                                  onClick={login}
+                                  onClick={() => window.location.href = "/auth"}
                                   className="zynd-nav-cta"
                                 >
                                   Sign In
@@ -259,7 +259,7 @@ export function Navbar(): React.ReactElement {
             {authenticated ? (
               <button type="button" onClick={() => { setMobileOpen(false); logout(); }}>Sign Out</button>
             ) : (
-              <button type="button" onClick={() => { setMobileOpen(false); login(); }}>Sign In</button>
+              <button type="button" onClick={() => { setMobileOpen(false); window.location.href = "/auth"; }}>Sign In</button>
             )}
           </div>
         </div>

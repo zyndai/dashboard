@@ -122,9 +122,13 @@ export function AuthProvider({ initial, children }: AuthProviderProps) {
   }, [supabase]);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout failed:", error);
+    }
     setUser(null);
     setDeveloper(null);
+    window.location.href = "/";
   }, [supabase]);
 
   const value = useMemo<AuthContextValue>(() => ({

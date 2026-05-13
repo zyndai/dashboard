@@ -109,10 +109,13 @@ const Footer: React.FC = () => {
       </div>
 
 
-      <div className="container copyright-bar" style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px 24px 32px 24px', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+      <div className="container copyright-bar" style={{ maxWidth: '1200px', margin: '0 auto', padding: '16px 24px 32px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: 500 }}>
            Copyright © 2026 ZyndAI. All Rights Reserved.
          </div>
+         <address style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: 500, fontStyle: 'normal', lineHeight: 1.5, textAlign: 'right' }}>
+           Zynd AI Inc · 8 The Green Ste A · Dover, DE 19901
+         </address>
       </div>
 
       <style>{`

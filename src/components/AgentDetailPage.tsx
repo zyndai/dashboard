@@ -507,21 +507,20 @@ function PageStyles() {
   return (
     <style>{`
       @keyframes ad-fade-slide {
-        0% { opacity: 0; transform: translateY(12px); }
-        100% { opacity: 1; transform: translateY(0); }
+        0% { transform: translateY(12px); }
+        100% { transform: translateY(0); }
       }
       @keyframes ad-pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
       }
 
+      /* fade-in animates the slide-in only — opacity stays at the default
+         (1). If the animation never fires for any reason (hydration retry,
+         browser extension cancelling animations, etc.), the element remains
+         visible. */
       .fade-in {
-        animation: ad-fade-slide 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-      }
-      /* Fallback: if the animation never fires (e.g. interrupted during a
-         hydration retry), elements must still be visible. */
-      @media (prefers-reduced-motion: reduce) {
-        .fade-in { animation: none; }
+        animation: ad-fade-slide 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .dl-1 { animation-delay: 0.05s; }
       .dl-2 { animation-delay: 0.1s; }

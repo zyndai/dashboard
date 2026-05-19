@@ -9,6 +9,7 @@ import {
   getEntity,
   getNetworkStatus,
   getEntityCard,
+  getEntityCardDirect,
   type EntityRecord,
   type NetworkStatus,
   type EntityCard,
@@ -35,6 +36,16 @@ import { COLOR_MAP } from "../lib/categoryTheme";
 function resolveCategoryTheme(category: string | null): string {
   if (!category) return C.accent;
   return COLOR_MAP[category] || C.accent;
+}
+
+function isLoopbackUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1";
+  } catch {
+    return false;
+  }
 }
 
 function formatDate(iso: string): string {
@@ -201,7 +212,13 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
 
         const isActive = (rec.status || "active").toUpperCase() === "ACTIVE";
         if (isActive) {
-          const cardData = await getEntityCard(entityId, controller.signal);
+          let cardData = await getEntityCard(entityId, controller.signal);
+          // Registry proxy can't reach private/loopback agent URLs from the
+          // cloud. Try fetching the card directly from the entity URL in case
+          // the user's browser can reach it (works for local dev).
+          if (!cardData) {
+            cardData = await getEntityCardDirect(rec.entity_url, controller.signal);
+          }
           if (cardData) {
             setCard(cardData);
           } else {
@@ -331,7 +348,11 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
           {cardFetchFailed && isActive && (
             <div className="fade-in dl-3" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", marginBottom: "24px", fontSize: "13px", color: C.textMuted }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span>Agent card unavailable — showing basic entity information. The agent may be offline or its card endpoint is unreachable.</span>
+              <span>
+                {isLoopbackUrl(agent.entity_url)
+                  ? <>Agent registered with a loopback URL (<code style={{ fontFamily: C.mono, fontSize: "12px" }}>{agent.entity_url}</code>) — not reachable from the public registry. Expose it via a public URL (e.g. ngrok or cloudflared) to fetch its full card.</>
+                  : "Agent card unavailable — showing basic entity information. The agent may be offline or its card endpoint is unreachable."}
+              </span>
             </div>
           )}
 

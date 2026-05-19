@@ -220,3 +220,24 @@ export async function getEntityCard(entityId: string, signal?: AbortSignal): Pro
     throw err;
   }
 }
+
+// Fallback: fetch the agent card directly from the entity's own URL.
+// Useful when the public registry can't reach the agent (e.g. agent is on
+// localhost or a private network) but the user's browser can. Matches the
+// A2A spec: card lives at `<entity_url>/.well-known/agent.json`.
+export async function getEntityCardDirect(
+  entityUrl: string | null | undefined,
+  signal?: AbortSignal,
+): Promise<EntityCard | null> {
+  if (!entityUrl) return null;
+  const base = entityUrl.replace(/\/+$/, "");
+  const cardUrl = `${base}/.well-known/agent.json`;
+  try {
+    return await fetchJSON<EntityCard>(cardUrl, { signal });
+  } catch (err) {
+    if (err instanceof Error && err.name !== "AbortError") {
+      return null;
+    }
+    throw err;
+  }
+}

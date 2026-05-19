@@ -225,8 +225,10 @@ export default async function SiteLayout({
           `}
         </Script>
         <Providers initialAuth={{ user, developer }}>{children}</Providers>
-        <Script src="/assets/js/jquery.min.js" strategy="beforeInteractive" />
-        <Script src="/assets/js/zynd-ui.js" strategy="beforeInteractive" />
+        {/* Loaded after React hydration so Webflow JS doesn't mutate <html>
+            (adding w-mod-ix etc.) before hydration and trigger React #418. */}
+        <Script src="/assets/js/jquery.min.js" strategy="afterInteractive" />
+        <Script src="/assets/js/zynd-ui.js" strategy="afterInteractive" />
       </body>
     </html>
   );

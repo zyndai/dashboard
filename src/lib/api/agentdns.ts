@@ -39,6 +39,8 @@ export interface EntityRecord {
   openapi_url?: string;
   entity_pricing?: EntityPricing | null;
   developer_id?: string;
+  fqan?: string;
+  developer_handle?: string;
 }
 
 export interface SearchResult {

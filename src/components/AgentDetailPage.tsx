@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
-import { TestPlayground } from "./agent-detail/TestPlayground";
 import {
   getEntity,
   getNetworkStatus,
@@ -53,6 +52,24 @@ function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "\u2014";
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function formatRelativeTime(iso: string | null | undefined): string {
+  if (!iso) return "\u2014";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "\u2014";
+  const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 2592000) return `${Math.floor(seconds / 86400)}d ago`;
+  return formatDate(iso);
+}
+
+function truncateMiddle(s: string, head = 12, tail = 6): string {
+  if (!s) return "";
+  if (s.length <= head + tail + 1) return s;
+  return `${s.slice(0, head)}\u2026${s.slice(-tail)}`;
 }
 
 async function copyToClipboard(value: string): Promise<boolean> {
@@ -194,7 +211,6 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
   const [networkInfo, setNetworkInfo] = useState<NetworkStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [entityId, setEntityId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -409,38 +425,40 @@ export function AgentDetailPage({ params }: { params: Promise<{ id: string }> })
             </div>
 
             <div className="dp-sidebar fade-in dl-6" style={{ display: "flex", flexDirection: "column", gap: "24px", position: "sticky", top: "100px" }}>
-              <BentoCard style={{ padding: "0", overflow: "hidden" }}>
-                  <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${C.border}` }}>
-                      <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#fff", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 8px" }}>Developer Engine</h3>
-                      <p style={{ fontSize: "13px", color: C.textMuted, margin: 0, lineHeight: 1.5 }}>
-                          Communicate securely with this {entityNoun} via its decentralized identifier and webhook.
-                      </p>
-                  </div>
-                  <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px", background: "rgba(0,0,0,0.15)" }}>
-                       <button
-                         type="button"
-                         className="dp-btn-primary"
-                         onClick={() => setPlaygroundOpen((v) => !v)}
-                         aria-expanded={playgroundOpen}
-                         style={{ padding: "10px 14px", borderRadius: 6, fontSize: 13, fontWeight: 600, display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                       >
-                           <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
-                              {playgroundOpen ? "Hide Playground" : "Test it"}
-                           </span>
-                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: playgroundOpen ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
-                              <polyline points="9 18 15 12 9 6" />
-                           </svg>
-                       </button>
-                       <CopyEntityIdButton
-                         value={agent.entity_id}
-                         label={`Copy ${EntityNoun} ID`}
-                         variant="secondary"
+              <BentoCard>
+                  <h3 style={{ fontSize: "12px", fontWeight: 700, color: C.textFaint, textTransform: "uppercase", letterSpacing: "1.2px", margin: "0 0 16px" }}>Provider</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                       <SidebarField
+                         label="Developer"
+                         value={agent.developer_handle ? `@${agent.developer_handle}` : agent.owner ? truncateMiddle(agent.owner) : "—"}
+                         copyValue={agent.owner || undefined}
+                         mono={!agent.developer_handle}
+                       />
+                       {agent.fqan && (
+                         <SidebarField
+                           label="FQAN"
+                           value={agent.fqan}
+                           copyValue={agent.fqan}
+                           mono
+                           accent
+                         />
+                       )}
+                       <SidebarField
+                         label="Public Key"
+                         value={truncateMiddle(agent.public_key, 16, 8)}
+                         copyValue={agent.public_key}
+                         mono
+                       />
+                       <SidebarField
+                         label="Last Heartbeat"
+                         value={formatRelativeTime(agent.last_heartbeat)}
+                       />
+                       <SidebarField
+                         label="Schema"
+                         value={`v${agent.schema_version || "1.0"}`}
+                         mono
                        />
                   </div>
-                  {playgroundOpen && (
-                    <TestPlayground agent={agent} onClose={() => setPlaygroundOpen(false)} />
-                  )}
               </BentoCard>
 
               <BentoCard>
@@ -485,6 +503,43 @@ function BentoStat({ label, value, icon }: { label: string; value: string; icon:
            <div style={{ fontSize: "12px", fontWeight: 600, color: C.textFaint, textTransform: "uppercase", letterSpacing: "1px" }}>{label}</div>
        </div>
    );
+}
+
+function SidebarField({
+  label,
+  value,
+  copyValue,
+  mono,
+  accent,
+}: {
+  label: string;
+  value: string;
+  copyValue?: string;
+  mono?: boolean;
+  accent?: boolean;
+}): React.ReactElement {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <span style={{ fontSize: "11px", fontWeight: 600, color: C.textFaint, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+        <span
+          style={{
+            fontSize: "13px",
+            color: accent ? C.accent : C.text,
+            fontFamily: mono ? C.mono : "inherit",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1,
+          }}
+          title={copyValue || value}
+        >
+          {value}
+        </span>
+        {copyValue && <CopyButton value={copyValue} />}
+      </div>
+    </div>
+  );
 }
 
 function DetailRow({ label, value, mono, link, color }: { label: string; value: string; mono?: boolean; link?: boolean; color?: string }) {

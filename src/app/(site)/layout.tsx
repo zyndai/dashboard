@@ -165,7 +165,9 @@ const webSiteSchema = {
   },
 };
 
-const wfBootstrap = `!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js";n.setAttribute("data-wf-domain","app.zynd.ai");n.setAttribute("data-wf-page","644340149db6917510d9c0b1");n.setAttribute("data-wf-site","644340149db691bd8cd9c0b0");("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);`;
+// Webflow bootstrap. Uses classList.add (idempotent) so the SSR'd `w-mod-js`
+// class isn't duplicated during hydration.
+const wfBootstrap = `!function(o,c){var n=c.documentElement;n.classList.add("w-mod-js");("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&n.classList.add("w-mod-touch")}(window,document);`;
 
 export default async function SiteLayout({
   children,
@@ -176,7 +178,14 @@ export default async function SiteLayout({
   const { user, developer } = await getServerAuth();
 
   return (
-    <html lang="en" className="w-mod-js" data-wf-domain="app.zynd.ai" data-wf-page="644340149db6917510d9c0b1" data-wf-site="644340149db691bd8cd9c0b0">
+    <html
+      lang="en"
+      className="w-mod-js"
+      data-wf-domain="app.zynd.ai"
+      data-wf-page="644340149db6917510d9c0b1"
+      data-wf-site="644340149db691bd8cd9c0b0"
+      suppressHydrationWarning
+    >
       <head>
         <Script id="wf-mod" strategy="beforeInteractive">
           {wfBootstrap}
@@ -201,7 +210,7 @@ export default async function SiteLayout({
           {JSON.stringify(webSiteSchema)}
         </Script>
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <div className="zm-page-bg"></div>
         <Script
           strategy="lazyOnload"

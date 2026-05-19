@@ -516,8 +516,12 @@ function PageStyles() {
       }
 
       .fade-in {
-        animation: ad-fade-slide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        opacity: 0;
+        animation: ad-fade-slide 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      /* Fallback: if the animation never fires (e.g. interrupted during a
+         hydration retry), elements must still be visible. */
+      @media (prefers-reduced-motion: reduce) {
+        .fade-in { animation: none; }
       }
       .dl-1 { animation-delay: 0.05s; }
       .dl-2 { animation-delay: 0.1s; }

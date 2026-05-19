@@ -269,7 +269,7 @@ export function TestPlayground({
         <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.5, margin: 0 }}>
           This entity has no <code style={codeChip}>url</code> on its card and no fallback service endpoint.
         </p>
-        <button type="button" onClick={onClose} className="ad-btn-secondary" style={{ marginTop: 12 }}>
+        <button type="button" onClick={onClose} className="dp-btn-secondary" style={{ marginTop: 12 }}>
           Close
         </button>
       </div>
@@ -322,7 +322,7 @@ export function TestPlayground({
           type="button"
           onClick={send}
           disabled={sending}
-          className="ad-btn-primary"
+          className="dp-btn-primary"
           style={sendBtnStyle(sending)}
         >
           {sending ? (

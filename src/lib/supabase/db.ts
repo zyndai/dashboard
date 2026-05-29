@@ -56,4 +56,5 @@ export interface EntityRecord {
   signature?: string | null;
   ttl?: number | null;
   type?: string | null;
+  wallet_address?: string | null;
 }

@@ -34,6 +34,10 @@ export function EntitiesProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = useAuth();
   const hasFetched = useRef(false);
 
+  const enrich = useCallback(() => {
+    fetch("/api/entities/enrich", { method: "POST" }).catch(() => {});
+  }, []);
+
   const sync = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
@@ -50,13 +54,13 @@ export function EntitiesProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initial fetch
+  // Initial fetch + background card enrich for wallet addresses
   useEffect(() => {
     if (!authenticated) return;
     if (hasFetched.current) return;
     hasFetched.current = true;
-    sync(true);
-  }, [authenticated, sync]);
+    sync(true).then(() => enrich());
+  }, [authenticated, sync, enrich]);
 
   // Poll every 20s
   useEffect(() => {

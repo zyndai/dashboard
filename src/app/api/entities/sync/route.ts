@@ -83,6 +83,16 @@ export async function GET(req: Request) {
     const data = await res.json() as { agents?: RegistryEntity[]; count?: number };
     const entities = Array.isArray(data.agents) ? data.agents : [];
 
+    // Pull cached wallet_address values from our DB for these entities.
+    const entityIds = entities.map((e) => e.entity_id).filter(Boolean);
+    const dbRows = entityIds.length > 0
+      ? await prisma.entity.findMany({
+          where: { entityId: { in: entityIds } },
+          select: { entityId: true, walletAddress: true },
+        })
+      : [];
+    const walletMap = new Map(dbRows.map((r) => [r.entityId, r.walletAddress ?? null]));
+
     return NextResponse.json({
       entities: entities.map((e) => ({
         entity_id: e.entity_id,
@@ -111,6 +121,7 @@ export async function GET(req: Request) {
         signature: e.signature || null,
         ttl: e.ttl ?? null,
         type: e.type || null,
+        wallet_address: walletMap.get(e.entity_id) ?? null,
       })),
       count: data.count ?? entities.length,
       developerId: devKey.developerId,
@@ -161,6 +172,7 @@ export async function POST() {
       entity_pricing: e.entityPricing,
       status: e.status,
       source: e.source,
+      wallet_address: e.walletAddress ?? null,
       created_at: e.createdAt.toISOString(),
       updated_at: e.updatedAt.toISOString(),
     }));
@@ -257,6 +269,7 @@ export async function POST() {
     entity_pricing: e.entityPricing,
     status: e.status,
     source: e.source,
+    wallet_address: e.walletAddress ?? null,
     created_at: e.createdAt.toISOString(),
     updated_at: e.updatedAt.toISOString(),
   }));

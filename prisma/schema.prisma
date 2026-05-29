@@ -70,6 +70,8 @@ model Entity {
   entityPricing   Json?    @map("entity_pricing")
   status          String   @default("active")
   source          String   @default("dashboard")
+  walletAddress   String?  @map("wallet_address")
+  cardSyncedAt    DateTime? @map("card_synced_at") @db.Timestamptz(6)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

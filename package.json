@@ -24,6 +24,7 @@
     "@types/d3-selection": "^3.0.11",
     "@types/d3-zoom": "^3.0.8",
     "@types/pg": "^8.20.0",
+    "@vercel/functions": "^3.6.1",
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
     "d3-force": "^3.0.0",
@@ -50,6 +51,7 @@
     "tailwind-merge": "^2.6.1",
     "three": "^0.183.2",
     "tweetnacl": "^1.0.3",
+    "viem": "^2.51.3",
     "x402-fetch": "^1.1.0",
     "zod": "^3.25.76"
   },

@@ -25,7 +25,10 @@ const EntitiesContext = createContext<EntitiesContextValue>({
   refresh: async () => {},
 });
 
-const SYNC_INTERVAL = 30_000;
+const SYNC_INTERVAL = parseInt(
+  process.env.NEXT_PUBLIC_SYNC_INTERVAL_MS ?? "300000",
+  10
+);
 
 export function EntitiesProvider({ children }: { children: React.ReactNode }) {
   const [entities, setEntities] = useState<EntityRecord[]>([]);
@@ -34,17 +37,27 @@ export function EntitiesProvider({ children }: { children: React.ReactNode }) {
   const { authenticated } = useAuth();
   const hasFetched = useRef(false);
 
-  const enrich = useCallback(() => {
-    fetch("/api/entities/enrich", { method: "POST" }).catch(() => {});
+  // Full sync from registry + agent cards → DB → return
+  const syncFromRegistry = useCallback(async () => {
+    try {
+      const res = await fetch("/api/entities/sync", { method: "POST" });
+      if (!res.ok) throw new Error("Sync failed");
+      const { entities: synced } = await res.json();
+      setEntities(synced ?? []);
+      setError(null);
+    } catch (err) {
+      console.error("[useEntities] Background sync failed:", err);
+    }
   }, []);
 
-  const sync = useCallback(async (showLoading = false) => {
+  // Fast load from DB (returns immediately; triggers auto-sync if stale)
+  const loadFromDb = useCallback(async () => {
     try {
-      if (showLoading) setLoading(true);
+      setLoading(true);
       const res = await fetch("/api/entities/sync", { method: "GET" });
       if (!res.ok) throw new Error("Failed to load entities");
-      const { entities: synced } = await res.json();
-      setEntities(synced || []);
+      const { entities: loaded } = await res.json();
+      setEntities(loaded ?? []);
       setError(null);
     } catch (err) {
       setError("Failed to load entities");
@@ -54,23 +67,26 @@ export function EntitiesProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Initial fetch + background card enrich for wallet addresses
+  // On mount: show DB data immediately, then kick off a background POST sync
   useEffect(() => {
-    if (!authenticated) return;
-    if (hasFetched.current) return;
+    if (!authenticated || hasFetched.current) return;
     hasFetched.current = true;
-    sync(true).then(() => enrich());
-  }, [authenticated, sync, enrich]);
+    loadFromDb().then(() => syncFromRegistry());
+  }, [authenticated, loadFromDb, syncFromRegistry]);
 
-  // Poll every 20s
+  // Poll: re-sync from registry on interval
   useEffect(() => {
     if (!authenticated) return;
-    const id = setInterval(() => sync(false), SYNC_INTERVAL);
+    const id = setInterval(() => syncFromRegistry(), SYNC_INTERVAL);
     return () => clearInterval(id);
-  }, [authenticated, sync]);
+  }, [authenticated, syncFromRegistry]);
+
+  const refresh = useCallback(async () => {
+    await syncFromRegistry();
+  }, [syncFromRegistry]);
 
   return (
-    <EntitiesContext.Provider value={{ entities, loading, error, refresh: () => sync(false) }}>
+    <EntitiesContext.Provider value={{ entities, loading, error, refresh }}>
       {children}
     </EntitiesContext.Provider>
   );

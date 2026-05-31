@@ -1,46 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEntities } from "@/hooks/useEntities";
 
-const MOCK_DEV_WALLET = {
-  address: "0x1A2b3C4d5E6f7890aAbBcCdDeEfF00112233445",
-  balance_usd: 12.50,
-};
-
-const MOCK_BALANCES = [3.10, 0.50, 8.00];
-
-const MOCK_ACTIVITY = [
-  { direction: "out" as const, amount_usdc: 5.00, agent: "weather-agent", timestamp: "2026-05-29 14:32" },
-  { direction: "out" as const, amount_usdc: 2.30, agent: "summarizer", timestamp: "2026-05-28 18:45" },
-  { direction: "in" as const, amount_usdc: 20.00, agent: "Add Balance", timestamp: "2026-05-27 09:11" },
-];
+interface DevInfo {
+  developer_id: string;
+  public_key: string;
+  name: string;
+  username: string | null;
+  evm_address: string | null;
+}
 
 const PAGE_SIZE = 5;
 
-function truncateKey(key: string) {
-  // strips "ed25519:" prefix then truncates
-  const raw = key.startsWith("ed25519:") ? key.slice(8) : key;
-  return raw.length > 16 ? `${raw.slice(0, 8)}...${raw.slice(-6)}` : raw;
+function truncateAddr(addr: string) {
+  return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
 }
 
 export default function WalletPage() {
   const { entities, loading: entitiesLoading } = useEntities();
+  const [devInfo, setDevInfo] = useState<DevInfo | null>(null);
   const [topUpAgentId, setTopUpAgentId] = useState<string | null>(null);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [topUpSuccess, setTopUpSuccess] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [page, setPage] = useState(0);
 
-  const totalAgentBalance = entities.reduce((s, _, i) => s + MOCK_BALANCES[i % MOCK_BALANCES.length], 0);
+  useEffect(() => {
+    fetch("/api/developer/keys")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setDevInfo(d))
+      .catch(() => {});
+  }, []);
+
+  const agentsWithWallet = entities.filter((e) => e.wallet_address);
   const activeAgents = entities.filter((e) => e.status.toUpperCase() === "ACTIVE").length;
   const totalPages = Math.ceil(entities.length / PAGE_SIZE);
   const pageEntities = entities.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  function handleCopy() {
-    navigator.clipboard.writeText(MOCK_DEV_WALLET.address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  function handleCopy(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
   }
 
   function openTopUp(entityId: string) {
@@ -69,7 +70,7 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* Master wallet card */}
+      {/* Developer identity card */}
       <div style={{
         padding: "24px 28px",
         background: "linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0.04) 100%)",
@@ -78,47 +79,83 @@ export default function WalletPage() {
         marginBottom: "24px",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "1px", color: "rgba(246,246,246,0.4)", marginBottom: "10px" }}>
-              Your Master Wallet · Arc Testnet
+              Developer Identity · ZNS
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-              <span style={{ fontSize: "40px", fontWeight: 700, color: "#fff", letterSpacing: "-1px", lineHeight: 1 }}>
-                ${MOCK_DEV_WALLET.balance_usd.toFixed(2)}
-              </span>
-              <span style={{ fontSize: "14px", color: "rgba(246,246,246,0.4)", fontWeight: 500 }}>USD</span>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>
+              {devInfo?.name ?? "—"}
+              {devInfo?.username && (
+                <span style={{ fontSize: "13px", fontWeight: 400, color: "rgba(139,92,246,0.8)", marginLeft: "8px" }}>
+                  @{devInfo.username}
+                </span>
+              )}
             </div>
-            <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <code style={{ fontSize: "12px", fontFamily: "monospace", color: "rgba(246,246,246,0.5)" }}>
-                {MOCK_DEV_WALLET.address}
-              </code>
-            </div>
+
+            {devInfo?.developer_id && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "10px", color: "rgba(246,246,246,0.35)", textTransform: "uppercase", letterSpacing: "0.5px" }}>DID</span>
+                <code style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(246,246,246,0.5)" }}>
+                  {devInfo.developer_id}
+                </code>
+                <button
+                  onClick={() => handleCopy(devInfo.developer_id, "did")}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: copied === "did" ? "#00FF66" : "rgba(246,246,246,0.3)", fontSize: "11px", padding: "2px 6px" }}
+                >
+                  {copied === "did" ? "✓" : "copy"}
+                </button>
+              </div>
+            )}
+
+            {devInfo?.public_key && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "10px", color: "rgba(246,246,246,0.35)", textTransform: "uppercase", letterSpacing: "0.5px" }}>ZNS Key</span>
+                <code style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(246,246,246,0.4)" }}>
+                  {truncateAddr(devInfo.public_key.replace("ed25519:", ""))}
+                </code>
+              </div>
+            )}
+
+            {devInfo?.evm_address ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
+                <span style={{ fontSize: "10px", color: "rgba(246,246,246,0.35)", textTransform: "uppercase", letterSpacing: "0.5px" }}>EVM</span>
+                <code style={{ fontSize: "12px", fontFamily: "monospace", color: "rgba(0,255,102,0.8)" }}>
+                  {devInfo.evm_address}
+                </code>
+                <button
+                  onClick={() => handleCopy(devInfo.evm_address!, "evm")}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: copied === "evm" ? "#00FF66" : "rgba(246,246,246,0.3)", fontSize: "11px", padding: "2px 6px" }}
+                >
+                  {copied === "evm" ? "✓" : "copy"}
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: "10px", fontSize: "11px", color: "rgba(246,246,246,0.3)", fontStyle: "italic" }}>
+                Deriving EVM address…
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "flex-start" }}>
-            <button
-              onClick={handleCopy}
-              className="dashboard-button-secondary"
-              style={{ padding: "9px 16px", fontSize: "12px", fontWeight: 600 }}
-            >
-              {copied ? "✓ Copied" : "Copy Address"}
-            </button>
-            <button
-              className="dashboard-button"
-              style={{ padding: "9px 16px", fontSize: "12px", fontWeight: 600, opacity: 0.5, cursor: "not-allowed" }}
-              disabled
-            >
-              + Add Balance
-            </button>
-          </div>
+
+          {devInfo?.evm_address && (
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "flex-start" }}>
+              <button
+                onClick={() => handleCopy(devInfo.evm_address!, "evm-top")}
+                className="dashboard-button-secondary"
+                style={{ padding: "9px 16px", fontSize: "12px", fontWeight: 600 }}
+              >
+                {copied === "evm-top" ? "✓ Copied" : "Copy EVM Address"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Stats row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
         {[
-          { label: "Total Balance", value: `$${MOCK_DEV_WALLET.balance_usd.toFixed(2)}`, sub: "USD in master wallet" },
-          { label: "Deployed to Agents", value: `$${totalAgentBalance.toFixed(2)}`, sub: "Across all agent wallets" },
-          { label: "Active Agents", value: String(activeAgents), sub: `${entities.length} total` },
+          { label: "Agents with Wallet", value: String(agentsWithWallet.length), sub: `${entities.length} total agents` },
+          { label: "Active Agents", value: String(activeAgents), sub: `${entities.length - activeAgents} inactive` },
+          { label: "EVM Balance", value: "—", sub: "Connect EVM wallet to view" },
         ].map((stat) => (
           <div key={stat.label} className="dashboard-card" style={{ padding: "20px 24px" }}>
             <div style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(246,246,246,0.4)", marginBottom: "10px" }}>
@@ -152,10 +189,7 @@ export default function WalletPage() {
             <>
               <div>
                 {pageEntities.map((entity, i) => {
-                  const globalIdx = page * PAGE_SIZE + i;
-                  const balance = MOCK_BALANCES[globalIdx % MOCK_BALANCES.length];
                   const isActive = entity.status.toUpperCase() === "ACTIVE";
-                  const pubKeyDisplay = entity.public_key ? truncateKey(entity.public_key) : null;
                   return (
                     <div key={entity.entity_id} style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -163,7 +197,7 @@ export default function WalletPage() {
                       borderBottom: i < pageEntities.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                       gap: "12px",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0, flex: 1 }}>
                         <div style={{
                           width: "36px", height: "36px", borderRadius: "8px", flexShrink: 0,
                           background: "rgba(139, 92, 246, 0.15)",
@@ -173,33 +207,38 @@ export default function WalletPage() {
                         }}>
                           {entity.name[0].toUpperCase()}
                         </div>
-                        <div style={{ minWidth: 0 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontSize: "14px", fontWeight: 500, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {entity.name}
                           </div>
                           <div style={{ fontSize: "11px", color: "rgba(246,246,246,0.35)", marginTop: "2px" }}>
-                            {entity.fqan ?? entity.entity_id.substring(0, 20) + "…"}
+                            {entity.fqan ?? (entity.entity_id ? entity.entity_id.substring(0, 24) + "…" : "—")}
                           </div>
                           {entity.wallet_address ? (
-                            <div style={{ fontSize: "10px", color: "rgba(139,92,246,0.6)", marginTop: "2px", fontFamily: "monospace" }}>
-                              {entity.wallet_address.slice(0, 6)}…{entity.wallet_address.slice(-4)}
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                              <code style={{ fontSize: "11px", color: "rgba(139,92,246,0.8)", fontFamily: "monospace" }}>
+                                {entity.wallet_address}
+                              </code>
+                              <button
+                                onClick={() => handleCopy(entity.wallet_address!, `agent-${entity.entity_id}`)}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: copied === `agent-${entity.entity_id}` ? "#00FF66" : "rgba(246,246,246,0.3)", fontSize: "10px", padding: "1px 4px" }}
+                              >
+                                {copied === `agent-${entity.entity_id}` ? "✓" : "copy"}
+                              </button>
                             </div>
-                          ) : pubKeyDisplay ? (
-                            <div style={{ fontSize: "10px", color: "rgba(246,246,246,0.25)", marginTop: "2px", fontFamily: "monospace" }}>
-                              {pubKeyDisplay}
+                          ) : (
+                            <div style={{ fontSize: "10px", color: "rgba(246,246,246,0.2)", marginTop: "4px", fontStyle: "italic" }}>
+                              No wallet synced
                             </div>
-                          ) : null}
+                          )}
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
                         <span className={`dashboard-badge ${isActive ? "badge-active" : "badge-inactive"}`} style={{ fontSize: "10px" }}>
                           {entity.status.toUpperCase()}
                         </span>
-                        <span style={{ fontSize: "15px", fontWeight: 700, fontFamily: "monospace", color: "#00FF66", minWidth: "60px", textAlign: "right" }}>
-                          ${balance.toFixed(2)}
-                        </span>
                         <button
-                          onClick={() => openTopUp(entity.entity_id)}
+                          onClick={() => openTopUp(entity.entity_id!)}
                           className="dashboard-button-secondary"
                           style={{ padding: "6px 12px", fontSize: "11px", fontWeight: 600, whiteSpace: "nowrap" }}
                         >
@@ -248,12 +287,15 @@ export default function WalletPage() {
           <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(139, 92, 246, 0.1)" }}>
             <span style={{ fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(246,246,246,0.5)" }}>Recent Activity</span>
           </div>
-          <div style={{ padding: "0 20px" }}>
-            {MOCK_ACTIVITY.map((tx, i) => (
+          <div style={{ padding: "20px", textAlign: "center", color: "rgba(246,246,246,0.3)", fontSize: "12px" }}>
+            Connect an EVM wallet to view transaction history.
+          </div>
+          <div style={{ display: "none" }}>
+            {[].map((tx: { direction: "in" | "out"; amount_usdc: number; agent: string; timestamp: string }, i) => (
               <div key={i} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "14px 0",
-                borderBottom: i < MOCK_ACTIVITY.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
                 gap: "10px",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -346,7 +388,7 @@ export default function WalletPage() {
                       />
                     </div>
                     <p style={{ margin: "8px 0 0 0", fontSize: "11px", color: "rgba(246,246,246,0.3)" }}>
-                      Master wallet balance: ${MOCK_DEV_WALLET.balance_usd.toFixed(2)} USD
+                      Connect an EVM wallet to view balance
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: "10px" }}>

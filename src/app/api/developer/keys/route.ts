@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { decryptPrivateKey, deriveEvmAddress } from "@/lib/pki";
 
 export async function GET() {
   const supabase = await createClient();
@@ -11,23 +12,41 @@ export async function GET() {
   }
 
   if (!user) {
-    console.error("[developer/keys] No user in session");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  console.log("[developer/keys] Looking up keys for user:", user.id);
-
   const devKey = await prisma.developerKey.findUnique({
     where: { userId: user.id },
-    select: { developerId: true, publicKey: true, name: true, username: true, role: true, country: true },
+    select: {
+      developerId: true,
+      publicKey: true,
+      privateKeyEnc: true,
+      name: true,
+      username: true,
+      role: true,
+      country: true,
+      evmAddress: true,
+    },
   });
 
   if (!devKey) {
-    console.log("[developer/keys] No key found for user:", user.id);
     return NextResponse.json(null, { status: 404 });
   }
 
-  console.log("[developer/keys] Found key:", devKey.developerId);
+  // Derive + persist EVM address on first call if not yet stored
+  let evmAddress = devKey.evmAddress;
+  if (!evmAddress) {
+    try {
+      const privateKey = decryptPrivateKey(devKey.privateKeyEnc);
+      evmAddress = deriveEvmAddress(privateKey);
+      await prisma.developerKey.update({
+        where: { userId: user.id },
+        data: { evmAddress },
+      });
+    } catch (err) {
+      console.error("[developer/keys] EVM derive failed:", err);
+    }
+  }
 
   return NextResponse.json({
     developer_id: devKey.developerId,
@@ -36,5 +55,6 @@ export async function GET() {
     username: devKey.username,
     role: devKey.role,
     country: devKey.country,
+    evm_address: evmAddress ?? null,
   });
 }

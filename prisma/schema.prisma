@@ -18,6 +18,7 @@ model DeveloperKey {
   role             String?  @map("role")
   registrationIp   String?  @map("registration_ip")
   country          String?  @map("country")
+  evmAddress       String?  @map("evm_address")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("developer_keys")
@@ -70,8 +71,23 @@ model Entity {
   entityPricing   Json?    @map("entity_pricing")
   status          String   @default("active")
   source          String   @default("dashboard")
-  walletAddress   String?  @map("wallet_address")
-  cardSyncedAt    DateTime? @map("card_synced_at") @db.Timestamptz(6)
+  walletAddress      String?   @map("wallet_address")
+  cardSyncedAt       DateTime? @map("card_synced_at") @db.Timestamptz(6)
+  // agent-card fields
+  capabilities       Json?     @map("capabilities")
+  protocolVersion    String?   @map("protocol_version")
+  preferredTransport String?   @map("preferred_transport")
+  defaultInputModes  String[]  @default([]) @map("default_input_modes")
+  defaultOutputModes String[]  @default([]) @map("default_output_modes")
+  cardSkills         Json?     @map("card_skills")
+  inputSchema        Json?     @map("input_schema")
+  outputSchema       Json?     @map("output_schema")
+  a2aUrl             String?   @map("a2a_url")
+  // registry fields
+  lastHeartbeat      DateTime? @map("last_heartbeat") @db.Timestamptz(6)
+  registeredAt       DateTime? @map("registered_at") @db.Timestamptz(6)
+  homeRegistry       String?   @map("home_registry")
+  agentPublicKey     String?   @map("agent_public_key")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 

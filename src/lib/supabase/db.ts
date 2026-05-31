@@ -57,4 +57,15 @@ export interface EntityRecord {
   ttl?: number | null;
   type?: string | null;
   wallet_address?: string | null;
+  a2a_url?: string | null;
+  capabilities?: Record<string, boolean> | null;
+  protocol_version?: string | null;
+  preferred_transport?: string | null;
+  default_input_modes?: string[];
+  default_output_modes?: string[];
+  card_skills?: unknown[] | null;
+  input_schema?: unknown | null;
+  output_schema?: unknown | null;
+  agent_public_key?: string | null;
+  card_synced_at?: string | null;
 }

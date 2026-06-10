@@ -1,22 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { verifyMessage as viemVerifyMessage } from "viem";
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
-}
-
-export async function verifyMessage(
-  message: string,
-  signature: `0x${string}`,
-  address: `0x${string}`
-): Promise<boolean> {
-  const isValid = await viemVerifyMessage({
-    message,
-    signature,
-    address,
-  });
-  return isValid;
 }
 
 export async function sha256Hash(input: string): Promise<string> {

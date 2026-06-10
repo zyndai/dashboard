@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/registry-sync",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

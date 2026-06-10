@@ -1,6 +1,9 @@
-import { UserResponse, VCResponse } from "@/apis/registry/types";
 import { atom } from "jotai";
 
-export const registryTokenAtom = atom<string | null>(null);
-export const userAtom = atom<UserResponse | null>(null);
-export const userCredsAtom = atom<VCResponse[]>([]);
+export interface DeveloperInfo {
+  developer_id: string;
+  public_key: string;
+  name: string;
+}
+
+export const developerAtom = atom<DeveloperInfo | null>(null);

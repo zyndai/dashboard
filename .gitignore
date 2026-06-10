@@ -41,6 +41,16 @@ notes.md
 # vercel
 .vercel
 
+# Payload local upload directory — production should use S3/Vercel Blob
+/media
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+
+.superpowers/
+# Added by code-review-graph
+.code-review-graph/

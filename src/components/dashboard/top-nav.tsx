@@ -2,14 +2,17 @@
 
 import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { formatAddress } from "@/lib/utils";
 
 interface TopNavProps {
   onToggleSidebar?: () => void;
 }
 
 export function TopNav({ onToggleSidebar }: TopNavProps) {
-  const { authenticated, user, walletAddress, logout } = useAuth();
+  const { authenticated, user, developer, logout } = useAuth();
+
+  const displayName = developer?.developer_id
+    ? `${developer.developer_id.slice(0, 16)}...`
+    : user?.email ?? "";
 
   return (
     <nav className="flex h-14 items-center justify-between border-b border-white/10 bg-black px-4 md:px-6">
@@ -21,10 +24,10 @@ export function TopNav({ onToggleSidebar }: TopNavProps) {
       </button>
 
       <div className="ml-auto flex items-center gap-3">
-        {authenticated && (user || walletAddress) ? (
+        {authenticated && displayName ? (
           <>
             <span className="font-mono text-xs text-white/40">
-              {user ? formatAddress(user.walletAddress) : formatAddress(walletAddress || "")}
+              {displayName}
             </span>
             <button
               onClick={logout}

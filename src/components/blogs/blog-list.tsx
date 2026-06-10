@@ -1,66 +1,178 @@
-"use client"
+"use client";
 
 import Link from "next/link";
-import { AccentCorners } from "../ui/AccentCorners";
+import { useState, useMemo } from "react";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { BLOG_POSTS, type BlogPostMeta } from "@/lib/blogs/posts";
 
-const blogs = [
-    {
-        slug: "what-is-zynd",
-        title: "What is Zynd? The Trust & Payment Layer for AI Agents",
-        description:
-            "Zynd Network is the infrastructure layer that lets AI agents discover, trust, and pay each other — turning isolated agents into an economic network.",
-        date: "Feb 15, 2025",
-        readTime: "5 min read",
-        tags: ["Infrastructure", "AI Agents", "Protocol"],
-    },
-];
+function PostCard({ post, large = false }: { post: BlogPostMeta; large?: boolean }): React.ReactElement {
+  return (
+    <Link
+      href={`/blogs/${post.slug}`}
+      className={`group relative flex flex-col rounded-xl border border-white/[0.08] bg-[#0A0E17] transition-colors duration-200 hover:border-white/20 ${
+        large ? "p-7 md:p-9" : "p-6"
+      }`}
+    >
+      <div className="flex items-start justify-between mb-5 gap-4">
+        <div className="flex flex-wrap gap-2">
+          {post.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex rounded border border-[#5b7cfa]/25 bg-[#5b7cfa]/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-[#a5b4fc] leading-none"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-[#5b7cfa] transition-transform duration-200 group-hover:translate-x-1 leading-none flex-shrink-0">
+          Read
+          <ArrowRight className="h-3 w-3" />
+        </div>
+      </div>
 
-export default function BlogList() {
-    return (
-        <section className="blog-section">
-            <div className="padding-global">
-                <div className="blog-article-container">
-                    <div className="blog-header">
-                        <h1>Blog</h1>
-                        <div className="text-large">
-                            Insights, updates, and deep dives from the Zynd Protocol team.
-                        </div>
-                    </div>
+      <div
+        role="heading"
+        aria-level={2}
+        className={`font-bold tracking-tight text-white leading-snug transition-colors group-hover:text-[#a5b4fc] ${
+          large ? "text-[26px] md:text-[30px] mb-4" : "text-[18px] mb-3"
+        }`}
+        style={{ letterSpacing: "-0.01em", lineHeight: 1.25 }}
+      >
+        {post.title}
+      </div>
 
-                    {blogs.map((blog) => (
-                        <Link href={`/blogs/${blog.slug}`} key={blog.slug}>
-                            <div className="blog-card">
-                                <AccentCorners />
-                                <div className="blog-card-top">
-                                    <div className="blog-tags">
-                                        {blog.tags.map((tag) => (
-                                            <span key={tag} className="blog-tag">{tag}</span>
-                                        ))}
-                                    </div>
-                                    <div className="blog-read-link">
-                                        Read
-                                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                                            <path d="M1 5.5H10M10 5.5L6 1.5M10 5.5L6 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <h3>{blog.title}</h3>
-                                <div className="text-large">{blog.description}</div>
-                                <div className="blog-meta">
-                                    <div className="blog-meta-item">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                        <span>{blog.date}</span>
-                                    </div>
-                                    <div className="blog-meta-item">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                        <span>{blog.readTime}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+      <p
+        className={`text-zinc-400 flex-1 ${
+          large ? "text-[15px] mb-7 line-clamp-4" : "text-[13.5px] mb-6 line-clamp-3"
+        }`}
+        style={{ lineHeight: 1.6, letterSpacing: 0 }}
+      >
+        {post.description}
+      </p>
+
+      <div className="mt-auto flex items-center justify-between border-t border-white/[0.08] pt-4 text-[12px] font-medium text-zinc-500 leading-none">
+        <span className="flex items-center gap-1.5">
+          <Calendar className="size-3.5" /> {post.date}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Clock className="size-3.5" /> {post.readTime}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+export default function BlogList({
+  posts = BLOG_POSTS,
+}: {
+  posts?: BlogPostMeta[];
+}): React.ReactElement {
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of posts) for (const t of p.tags) set.add(t);
+    return Array.from(set);
+  }, [posts]);
+
+  const visible = useMemo(
+    () => (activeTag ? posts.filter((p) => p.tags.includes(activeTag)) : posts),
+    [activeTag, posts],
+  );
+
+  const featured = activeTag ? null : visible.find((p) => p.featured) ?? null;
+  const rest = featured ? visible.filter((p) => p.slug !== featured.slug) : visible;
+
+  return (
+    <section
+      className="text-white selection:bg-[#5b7cfa]/30 antialiased font-sans"
+      style={{
+        background: "transparent",
+        letterSpacing: "normal",
+        lineHeight: 1.5,
+        marginTop: "-3rem",
+        paddingTop: "1rem",
+      }}
+    >
+      <div className="mx-auto w-full max-w-[1240px] px-[60px] max-[991px]:px-10 max-[767px]:px-6 pb-24">
+        <header className="mb-12 max-w-3xl">
+          <div
+            role="heading"
+            aria-level={1}
+            className="font-bold text-white mb-5"
+            style={{
+              fontSize: "clamp(36px, 5vw, 52px)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.025em",
+              textAlign: "left",
+            }}
+          >
+            Notes from the agent network.
+          </div>
+
+          <p
+            className="text-zinc-400 max-w-2xl text-[16px]"
+            style={{ lineHeight: 1.6, letterSpacing: 0 }}
+          >
+            Protocol deep-dives, infrastructure decisions, and field reports from the
+            team building the trust and payment layer for AI agents.
+          </p>
+
+          <div className="mt-7 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTag(null)}
+              className={`px-3 py-1.5 rounded-md text-[12px] font-medium font-mono leading-none border transition-colors ${
+                activeTag === null
+                  ? "border-[#5b7cfa]/50 bg-[#5b7cfa]/10 text-white"
+                  : "border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:text-white hover:border-white/20"
+              }`}
+              style={{ letterSpacing: "0.02em" }}
+            >
+              All
+            </button>
+            {allTags.map((tag) => {
+              const active = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setActiveTag(active ? null : tag)}
+                  className={`px-3 py-1.5 rounded-md text-[12px] font-medium font-mono leading-none border transition-colors ${
+                    active
+                      ? "border-[#5b7cfa]/50 bg-[#5b7cfa]/10 text-white"
+                      : "border-white/[0.08] bg-white/[0.02] text-zinc-400 hover:text-white hover:border-white/20"
+                  }`}
+                  style={{ letterSpacing: "0.02em" }}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </header>
+
+        {featured && (
+          <div className="mb-8">
+            <div className="text-[10px] font-mono tracking-[0.2em] text-zinc-500 uppercase mb-3 leading-none">
+              Featured
             </div>
-        </section>
-    );
+            <PostCard post={featured} large />
+          </div>
+        )}
+
+        {rest.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {rest.map((post) => (
+              <PostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-white/[0.08] bg-[#0A0E17] py-14 text-center text-sm text-zinc-500 font-mono">
+            No posts under {activeTag} yet.
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }

@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model DeveloperKey {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @unique @map("user_id")
+  developerId   String   @unique @map("developer_id")
+  publicKey     String   @map("public_key")
+  privateKeyEnc String   @map("private_key_enc")
+  name             String
+  username         String?  @unique @map("username")
+  role             String?  @map("role")
+  registrationIp   String?  @map("registration_ip")
+  country          String?  @map("country")
+  evmAddress       String?  @map("evm_address")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("developer_keys")
+}
+
+model Subscriber {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("subscribers")
+}
+
+model BlogPost {
+  id             String    @id @default(uuid()) @db.Uuid
+  slug           String    @unique
+  title          String
+  excerpt        String?
+  body           String    @default("")
+  coverImage     String?   @map("cover_image")
+  publishedAt    DateTime? @map("published_at") @db.Timestamptz(6)
+  status         String    @default("draft")
+  tags           String[]  @default([])
+  authorEmail    String?   @map("author_email")
+  seoTitle       String?   @map("seo_title")
+  seoDescription String?   @map("seo_description")
+  ogImage        String?   @map("og_image")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@map("blog_posts")
+}
+
+model Entity {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id")
+  entityId    String?  @unique @map("entity_id")
+  name        String
+  description String?
+  entityUrl       String?  @map("entity_url")
+  category        String?
+  tags            String[] @default([])
+  summary         String?
+  entityIndex      Int?     @map("entity_index")
+  fqan            String?  @map("fqan")
+  entityType      String?  @default("agent") @map("entity_type")
+  serviceEndpoint String?  @map("service_endpoint")
+  openapiUrl      String?  @map("openapi_url")
+  entityPricing   Json?    @map("entity_pricing")
+  status          String   @default("active")
+  source          String   @default("dashboard")
+  walletAddress      String?   @map("wallet_address")
+  cardSyncedAt       DateTime? @map("card_synced_at") @db.Timestamptz(6)
+  // agent-card fields
+  capabilities       Json?     @map("capabilities")
+  protocolVersion    String?   @map("protocol_version")
+  preferredTransport String?   @map("preferred_transport")
+  defaultInputModes  String[]  @default([]) @map("default_input_modes")
+  defaultOutputModes String[]  @default([]) @map("default_output_modes")
+  cardSkills         Json?     @map("card_skills")
+  inputSchema        Json?     @map("input_schema")
+  outputSchema       Json?     @map("output_schema")
+  a2aUrl             String?   @map("a2a_url")
+  // registry fields
+  lastHeartbeat      DateTime? @map("last_heartbeat") @db.Timestamptz(6)
+  registeredAt       DateTime? @map("registered_at") @db.Timestamptz(6)
+  homeRegistry       String?   @map("home_registry")
+  agentPublicKey     String?   @map("agent_public_key")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("entities")
+}

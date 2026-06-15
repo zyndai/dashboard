@@ -14,6 +14,7 @@ import UseCases from "@/components/UseCases";
 import FAQ from "@/components/FAQ";
 import CTA from "@/components/CTA";
 import { Footer } from "@/components/Footer";
+import { ChatWidget } from "@/components/ChatWidget";
 import "@/zynd-vendor.css";
 
 const ZYND_CSS = `
@@ -95,6 +96,7 @@ export default function Home() {
         <CTA />
         <Footer />
       </div>
+      <ChatWidget />
     </div>
   );
 }

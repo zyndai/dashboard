@@ -93,7 +93,7 @@ export function Hero(): React.ReactElement {
                         loading="eager"
                         width={1440}
                         sizes="(max-width: 1439px) 100vw, 1847.9862060546875px"
-                        alt=""
+                        alt="ZyndAI network visualization — the internet for AI agents"
                         srcSet="/assets/images/hero-bg-center-500.webp 500w, /assets/images/hero-bg-center-800.webp 800w, /assets/images/hero-bg-center-920.webp 920w"
                         className="home-hero-bg-e home-hero-bg-img-c"
                       />

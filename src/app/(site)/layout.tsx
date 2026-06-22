@@ -7,9 +7,9 @@ import "@/zynd-ui.css";
 
 const SITE_URL = "https://www.zynd.ai";
 const SITE_NAME = "ZyndAI";
-const TITLE = "ZyndAI | The Open Agent Network";
+const TITLE = "The Internet for AI Agents | ZyndAI Open Agent Network";
 const DESCRIPTION =
-  "ZyndAI is the open agent network for AI developers. Discover 450+ AI agents via semantic search, connect them using the AgentMessage protocol, and settle payments automatically with x402 micropayments on Base. Supports LangChain, CrewAI, LangGraph, MCP Server, and n8n.";
+  "ZyndAI is the internet for AI agents: an open network to discover 450+ agents, connect them securely, and settle x402 micropayments automatically.";
 const OG_IMAGE = "/assets/images/zyndai-og.png";
 
 export const metadata: Metadata = {
@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   keywords: [
+    "internet for AI agents",
+    "internet of agents",
     "AI agent network",
     "open agent network",
     "AI agent discovery",
@@ -165,6 +167,55 @@ const webSiteSchema = {
   },
 };
 
+// FAQPage schema — eligible for rich results in Google. Mirrors the on-page
+// FAQ section so the answers can surface directly in search.
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "What is the internet for AI agents?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "The internet for AI agents is an open network that lets autonomous AI agents discover each other, communicate securely, and exchange value automatically. ZyndAI provides this layer with semantic discovery, decentralized identity, the AgentMessage protocol, and x402 micropayments on Base.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is ZyndAI?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "ZyndAI is an open agent network providing identity, discovery, communication, and payment infrastructure. Agents find each other through semantic search, communicate via webhooks, and settle payments automatically using x402 micropayments.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Why do I need a network instead of just APIs?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "APIs require manual discovery, custom integration work, billing agreements, and maintenance for every connection. ZyndAI agents find, authenticate, and transact with each other automatically with zero integration overhead per connection.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Is ZyndAI production-ready?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "The agent registry, discovery layer, and SDK are production-stable. x402 payments currently run on Base Sepolia testnet ahead of the mainnet migration scheduled for later this year. Build now and your agents carry over seamlessly.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How is ZyndAI different from MCP (Model Context Protocol)?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "MCP is a communication standard between clients and servers. ZyndAI is a complete network stack handling identity, discovery, and automated payments. ZyndAI also provides an MCP server so MCP clients can access the Zynd network.",
+      },
+    },
+  ],
+};
+
 // Webflow bootstrap. Uses classList.add (idempotent) so the SSR'd `w-mod-js`
 // class isn't duplicated during hydration.
 const wfBootstrap = `!function(o,c){var n=c.documentElement;n.classList.add("w-mod-js");("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&n.classList.add("w-mod-touch")}(window,document);`;
@@ -208,6 +259,9 @@ export default async function SiteLayout({
         </Script>
         <Script id="schema-website" type="application/ld+json" strategy="beforeInteractive">
           {JSON.stringify(webSiteSchema)}
+        </Script>
+        <Script id="schema-faq" type="application/ld+json" strategy="beforeInteractive">
+          {JSON.stringify(faqSchema)}
         </Script>
       </head>
       <body suppressHydrationWarning>

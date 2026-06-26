@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Entities", href: "/dashboard/entities" },
+  { name: "Connect AI", href: "/dashboard/connect" },
   { name: "Wallet", href: "/dashboard/wallet" },
   { name: "Settings", href: "/dashboard/settings" },
 ];

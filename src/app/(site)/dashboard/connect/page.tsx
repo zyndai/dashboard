@@ -11,16 +11,17 @@ type Status = "loading" | "ready" | "error";
 
 // MCP clients that consume the standard `mcpServers` block (variant=false) vs ones
 // that need a different schema/flow (variant=true → we point them at their own setup).
-const CLIENTS: { name: string; initial: string; color: string; loc: string; variant: boolean }[] = [
-  { name: "Claude Desktop", initial: "C", color: "#D97757", loc: "Settings → Developer → Edit Config", variant: false },
-  { name: "Claude Code", initial: "C", color: "#D97757", loc: "Add to .mcp.json, or run claude mcp add", variant: false },
-  { name: "Cursor", initial: "Cu", color: "#6E56CF", loc: "Settings → MCP → Add new server", variant: false },
-  { name: "Windsurf", initial: "W", color: "#22C55E", loc: "~/.codeium/windsurf/mcp_config.json", variant: false },
-  { name: "Cline", initial: "Cl", color: "#3B82F6", loc: "MCP Servers → Configure → cline_mcp_settings.json", variant: false },
-  { name: "Continue", initial: "Co", color: "#8B5CF6", loc: "config.json → mcpServers", variant: false },
-  { name: "VS Code (Copilot)", initial: "V", color: "#3B82F6", loc: ".vscode/mcp.json — uses a \"servers\" key", variant: true },
-  { name: "Zed", initial: "Z", color: "#9CA3AF", loc: "settings.json → context_servers", variant: true },
-  { name: "ChatGPT", initial: "G", color: "#10A37F", loc: "Already supported via the ZYND GPT", variant: true },
+// Logos are real brand favicons fetched from icon.horse (no bundled assets).
+const CLIENTS: { name: string; domain: string; loc: string; variant: boolean }[] = [
+  { name: "Claude Desktop", domain: "claude.ai", loc: "Settings → Developer → Edit Config", variant: false },
+  { name: "Claude Code", domain: "claude.ai", loc: "Add to .mcp.json, or run claude mcp add", variant: false },
+  { name: "Cursor", domain: "cursor.com", loc: "Settings → MCP → Add new server", variant: false },
+  { name: "Windsurf", domain: "windsurf.com", loc: "~/.codeium/windsurf/mcp_config.json", variant: false },
+  { name: "Cline", domain: "cline.bot", loc: "MCP Servers → Configure", variant: false },
+  { name: "Continue", domain: "continue.dev", loc: "config.json → mcpServers", variant: false },
+  { name: "VS Code", domain: "code.visualstudio.com", loc: "uses a \"servers\" key", variant: true },
+  { name: "Zed", domain: "zed.dev", loc: "settings.json → context_servers", variant: true },
+  { name: "ChatGPT", domain: "chatgpt.com", loc: "via the ZYND GPT", variant: true },
 ];
 
 function CodeBlock({ code }: { code: string }) {
@@ -184,14 +185,19 @@ export default function ConnectPage() {
             <div className="zc-grid">
               {CLIENTS.map((c) => (
                 <div key={c.name} className="zc-client">
-                  <div className="zc-client-head">
-                    <span className="zc-logo" style={{ background: c.color }}>{c.initial}</span>
-                    <span className="zc-client-name">{c.name}</span>
+                  <img
+                    className="zc-logo"
+                    src={`https://icon.horse/icon/${c.domain}`}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.visibility = "hidden";
+                    }}
+                  />
+                  <div className="zc-cmeta">
+                    <div className="zc-client-name">{c.name}</div>
+                    <div className="zc-client-loc">{c.loc}</div>
                   </div>
-                  <div className="zc-client-loc">{c.loc}</div>
-                  <span className={`zc-tag ${c.variant ? "zc-tag-alt" : "zc-tag-ok"}`}>
-                    {c.variant ? "See docs" : "Paste block"}
-                  </span>
                 </div>
               ))}
             </div>
@@ -225,18 +231,15 @@ const CONNECT_CSS = `
   border-radius:999px;margin-bottom:16px}
 .zc-connected strong{color:#fff;font-weight:600}
 .zc-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e}
-.zc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.zc-client{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;padding:14px 15px;transition:border-color .15s,background .15s}
-.zc-client:hover{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}
-.zc-client-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
-.zc-logo{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.zc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px;
+  border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.09)}
+.zc-client{display:flex;align-items:center;gap:12px;padding:13px 15px;background:#0b0b10;
+  transition:background .15s}
+.zc-client:hover{background:rgba(255,255,255,.035)}
+.zc-logo{width:26px;height:26px;border-radius:6px;flex-shrink:0;object-fit:contain;background:#fff}
+.zc-cmeta{min-width:0}
 .zc-client-name{font-size:14px;font-weight:600;color:#f6f6f6}
-.zc-client-loc{font-size:11.5px;color:rgba(246,246,246,.6);line-height:1.5;margin-bottom:10px;min-height:34px}
-.zc-tag{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;letter-spacing:.01em}
-.zc-tag-ok{color:#a78bfa;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.3)}
-.zc-tag-alt{color:#d8c089;background:rgba(217,180,80,.10);border:1px solid rgba(217,180,80,.28)}
+.zc-client-loc{font-size:11.5px;color:rgba(246,246,246,.58);line-height:1.45;margin-top:1px}
 .zc-list{margin:0;padding-left:0;list-style:none}
 .zc-list li{position:relative;padding-left:26px;font-size:13.5px;color:rgba(246,246,246,.82);
   line-height:1.5;margin-bottom:11px}

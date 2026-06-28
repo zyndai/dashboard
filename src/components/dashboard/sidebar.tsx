@@ -8,7 +8,9 @@ const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Entities", href: "/dashboard/entities" },
   { name: "Connect AI", href: "/dashboard/connect" },
+  { name: "Be findable", href: "/dashboard/findable" },
   { name: "Wallet", href: "/dashboard/wallet" },
+  { name: "CLI", href: "/dashboard/cli" },
   { name: "Settings", href: "/dashboard/settings" },
 ];
 

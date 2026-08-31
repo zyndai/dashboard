@@ -12,7 +12,10 @@ interface PageProps {
 
 function buildJsonLd(card: AgentProfileCard) {
   const { identity } = card;
-  const sameAs = Object.values(identity.links).filter((v): v is string => Boolean(v));
+  const sameAs = Object.values(identity.links)
+    .filter((v): v is string => Boolean(v))
+    .filter((v) => /^https?:\/\//.test(v));
+  const image = /^https?:\/\//.test(identity.avatar_url || "") ? identity.avatar_url : undefined;
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -22,7 +25,7 @@ function buildJsonLd(card: AgentProfileCard) {
       "@type": "Person",
       name: identity.name,
       description: card.summary || identity.headline,
-      image: identity.avatar_url || undefined,
+      image,
       sameAs,
     },
   };
@@ -58,6 +61,17 @@ function isBlank(s: string | null | undefined): boolean {
   if (!s) return true;
   const low = s.toLowerCase().trim();
   return low === "" || low === "n/a" || low === "not specified" || low === "unknown" || low === "none";
+}
+
+// Only allow http/https — blocks javascript: data: and other protocol XSS vectors
+function safeUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === "http:" || protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
 }
 
 function PlatformIcon({ platform }: { platform: string }) {
@@ -149,7 +163,9 @@ export default async function ProfilePage({ params }: PageProps) {
     .join("")
     .toUpperCase();
 
-  const socialLinks = Object.entries(identity.links).filter(([, url]) => !isBlank(url)) as [string, string][];
+  const socialLinks = Object.entries(identity.links)
+    .map(([p, u]) => [p, safeUrl(u)] as [string, string | null])
+    .filter((e): e is [string, string] => e[1] !== null);
   const hasSkills = card.skills.length > 0;
   const hasProjects = card.projects.length > 0;
   const hasSamples = card.writing_samples.length > 0;
@@ -277,9 +293,9 @@ export default async function ProfilePage({ params }: PageProps) {
           >
             <div className="pf-hero-inner" style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
               {/* Avatar */}
-              {identity.avatar_url && !isBlank(identity.avatar_url) ? (
+              {safeUrl(identity.avatar_url) ? (
                 <img
-                  src={identity.avatar_url}
+                  src={safeUrl(identity.avatar_url)!}
                   alt={identity.name}
                   style={{ width: "72px", height: "72px", borderRadius: "12px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.08)" }}
                 />
@@ -381,9 +397,9 @@ export default async function ProfilePage({ params }: PageProps) {
                         {project.description}
                       </div>
                     )}
-                    {!isBlank(project.url) && (
+                    {safeUrl(project.url) && (
                       <a
-                        href={project.url}
+                        href={safeUrl(project.url)!}
                         target="_blank"
                         rel="noreferrer"
                         style={{ fontSize: "12px", color: "#5b7cfa", textDecoration: "none", fontWeight: 500 }}
@@ -409,8 +425,8 @@ export default async function ProfilePage({ params }: PageProps) {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ fontSize: "11px", color: "#3d5068", textTransform: "capitalize" }}>{sample.platform}</span>
-                      {!isBlank(sample.url) && (
-                        <a href={sample.url} target="_blank" rel="noreferrer" style={{ fontSize: "11px", color: "#5b7cfa", textDecoration: "none" }}>
+                      {safeUrl(sample.url) && (
+                        <a href={safeUrl(sample.url)!} target="_blank" rel="noreferrer" style={{ fontSize: "11px", color: "#5b7cfa", textDecoration: "none" }}>
                           Read →
                         </a>
                       )}

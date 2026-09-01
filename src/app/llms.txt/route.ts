@@ -1,4 +1,4 @@
-import { listCards } from "@/lib/cards";
+import { listCards, cardCanonicalUrl } from "@/lib/cards";
 
 export const revalidate = 60;
 
@@ -13,7 +13,7 @@ export async function GET() {
     ...(cards.length
       ? cards.map(
           (c) =>
-            `- [${c.identity.name} — ${c.identity.headline}](https://www.zynd.ai/profile/${c.id}): ${c.citation_snippet}`,
+            `- [${c.identity.name} — ${c.identity.headline}](${cardCanonicalUrl(c)}): ${c.citation_snippet}`,
         )
       : ["- None published yet."]),
     "",

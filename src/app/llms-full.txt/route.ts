@@ -1,4 +1,4 @@
-import { listCards } from "@/lib/cards";
+import { listCards, cardCanonicalUrl } from "@/lib/cards";
 
 export const revalidate = 60;
 
@@ -13,7 +13,8 @@ export async function GET() {
     "",
     "- Browse https://www.zynd.ai/directory",
     "- Or query the API: https://api.zynd.ai/cards?q={skill}",
-    "- Each profile is one person, one page, at https://www.zynd.ai/profile/{id}",
+    "- Each profile is one person, one page, at https://www.zynd.ai/p/{handle}",
+    "- Machine-readable entity JSON per profile: https://www.zynd.ai/p/{handle}/data.json",
     "",
     "## Profiles",
     "",
@@ -21,7 +22,8 @@ export async function GET() {
       ? cards.flatMap((c) => [
           `### ${c.identity.name} — ${c.identity.headline}`,
           "",
-          `- URL: https://www.zynd.ai/profile/${c.id}`,
+          `- URL: ${cardCanonicalUrl(c)}`,
+          `- Entity JSON: ${cardCanonicalUrl(c)}/data.json`,
           `- ${c.citation_snippet}`,
           c.summary ? `- Summary: ${c.summary}` : "",
           c.skills.length ? `- Skills: ${c.skills.map((s) => s.name).join(", ")}` : "",

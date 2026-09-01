@@ -175,8 +175,6 @@ export default async function PersonPage({ params }: PageProps) {
         .pf-social-link:hover { background: rgba(91,124,250,0.08); border-color: rgba(91,124,250,0.3); color: #a5b4fc; }
         .pf-project { padding: 18px 20px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; transition: border-color 0.15s ease; }
         .pf-project:hover { border-color: rgba(91,124,250,0.25); }
-        .pf-edit-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #64748b; font-size: 12px; font-weight: 600; text-decoration: none; letter-spacing: 0.04em; transition: all 0.15s ease; }
-        .pf-edit-btn:hover { border-color: rgba(255,255,255,0.2); color: #94a3b8; }
         .pf-back { display: inline-flex; align-items: center; gap: 6px; color: #475569; font-size: 13px; text-decoration: none; transition: color 0.15s ease; }
         .pf-back:hover { color: #94a3b8; }
         @media (max-width: 600px) { .pf-hero-inner { flex-direction: column; gap: 16px !important; } .pf-hero-name { font-size: 1.6rem !important; } }
@@ -185,17 +183,10 @@ export default async function PersonPage({ params }: PageProps) {
       <div style={{ backgroundColor: "#080f1a", minHeight: "100vh", color: "#f1f5f9", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
         <div style={{ maxWidth: "700px", margin: "0 auto", padding: "0 24px 80px" }}>
 
-          <div className="pf-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "24px", marginBottom: "32px" }}>
+          <div className="pf-card" style={{ paddingTop: "24px", marginBottom: "32px" }}>
             <Link href="/directory" className="pf-back">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
               Directory
-            </Link>
-            <Link href="/create" className="pf-edit-btn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              Update profile
             </Link>
           </div>
 

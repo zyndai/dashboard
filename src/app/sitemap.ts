@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 import { BLOG_POSTS } from "@/lib/blogs/posts";
-import { listCards } from "@/lib/cards";
+import { listCards, cardCanonicalUrl } from "@/lib/cards";
 
 const BASE_URL = "https://www.zynd.ai";
 
@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const profileEntries: MetadataRoute.Sitemap = cards.map((c) => ({
-    url: `${BASE_URL}/profile/${c.id}`,
+    url: cardCanonicalUrl(c),
     lastModified: c.updated_at ? new Date(c.updated_at) : new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,

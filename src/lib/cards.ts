@@ -43,6 +43,7 @@ export interface AgentProfileCard {
   id: string;
   schema_version: string;
   status: string;
+  handle: string;
   created_at: string;
   updated_at: string;
   identity: Identity;
@@ -77,6 +78,18 @@ export async function fetchCard(id: string): Promise<AgentProfileCard | null> {
   }
 }
 
+export async function fetchCardByHandle(handle: string): Promise<AgentProfileCard | null> {
+  try {
+    const res = await fetch(`${API_BASE}/cards/by-handle/${handle}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as AgentProfileCard;
+  } catch {
+    return null;
+  }
+}
+
 export async function listCards(): Promise<AgentProfileCard[]> {
   try {
     const res = await fetch(`${API_BASE}/cards`, { next: { revalidate: 60 } });
@@ -85,6 +98,11 @@ export async function listCards(): Promise<AgentProfileCard[]> {
   } catch {
     return [];
   }
+}
+
+export function cardCanonicalUrl(card: AgentProfileCard): string {
+  const base = "https://www.zynd.ai";
+  return card.handle ? `${base}/p/${card.handle}` : `${base}/profile/${card.id}`;
 }
 
 export { API_BASE as CARDS_API };

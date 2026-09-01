@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { Navbar } from "@/components/Navbar";
-import { fetchCard, cardCanonicalUrl, type AgentProfileCard, type Skill } from "@/lib/cards";
+import { fetchCardByHandle, cardCanonicalUrl, type AgentProfileCard, type Skill } from "@/lib/cards";
 import { pageMetadata } from "@/lib/seo";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ handle: string }>;
 }
 
 function buildJsonLd(card: AgentProfileCard) {
@@ -27,30 +27,52 @@ function buildJsonLd(card: AgentProfileCard) {
       description: card.summary || identity.headline,
       image,
       sameAs,
+      knowsAbout: card.skills.map((s) => s.name),
+      ...(identity.headline ? { hasOccupation: { "@type": "Occupation", name: identity.headline } } : {}),
+      ...(identity.location ? { address: { "@type": "PostalAddress", addressLocality: identity.location } } : {}),
+    },
+    breadcrumb: {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Zynd", item: "https://www.zynd.ai" },
+        { "@type": "ListItem", position: 2, name: "Directory", item: "https://www.zynd.ai/directory" },
+        { "@type": "ListItem", position: 3, name: identity.name, item: cardCanonicalUrl(card) },
+      ],
     },
   };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const card = await fetchCard(id);
+  const { handle } = await params;
+  const card = await fetchCardByHandle(handle);
   if (!card) {
-    return pageMetadata({ title: "Profile not found", description: "This profile does not exist on Zynd.", path: `/profile/${id}` });
+    return pageMetadata({ title: "Profile not found", description: "This profile does not exist on Zynd.", path: `/p/${handle}` });
   }
   const name = card.identity.name || "Profile";
   const headline = card.identity.headline;
-  return pageMetadata({
-    title: headline ? `${name} — ${headline} — Zynd` : `${name} — Zynd`,
-    description: card.citation_snippet,
-    path: `/profile/${id}`,
-  });
+  const canonical = cardCanonicalUrl(card);
+  return {
+    ...pageMetadata({
+      title: headline ? `${name} — ${headline} — Zynd` : `${name} — Zynd`,
+      description: card.citation_snippet || card.summary,
+      path: `/p/${handle}`,
+    }),
+    alternates: { canonical },
+    openGraph: {
+      type: "profile",
+      url: canonical,
+      title: headline ? `${name} — ${headline}` : name,
+      description: card.citation_snippet || card.summary,
+      ...(card.identity.links.github ? { username: handle } : {}),
+    },
+  };
 }
 
-const LEVEL_META: Record<string, { label: string; color: string; bg: string }> = {
-  expert:       { label: "Expert",       color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
-  advanced:     { label: "Advanced",     color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
-  intermediate: { label: "Mid",          color: "#5b7cfa", bg: "rgba(91,124,250,0.1)" },
-  beginner:     { label: "Beginner",     color: "#34d399", bg: "rgba(52,211,153,0.1)" },
+const LEVEL_META: Record<string, { label: string; color: string }> = {
+  expert:       { label: "Expert",    color: "#f59e0b" },
+  advanced:     { label: "Advanced",  color: "#a78bfa" },
+  intermediate: { label: "Mid",       color: "#5b7cfa" },
+  beginner:     { label: "Beginner",  color: "#34d399" },
 };
 
 function levelMeta(level: string) {
@@ -63,7 +85,6 @@ function isBlank(s: string | null | undefined): boolean {
   return low === "" || low === "n/a" || low === "not specified" || low === "unknown" || low === "none";
 }
 
-// Only allow http/https — blocks javascript: data: and other protocol XSS vectors
 function safeUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
@@ -101,19 +122,8 @@ function PlatformIcon({ platform }: { platform: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      marginBottom: "20px",
-    }}>
-      <div style={{
-        fontSize: "10px",
-        fontWeight: 700,
-        letterSpacing: "0.14em",
-        textTransform: "uppercase",
-        color: "#3d5068",
-      }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+      <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3d5068" }}>
         {children}
       </div>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.06)" }} />
@@ -124,149 +134,57 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SkillChip({ skill }: { skill: Skill }) {
   const meta = levelMeta(skill.level);
   return (
-    <span style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "6px",
-      padding: "5px 11px",
-      background: "rgba(255,255,255,0.04)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: "6px",
-      fontSize: "13px",
-      color: "#cbd5e1",
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
-    }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "5px 11px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", fontSize: "13px", color: "#cbd5e1", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace" }}>
       {skill.name}
-      <span style={{
-        fontSize: "10px",
-        fontWeight: 700,
-        color: meta.color,
-        letterSpacing: "0.04em",
-      }}>
-        {meta.label.toUpperCase()}
-      </span>
+      <span style={{ fontSize: "10px", fontWeight: 700, color: meta.color, letterSpacing: "0.04em" }}>{meta.label.toUpperCase()}</span>
     </span>
   );
 }
 
-export default async function ProfilePage({ params }: PageProps) {
-  const { id } = await params;
-  const card = await fetchCard(id);
+export default async function PersonPage({ params }: PageProps) {
+  const { handle } = await params;
+  const card = await fetchCardByHandle(handle);
   if (!card) notFound();
-  // Permanent redirect to canonical slug URL once the handle is set
-  if (card.handle) redirect(`/p/${card.handle}`);
 
   const { identity } = card;
-  const initials = (identity.name || "?")
-    .split(/\s+/)
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
+  const initials = (identity.name || "?").split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   const socialLinks = Object.entries(identity.links)
     .map(([p, u]) => [p, safeUrl(u)] as [string, string | null])
     .filter((e): e is [string, string] => e[1] !== null);
-  const hasSkills = card.skills.length > 0;
-  const hasProjects = card.projects.length > 0;
-  const hasSamples = card.writing_samples.length > 0;
-  const hasSummary = !isBlank(card.summary);
-
-  const updated = card.updated_at
-    ? new Date(card.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-    : null;
+  const canonical = cardCanonicalUrl(card);
+  const updated = card.updated_at ? new Date(card.updated_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : null;
 
   return (
     <>
       <Navbar />
+      <link rel="canonical" href={canonical} />
       <script
         type="application/ld+json"
-        // Escape < to prevent </script> injection from untrusted card data
         dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd(card)).replace(/</g, "\\u003c") }}
       />
 
       <style>{`
-        @keyframes pf-fade {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .pf-card {
-          animation: pf-fade 0.5s cubic-bezier(0.16,1,0.3,1) both;
-        }
+        @keyframes pf-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pf-card { animation: pf-fade 0.5s cubic-bezier(0.16,1,0.3,1) both; }
         .pf-card:nth-child(2) { animation-delay: 0.05s; }
         .pf-card:nth-child(3) { animation-delay: 0.10s; }
         .pf-card:nth-child(4) { animation-delay: 0.15s; }
         .pf-card:nth-child(5) { animation-delay: 0.20s; }
         .pf-card:nth-child(6) { animation-delay: 0.25s; }
-        .pf-card:nth-child(7) { animation-delay: 0.30s; }
-        .pf-social-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          padding: 7px 13px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.09);
-          border-radius: 8px;
-          color: #94a3b8;
-          font-size: 13px;
-          font-weight: 500;
-          text-decoration: none;
-          transition: all 0.15s ease;
-          text-transform: capitalize;
-        }
-        .pf-social-link:hover {
-          background: rgba(91,124,250,0.08);
-          border-color: rgba(91,124,250,0.3);
-          color: #a5b4fc;
-        }
-        .pf-project {
-          padding: 18px 20px;
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 10px;
-          transition: border-color 0.15s ease;
-        }
+        .pf-social-link { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; color: #94a3b8; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s ease; text-transform: capitalize; }
+        .pf-social-link:hover { background: rgba(91,124,250,0.08); border-color: rgba(91,124,250,0.3); color: #a5b4fc; }
+        .pf-project { padding: 18px 20px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; transition: border-color 0.15s ease; }
         .pf-project:hover { border-color: rgba(91,124,250,0.25); }
-        .pf-edit-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 7px 13px;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 7px;
-          color: #64748b;
-          font-size: 12px;
-          font-weight: 600;
-          text-decoration: none;
-          letter-spacing: 0.04em;
-          transition: all 0.15s ease;
-        }
-        .pf-edit-btn:hover {
-          border-color: rgba(255,255,255,0.2);
-          color: #94a3b8;
-        }
-        .pf-back {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          color: #475569;
-          font-size: 13px;
-          text-decoration: none;
-          transition: color 0.15s ease;
-        }
+        .pf-edit-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #64748b; font-size: 12px; font-weight: 600; text-decoration: none; letter-spacing: 0.04em; transition: all 0.15s ease; }
+        .pf-edit-btn:hover { border-color: rgba(255,255,255,0.2); color: #94a3b8; }
+        .pf-back { display: inline-flex; align-items: center; gap: 6px; color: #475569; font-size: 13px; text-decoration: none; transition: color 0.15s ease; }
         .pf-back:hover { color: #94a3b8; }
-        @media (max-width: 600px) {
-          .pf-hero-inner { flex-direction: column; gap: 16px !important; }
-          .pf-hero-name { font-size: 1.6rem !important; }
-        }
+        @media (max-width: 600px) { .pf-hero-inner { flex-direction: column; gap: 16px !important; } .pf-hero-name { font-size: 1.6rem !important; } }
       `}</style>
 
       <div style={{ backgroundColor: "#080f1a", minHeight: "100vh", color: "#f1f5f9", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
         <div style={{ maxWidth: "700px", margin: "0 auto", padding: "0 24px 80px" }}>
 
-          {/* Top nav row */}
           <div className="pf-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "24px", marginBottom: "32px" }}>
             <Link href="/directory" className="pf-back">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -281,57 +199,21 @@ export default async function ProfilePage({ params }: PageProps) {
             </Link>
           </div>
 
-          {/* Hero card */}
-          <div
-            className="pf-card"
-            style={{
-              padding: "28px",
-              background: "#0c1525",
-              border: "1px solid rgba(91,124,250,0.18)",
-              borderRadius: "16px",
-              marginBottom: "40px",
-              boxShadow: "0 0 0 1px rgba(91,124,250,0.06), 0 8px 40px rgba(0,0,0,0.4)",
-            }}
-          >
+          <div className="pf-card" style={{ padding: "28px", background: "#0c1525", border: "1px solid rgba(91,124,250,0.18)", borderRadius: "16px", marginBottom: "40px", boxShadow: "0 0 0 1px rgba(91,124,250,0.06), 0 8px 40px rgba(0,0,0,0.4)" }}>
             <div className="pf-hero-inner" style={{ display: "flex", alignItems: "flex-start", gap: "20px" }}>
-              {/* Avatar */}
               {safeUrl(identity.avatar_url) ? (
-                <img
-                  src={safeUrl(identity.avatar_url)!}
-                  alt={identity.name}
-                  style={{ width: "72px", height: "72px", borderRadius: "12px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.08)" }}
-                />
+                <img src={safeUrl(identity.avatar_url)!} alt={identity.name} style={{ width: "72px", height: "72px", borderRadius: "12px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.08)" }} />
               ) : (
-                <div style={{
-                  width: "72px",
-                  height: "72px",
-                  borderRadius: "12px",
-                  background: "linear-gradient(135deg, #5b7cfa 0%, #8b5cf6 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  color: "#fff",
-                  flexShrink: 0,
-                  letterSpacing: "-0.02em",
-                }}>
+                <div style={{ width: "72px", height: "72px", borderRadius: "12px", background: "linear-gradient(135deg, #5b7cfa 0%, #8b5cf6 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", fontWeight: 700, color: "#fff", flexShrink: 0, letterSpacing: "-0.02em" }}>
                   {initials}
                 </div>
               )}
-
-              {/* Identity */}
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div
-                  className="pf-hero-name"
-                  style={{ fontSize: "1.875rem", fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: "6px" }}
-                >
+                <div className="pf-hero-name" style={{ fontSize: "1.875rem", fontWeight: 700, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: "6px" }}>
                   {identity.name}
                 </div>
                 {!isBlank(identity.headline) && (
-                  <div style={{ fontSize: "15px", color: "#8898aa", lineHeight: 1.4, marginBottom: "10px" }}>
-                    {identity.headline}
-                  </div>
+                  <div style={{ fontSize: "15px", color: "#8898aa", lineHeight: 1.4, marginBottom: "10px" }}>{identity.headline}</div>
                 )}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
                   {!isBlank(identity.location) && (
@@ -340,16 +222,11 @@ export default async function ProfilePage({ params }: PageProps) {
                       {identity.location}
                     </span>
                   )}
-                  {updated && (
-                    <span style={{ fontSize: "11px", color: "#3d5068" }}>
-                      Updated {updated}
-                    </span>
-                  )}
+                  {updated && <span style={{ fontSize: "11px", color: "#3d5068" }}>Updated {updated}</span>}
                 </div>
               </div>
             </div>
 
-            {/* Social links */}
             {socialLinks.length > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 {socialLinks.map(([platform, url]) => (
@@ -362,76 +239,47 @@ export default async function ProfilePage({ params }: PageProps) {
             )}
           </div>
 
-          {/* About */}
-          {hasSummary && (
+          {!isBlank(card.summary) && (
             <section className="pf-card" style={{ marginBottom: "36px" }}>
               <SectionLabel>About</SectionLabel>
-              <div style={{ fontSize: "15px", color: "#94a3b8", lineHeight: 1.8 }}>
-                {card.summary}
-              </div>
+              <div style={{ fontSize: "15px", color: "#94a3b8", lineHeight: 1.8 }}>{card.summary}</div>
             </section>
           )}
 
-          {/* Skills */}
-          {hasSkills && (
+          {card.skills.length > 0 && (
             <section className="pf-card" style={{ marginBottom: "36px" }}>
               <SectionLabel>Skills</SectionLabel>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {card.skills.map((skill) => (
-                  <SkillChip key={skill.name} skill={skill} />
-                ))}
+                {card.skills.map((skill) => <SkillChip key={skill.name} skill={skill} />)}
               </div>
             </section>
           )}
 
-          {/* Projects */}
-          {hasProjects && (
+          {card.projects.length > 0 && (
             <section className="pf-card" style={{ marginBottom: "36px" }}>
               <SectionLabel>Projects</SectionLabel>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
                 {card.projects.map((project) => (
                   <div key={project.name} className="pf-project">
-                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>
-                      {project.name}
-                    </div>
-                    {!isBlank(project.description) && (
-                      <div style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, marginBottom: "10px" }}>
-                        {project.description}
-                      </div>
-                    )}
-                    {safeUrl(project.url) && (
-                      <a
-                        href={safeUrl(project.url)!}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ fontSize: "12px", color: "#5b7cfa", textDecoration: "none", fontWeight: 500 }}
-                      >
-                        View →
-                      </a>
-                    )}
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>{project.name}</div>
+                    {!isBlank(project.description) && <div style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, marginBottom: "10px" }}>{project.description}</div>}
+                    {safeUrl(project.url) && <a href={safeUrl(project.url)!} target="_blank" rel="noreferrer" style={{ fontSize: "12px", color: "#5b7cfa", textDecoration: "none", fontWeight: 500 }}>View →</a>}
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Writing samples */}
-          {hasSamples && (
+          {card.writing_samples.length > 0 && (
             <section className="pf-card" style={{ marginBottom: "36px" }}>
               <SectionLabel>Writing</SectionLabel>
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {card.writing_samples.map((sample, i) => (
                   <div key={i} style={{ paddingLeft: "16px", borderLeft: "2px solid rgba(91,124,250,0.3)" }}>
-                    <div style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.7, marginBottom: "6px" }}>
-                      {sample.excerpt}
-                    </div>
+                    <div style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.7, marginBottom: "6px" }}>{sample.excerpt}</div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ fontSize: "11px", color: "#3d5068", textTransform: "capitalize" }}>{sample.platform}</span>
-                      {safeUrl(sample.url) && (
-                        <a href={safeUrl(sample.url)!} target="_blank" rel="noreferrer" style={{ fontSize: "11px", color: "#5b7cfa", textDecoration: "none" }}>
-                          Read →
-                        </a>
-                      )}
+                      {safeUrl(sample.url) && <a href={safeUrl(sample.url)!} target="_blank" rel="noreferrer" style={{ fontSize: "11px", color: "#5b7cfa", textDecoration: "none" }}>Read →</a>}
                     </div>
                   </div>
                 ))}
@@ -439,28 +287,13 @@ export default async function ProfilePage({ params }: PageProps) {
             </section>
           )}
 
-          {/* Citation */}
-          <div
-            className="pf-card"
-            style={{
-              marginTop: "40px",
-              paddingTop: "24px",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            <div style={{ fontSize: "12px", color: "#1e3a5f", lineHeight: 1.6 }}>
-              {card.citation_snippet}
-            </div>
+          <div className="pf-card" style={{ marginTop: "40px", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ fontSize: "12px", color: "#1e3a5f", lineHeight: 1.6 }}>{card.citation_snippet}</div>
           </div>
 
-          {/* Footer */}
           <div className="pf-card" style={{ marginTop: "32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Link href="/directory" className="pf-back">
-              ← Zynd directory
-            </Link>
-            <div style={{ fontSize: "11px", color: "#1e3a5f" }}>
-              Listed on Zynd
-            </div>
+            <Link href="/directory" className="pf-back">← Zynd directory</Link>
+            <div style={{ fontSize: "11px", color: "#1e3a5f" }}>zynd.ai/p/{handle}</div>
           </div>
 
         </div>

@@ -560,7 +560,7 @@ export default async function PersonPage({ params }: PageProps) {
               </div>
 
               {/* Snapshot card */}
-              {(card.experience_years || card.projects.length > 0 || card.industries.length > 0) && (
+              {(card.experience_years != null || card.skills.length > 0 || card.writing_samples.length > 0 || card.projects.length > 0 || card.industries.length > 0 || !isBlank(card.availability)) && (
                 <div className="pf-card pf-in">
                   <div className="pf-card-body">
                     <div className="pf-section-label">Snapshot</div>
@@ -660,7 +660,7 @@ export default async function PersonPage({ params }: PageProps) {
                   <div className="pf-card-body">
                     <div className="pf-section-label">Skills</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {card.skills.map((skill) => {
+                      {card.skills.slice().sort((a, b) => b.evidence_count - a.evidence_count).map((skill) => {
                         const meta = levelMeta(skill.level);
                         return (
                           <div key={skill.name} className="pf-skill">
@@ -683,26 +683,27 @@ export default async function PersonPage({ params }: PageProps) {
                   <div className="pf-card-body">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
                       <div className="pf-section-label" style={{ marginBottom: 0 }}>Posts & Writing</div>
-                      {card.writing_samples.length > 4 && (
-                        <span style={{ fontSize: "11px", color: T.textTert }}>{card.writing_samples.length} posts</span>
-                      )}
+                      <span style={{ fontSize: "11px", color: T.textTert }}>{card.writing_samples.length} posts</span>
                     </div>
                     <div>
-                      {card.writing_samples.slice(0, 4).map((sample, i) => (
-                        <div key={i} className="pf-writing">
-                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px", marginBottom: "6px" }}>
-                            <PlatformDot platform={sample.platform} />
-                            {safeUrl(sample.url) && (
-                              <a href={safeUrl(sample.url)!} target="_blank" rel="noreferrer" style={{ color: T.textTert, flexShrink: 0 }}>
-                                <ExternalLink size={12} />
-                              </a>
-                            )}
+                      {card.writing_samples.slice(0, 10).map((sample, i) => {
+                        const sampleUrl = safeUrl(sample.url);
+                        return (
+                          <div key={i} className="pf-writing">
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px", marginBottom: "6px" }}>
+                              <PlatformDot platform={sample.platform} />
+                              {sampleUrl && (
+                                <a href={sampleUrl} target="_blank" rel="noreferrer" style={{ color: T.textTert, flexShrink: 0 }}>
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.7 }}>
+                              {sample.excerpt.length > 320 ? sample.excerpt.slice(0, 317) + "…" : sample.excerpt}
+                            </div>
                           </div>
-                          <div style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.7 }}>
-                            {sample.excerpt.length > 240 ? sample.excerpt.slice(0, 237) + "…" : sample.excerpt}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -714,46 +715,22 @@ export default async function PersonPage({ params }: PageProps) {
                   <div className="pf-card-body">
                     <div className="pf-section-label">Projects</div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "10px" }}>
-                      {card.projects.map((project) => (
-                        <div key={project.name} className="pf-project">
-                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
-                            <div style={{ fontSize: "13px", fontWeight: 600, color: T.textPri }}>{project.name}</div>
-                            {safeUrl(project.url) && (
-                              <a href={safeUrl(project.url)!} target="_blank" rel="noreferrer" style={{ color: T.textTert, flexShrink: 0 }}>
-                                <ExternalLink size={12} />
-                              </a>
+                      {card.projects.map((project) => {
+                        const projectUrl = safeUrl(project.url);
+                        return (
+                          <div key={project.name} className="pf-project">
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "6px" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: T.textPri }}>{project.name}</div>
+                              {projectUrl && (
+                                <a href={projectUrl} target="_blank" rel="noreferrer" style={{ color: T.textTert, flexShrink: 0 }}>
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </div>
+                            {!isBlank(project.description) && (
+                              <div style={{ fontSize: "12px", color: T.textSec, lineHeight: 1.6 }}>{project.description}</div>
                             )}
                           </div>
-                          {!isBlank(project.description) && (
-                            <div style={{ fontSize: "12px", color: T.textSec, lineHeight: 1.6 }}>{project.description}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Browse by skill — always renders, fills empty space, drives discovery */}
-              {card.skills.length > 0 && (
-                <div className="pf-card pf-in">
-                  <div className="pf-card-body">
-                    <div className="pf-section-label">Browse by Skill</div>
-                    <p style={{ fontSize: "12px", color: T.textTert, marginBottom: "14px", lineHeight: 1.5 }}>
-                      Find other people on Zynd with the same expertise
-                    </p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
-                      {card.skills.map((skill) => {
-                        const tagSlug = encodeURIComponent(skill.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
-                        return (
-                          <Link
-                            key={skill.name}
-                            href={`/tag/${tagSlug}`}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12px", color: T.accent, textDecoration: "none", padding: "5px 10px", borderRadius: "20px", background: T.accentMid, border: "1px solid rgba(91,124,250,0.2)", fontWeight: 500, transition: "background 0.12s" }}
-                          >
-                            <SkillIcon name={skill.name} size={13} />
-                            {skill.name}
-                          </Link>
                         );
                       })}
                     </div>
@@ -761,30 +738,6 @@ export default async function PersonPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Searchable topics — shows how this profile surfaces in AI search */}
-              {card.searchable_facts.length > 0 && (
-                <div className="pf-card pf-in">
-                  <div className="pf-card-body">
-                    <div className="pf-section-label">AI Discovery Topics</div>
-                    <p style={{ fontSize: "12px", color: T.textTert, marginBottom: "12px", lineHeight: 1.5 }}>
-                      How this profile surfaces in AI-agent search queries
-                    </p>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {card.searchable_facts.slice(0, 6).map((fact, i) => (
-                        <div key={i} style={{ fontSize: "12px", color: T.textSec, padding: "6px 10px", borderRadius: "8px", background: "#f8fafc", border: `1px solid ${T.border}`, lineHeight: 1.4 }}>
-                          {fact}
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <Search size={11} style={{ color: T.textTert }} />
-                      <Link href={`/search?q=${encodeURIComponent(identity.name)}`} style={{ fontSize: "11px", color: T.accent, textDecoration: "none", fontWeight: 500 }}>
-                        Search for {identity.name.split(" ")[0]} on Zynd →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* ── RIGHT column ── */}
@@ -817,7 +770,7 @@ export default async function PersonPage({ params }: PageProps) {
                   <div className="pf-card-body">
                     <div className="pf-section-label">Tech Stack</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {card.skills.slice(0, 16).map((skill) => (
+                      {card.skills.slice().sort((a, b) => b.evidence_count - a.evidence_count).slice(0, 16).map((skill) => (
                         <div key={skill.name} className="pf-tech-icon" title={skill.name}>
                           <SkillIcon name={skill.name} size={20} />
                         </div>

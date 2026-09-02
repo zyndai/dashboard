@@ -177,12 +177,11 @@ export default async function TagPage({ params }: PageProps) {
               const otherSkillCount = card.skills.length - 1;
 
               return (
-                <Link
+                <div
                   key={card.id}
-                  href={cardCanonicalUrl(card)}
                   className="tg-card"
                   style={{
-                    display: "block",
+                    position: "relative",
                     textDecoration: "none",
                     background: "rgba(255,255,255,0.02)",
                     border: "1px solid rgba(255,255,255,0.07)",
@@ -191,6 +190,12 @@ export default async function TagPage({ params }: PageProps) {
                     animationDelay: `${idx * 0.04}s`,
                   }}
                 >
+                  {/* Full-coverage card link — skill chips sit above via z-index */}
+                  <Link
+                    href={cardCanonicalUrl(card)}
+                    style={{ position: "absolute", inset: 0, zIndex: 1, borderRadius: "12px" }}
+                    aria-label={`View ${card.identity.name}'s profile`}
+                  />
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
                     {/* Avatar */}
                     {card.identity.avatar_url && /^https?:\/\//.test(card.identity.avatar_url) ? (
@@ -235,9 +240,9 @@ export default async function TagPage({ params }: PageProps) {
                           {card.citation_snippet}
                         </div>
                       )}
-                      {/* Other skills preview */}
+                      {/* Other skills preview — z-index 2 to sit above card overlay */}
                       {card.skills.length > 1 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", position: "relative", zIndex: 2 }}>
                           {card.skills
                             .filter((sk) => sk.name.toLowerCase() !== skill)
                             .slice(0, 4)
@@ -263,7 +268,7 @@ export default async function TagPage({ params }: PageProps) {
                       )}
                     </div>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

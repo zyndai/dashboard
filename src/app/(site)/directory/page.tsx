@@ -79,11 +79,16 @@ export default async function DirectoryPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {cards.map((card) => (
-                <Link
+                <div
                   key={card.id}
-                  href={cardCanonicalUrl(card)}
-                  className="group flex flex-col rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#5b7cfa]/40"
+                  className="group relative flex flex-col rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#5b7cfa]/40"
                 >
+                  {/* Full-coverage card link — skill chips sit above it via z-index */}
+                  <Link
+                    href={cardCanonicalUrl(card)}
+                    className="absolute inset-0 z-[1] rounded-lg"
+                    aria-label={`View ${card.identity.name}'s profile`}
+                  />
                   <div className="flex items-center gap-3 mb-3">
                     {card.identity.avatar_url && /^https?:\/\//.test(card.identity.avatar_url) ? (
                       <img
@@ -118,12 +123,11 @@ export default async function DirectoryPage() {
                     {card.identity.headline}
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="relative z-[2] flex flex-wrap gap-1.5">
                     {card.skills.slice(0, 4).map((s) => (
                       <Link
                         key={s.name}
                         href={`/tag/${encodeSkill(s.name)}`}
-
                         className="inline-flex rounded-full border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2.5 py-0.5 text-xs text-[#a5b4fc] hover:bg-[#5b7cfa]/20 transition-colors"
                       >
                         {s.name}
@@ -135,7 +139,7 @@ export default async function DirectoryPage() {
                       </span>
                     )}
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           )}

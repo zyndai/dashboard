@@ -2,25 +2,35 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Github, Twitter, Linkedin, Globe, X } from "lucide-react";
+import Link from "next/link";
+import { Github, Twitter, Linkedin, Globe, X as XIcon, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
 import { CARDS_API } from "@/lib/cards";
 import type { AgentProfileCard, OnboardStatus } from "@/lib/cards";
 
+// ─── tokens (mirror profile page) ─────────────────────────────────────────────
+const T = {
+  bg:      "#f0f2f7",
+  surface: "#ffffff",
+  accent:  "#5b7cfa",
+  navy:    "#0d1b2a",
+  border:  "rgba(0,0,0,0.07)",
+  shadow:  "0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06)",
+  pri:     "#0f172a",
+  sec:     "#475569",
+  tert:    "#94a3b8",
+} as const;
+
 type Phase = "form" | "working" | "review" | "error";
 type UrlKind = "github" | "x" | "linkedin" | "website";
 
-const INPUT =
-  "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-[#5b7cfa]/60 focus:bg-white/[0.06]";
-
-const LABEL = "block text-sm font-medium text-white/60 mb-1.5";
-
-const KIND_META: Record<UrlKind, { label: string; color: string; bg: string }> = {
-  github:   { label: "GitHub",   color: "#e2e8f0", bg: "rgba(226,232,240,0.08)" },
-  x:        { label: "X",        color: "#e2e8f0", bg: "rgba(226,232,240,0.08)" },
-  linkedin: { label: "LinkedIn", color: "#7eb3f8", bg: "rgba(126,179,248,0.08)" },
-  website:  { label: "Website",  color: "#a5f3c0", bg: "rgba(165,243,192,0.08)" },
+// ─── chip palette ──────────────────────────────────────────────────────────────
+const CHIP: Record<UrlKind, { label: string; color: string; bg: string; border: string }> = {
+  github:   { label: "GitHub",   color: "#24292e", bg: "#f1f3f5", border: "rgba(36,41,46,0.18)" },
+  linkedin: { label: "LinkedIn", color: "#0a66c2", bg: "#e8f3ff", border: "rgba(10,102,194,0.20)" },
+  x:        { label: "X",        color: "#0f172a", bg: "#f1f5f9", border: "rgba(15,23,42,0.12)" },
+  website:  { label: "Website",  color: "#065f46", bg: "#ecfdf5", border: "rgba(6,95,70,0.18)" },
 };
 
 function detectKind(url: string): UrlKind {
@@ -29,44 +39,72 @@ function detectKind(url: string): UrlKind {
     if (host === "github.com" || host.endsWith(".github.com")) return "github";
     if (host === "x.com" || host === "twitter.com" || host.endsWith(".twitter.com")) return "x";
     if (host === "linkedin.com" || host.endsWith(".linkedin.com")) return "linkedin";
-  } catch { /* invalid URL — treat as website */ }
+  } catch { /* invalid — treat as website */ }
   return "website";
 }
 
-function KindIcon({ kind }: { kind: UrlKind }) {
-  if (kind === "github") return <Github size={12} />;
-  if (kind === "x") return <Twitter size={12} />;
-  if (kind === "linkedin") return <Linkedin size={12} />;
-  return <Globe size={12} />;
+function KindIcon({ kind, size = 12 }: { kind: UrlKind; size?: number }) {
+  if (kind === "github")   return <Github   size={size} />;
+  if (kind === "x")        return <Twitter  size={size} />;
+  if (kind === "linkedin") return <Linkedin size={size} />;
+  return <Globe size={size} />;
 }
 
 function shortenUrl(url: string): string {
   try {
     const u = new URL(url);
-    return (u.hostname + u.pathname).replace(/\/$/, "").slice(0, 40);
+    return (u.hostname + u.pathname).replace(/\/$/, "").slice(0, 38);
   } catch {
-    return url.slice(0, 40);
+    return url.slice(0, 38);
   }
 }
 
-function Field({
-  label,
-  hint,
-  children,
+// ─── field component ───────────────────────────────────────────────────────────
+const fieldInput: React.CSSProperties = {
+  width: "100%", padding: "10px 14px", fontSize: "14px",
+  border: `1px solid ${T.border}`, borderRadius: "10px",
+  background: "#f8fafc", color: T.pri, outline: "none",
+  transition: "border-color 0.12s, background 0.12s",
+  fontFamily: "inherit",
+};
+
+function TextField({
+  label, value, onChange, rows, hint,
 }: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
+  label: string; value: string;
+  onChange: (v: string) => void;
+  rows?: number; hint?: string;
 }) {
+  const [focused, setFocused] = useState(false);
+  const style = { ...fieldInput, borderColor: focused ? "rgba(91,124,250,0.5)" : T.border };
   return (
     <div>
-      <label className={LABEL}>{label}</label>
-      {children}
-      {hint && <p className="mt-1 text-xs text-white/25">{hint}</p>}
+      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.tert, marginBottom: "7px" }}>
+        {label}
+      </div>
+      {rows ? (
+        <textarea
+          rows={rows} value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={{ ...style, resize: "none" }}
+        />
+      ) : (
+        <input
+          type="text" value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          style={style}
+        />
+      )}
+      {hint && <div style={{ fontSize: "11px", color: T.tert, marginTop: "5px" }}>{hint}</div>}
     </div>
   );
 }
 
+// ─── page ──────────────────────────────────────────────────────────────────────
 export default function CreateProfilePage() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("form");
@@ -77,45 +115,36 @@ export default function CreateProfilePage() {
   const [urls, setUrls] = useState<string[]>([]);
   const [inputVal, setInputVal] = useState("");
   const [resume, setResume] = useState<File | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   function addUrl(raw: string) {
     const trimmed = raw.trim();
     if (!trimmed) return;
-    // Prepend https:// if no protocol
-    const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    if (urls.includes(withProtocol)) {
-      setInputVal("");
-      return;
-    }
-    setUrls((prev) => [...prev, withProtocol]);
+    const withProto = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    if (!urls.includes(withProto)) setUrls((p) => [...p, withProto]);
     setInputVal("");
   }
 
   function removeUrl(url: string) {
-    setUrls((prev) => prev.filter((u) => u !== url));
+    setUrls((p) => p.filter((u) => u !== url));
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addUrl(inputVal);
-    } else if (e.key === "Backspace" && !inputVal && urls.length > 0) {
-      setUrls((prev) => prev.slice(0, -1));
+    if (e.key === "Enter") { e.preventDefault(); addUrl(inputVal); }
+    else if (e.key === "Backspace" && !inputVal && urls.length > 0) {
+      setUrls((p) => p.slice(0, -1));
     }
   }
 
   function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
     const pasted = e.clipboardData.getData("text").trim();
-    if (pasted) {
-      e.preventDefault();
-      addUrl(pasted);
-    }
+    if (pasted) { e.preventDefault(); addUrl(pasted); }
   }
 
   const hasSource = urls.length > 0 || resume !== null;
@@ -124,11 +153,9 @@ export default function CreateProfilePage() {
     e.preventDefault();
     setError(null);
     setPhase("working");
-
     const form = new FormData();
     urls.forEach((u) => form.append("url", u));
     if (resume) form.append("resume", resume);
-
     try {
       const res = await fetch(`${CARDS_API}/onboard/start`, { method: "POST", body: form });
       if (!res.ok) throw new Error((await res.text()) || `Status ${res.status}`);
@@ -182,63 +209,121 @@ export default function CreateProfilePage() {
 
   return (
     <>
-      <Navbar />
-      <main className="min-h-screen text-white antialiased pb-32">
-        <div className="mx-auto max-w-lg px-6 pt-16">
+      <style>{`
+        @keyframes chip-in {
+          from { opacity: 0; transform: scale(0.85) translateY(4px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .chip-enter { animation: chip-in 0.18s cubic-bezier(0.16,1,0.3,1) both; }
 
-          <div className="mb-8">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-3 py-1 text-xs font-medium text-[#5b7cfa]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#5b7cfa]" />
-              Publicly visible · Discoverable by AI
-            </span>
-            <div className="mt-3 text-[1.75rem] font-bold leading-snug tracking-tight text-white">
-              Create your Agent Profile Card
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.9s linear infinite; }
+
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 0.4; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+
+        .url-box { transition: border-color 0.14s, box-shadow 0.14s; }
+        .url-box:hover { border-color: rgba(91,124,250,0.25) !important; }
+
+        .submit-btn { transition: background 0.14s, transform 0.1s; }
+        .submit-btn:hover:not(:disabled) { background: #4a67e0 !important; }
+        .submit-btn:active:not(:disabled) { transform: translateY(1px); }
+
+        .chip-x { transition: opacity 0.12s; }
+        .chip-x:hover { opacity: 1 !important; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .chip-enter { animation: none; }
+          .spin { animation: spin 1.5s linear infinite; }
+        }
+      `}</style>
+
+      <div style={{ background: T.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
+        <Navbar />
+
+        <div style={{ maxWidth: "520px", margin: "0 auto", padding: "40px 24px 80px" }}>
+
+          {/* back */}
+          <Link href="/directory" style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "13px", color: T.tert, textDecoration: "none", marginBottom: "32px", fontWeight: 500 }}>
+            <ArrowLeft size={13} />
+            Directory
+          </Link>
+
+          {/* header */}
+          <div style={{ marginBottom: "32px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: T.accent, marginBottom: "12px", padding: "4px 10px", borderRadius: "20px", background: "rgba(91,124,250,0.08)", border: "1px solid rgba(91,124,250,0.15)" }}>
+              <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: T.accent }} />
+              AI-discoverable · You review first
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-white/40">
-              Publishes at{" "}
-              <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[0.8em] text-white/60">
-                zynd.ai/p/you
-              </code>{" "}
-              — findable by people and AI agents worldwide. You review before anything goes live.
+            <div style={{ fontSize: "28px", fontWeight: 800, color: T.navy, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: "10px" }}>
+              Add your profiles
+            </div>
+            <p style={{ fontSize: "14px", color: T.sec, lineHeight: 1.65, margin: 0 }}>
+              Paste links to your GitHub, LinkedIn, X, or any website.
+              Zynd scrapes what&apos;s public and builds your card — you approve before anything goes live.
             </p>
           </div>
 
+          {/* ── FORM ── */}
           {phase === "form" && (
-            <form onSubmit={startOnboard} className="flex flex-col gap-4">
+            <form onSubmit={startOnboard} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/30">
-                  Paste your profiles — GitHub, LinkedIn, X, or any website
-                </p>
+              {/* URL chip input */}
+              <div
+                className="url-box"
+                style={{
+                  background: T.surface,
+                  borderRadius: "16px",
+                  border: `1px solid ${inputFocused ? "rgba(91,124,250,0.4)" : T.border}`,
+                  boxShadow: inputFocused ? `0 0 0 3px rgba(91,124,250,0.1), ${T.shadow}` : T.shadow,
+                  overflow: "hidden",
+                }}
+              >
+                <div style={{ padding: "16px 18px 0" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "12px" }}>
+                    Profiles
+                  </div>
 
-                {/* URL chip input */}
-                <div
-                  className="min-h-[52px] w-full cursor-text rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 transition focus-within:border-[#5b7cfa]/60 focus-within:bg-white/[0.06]"
-                  onClick={() => inputRef.current?.focus()}
-                >
-                  <div className="flex flex-wrap gap-1.5">
+                  {/* chips + input */}
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", minHeight: "36px", cursor: "text" }}
+                    onClick={() => inputRef.current?.focus()}
+                  >
                     {urls.map((url) => {
                       const kind = detectKind(url);
-                      const meta = KIND_META[kind];
+                      const c = CHIP[kind];
                       return (
                         <span
                           key={url}
-                          style={{ background: meta.bg, color: meta.color }}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.08] px-2 py-1 text-xs font-medium"
+                          className="chip-enter"
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: "5px",
+                            padding: "5px 8px 5px 9px", borderRadius: "8px",
+                            background: c.bg, border: `1px solid ${c.border}`,
+                            color: c.color, fontSize: "12px", fontWeight: 600, lineHeight: 1,
+                          }}
                         >
-                          <KindIcon kind={kind} />
-                          <span className="opacity-50">{KIND_META[kind].label}</span>
-                          <span className="max-w-[180px] truncate opacity-70">{shortenUrl(url)}</span>
+                          <KindIcon kind={kind} size={11} />
+                          <span style={{ opacity: 0.55, fontSize: "10px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                            {c.label}
+                          </span>
+                          <span style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px", fontWeight: 500, opacity: 0.75 }}>
+                            {shortenUrl(url)}
+                          </span>
                           <button
                             type="button"
+                            className="chip-x"
                             onClick={(e) => { e.stopPropagation(); removeUrl(url); }}
-                            className="ml-0.5 opacity-40 transition hover:opacity-80"
+                            style={{ display: "flex", alignItems: "center", border: "none", background: "none", cursor: "pointer", color: "inherit", padding: "0 0 0 2px", opacity: 0.35 }}
                           >
-                            <X size={10} />
+                            <XIcon size={10} />
                           </button>
                         </span>
                       );
                     })}
+
                     <input
                       ref={inputRef}
                       type="text"
@@ -246,33 +331,49 @@ export default function CreateProfilePage() {
                       onChange={(e) => setInputVal(e.target.value)}
                       onKeyDown={handleKeyDown}
                       onPaste={handlePaste}
-                      onBlur={() => { if (inputVal.trim()) addUrl(inputVal); }}
-                      placeholder={urls.length === 0 ? "https://github.com/you, linkedin.com/in/you…" : "Add another URL…"}
-                      className="min-w-[200px] flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/20"
+                      onFocus={() => setInputFocused(true)}
+                      onBlur={() => { setInputFocused(false); if (inputVal.trim()) addUrl(inputVal); }}
+                      placeholder={urls.length === 0 ? "github.com/you, linkedin.com/in/you…" : "Add another…"}
+                      style={{
+                        flex: "1 1 160px", minWidth: "160px", border: "none", outline: "none",
+                        background: "transparent", fontSize: "13px", color: T.pri,
+                        fontFamily: "inherit",
+                      }}
                     />
                   </div>
-                </div>
-                <p className="mt-1.5 text-xs text-white/20">
-                  Press Enter after each URL · Auto-detects GitHub, LinkedIn, X, and websites
-                </p>
 
-                {/* Resume upload */}
-                <div className="mt-4">
-                  <label className={LABEL}>
-                    {resume ? `Résumé — ${resume.name}` : "Résumé (optional)"}
-                  </label>
+                  <div style={{ fontSize: "11px", color: T.tert, marginTop: "10px", paddingBottom: "14px" }}>
+                    Press <kbd style={{ padding: "1px 5px", borderRadius: "4px", border: "1px solid rgba(0,0,0,0.1)", background: "#f1f5f9", fontSize: "10px", color: T.sec }}>Enter</kbd> after each URL · Backspace removes the last one
+                  </div>
+                </div>
+
+                {/* divider + resume */}
+                <div style={{ borderTop: `1px solid ${T.border}`, padding: "14px 18px" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "10px" }}>
+                    Résumé <span style={{ fontWeight: 400, letterSpacing: 0, textTransform: "none", fontSize: "11px" }}>— optional</span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white/30 transition hover:border-white/20 hover:text-white/50"
+                    style={{
+                      display: "flex", alignItems: "center", gap: "8px", width: "100%",
+                      padding: "9px 12px", borderRadius: "10px",
+                      border: `1px dashed ${resume ? "rgba(91,124,250,0.3)" : "rgba(0,0,0,0.12)"}`,
+                      background: resume ? "rgba(91,124,250,0.04)" : "transparent",
+                      cursor: "pointer", color: resume ? T.accent : T.tert,
+                      fontSize: "13px", fontWeight: 500, transition: "all 0.12s",
+                    }}
                   >
-                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
-                    </svg>
-                    {resume ? (
-                      <span className="truncate text-white/60">{resume.name}</span>
-                    ) : (
-                      "Upload PDF or DOCX"
+                    <Upload size={13} />
+                    {resume ? resume.name : "Upload PDF or DOCX"}
+                    {resume && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setResume(null); }}
+                        style={{ marginLeft: "auto", display: "flex", alignItems: "center", color: T.tert, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                      >
+                        <XIcon size={12} />
+                      </button>
                     )}
                   </button>
                   <input
@@ -280,143 +381,158 @@ export default function CreateProfilePage() {
                     type="file"
                     accept=".pdf,.docx,application/pdf"
                     onChange={(e) => setResume(e.target.files?.[0] ?? null)}
-                    className="hidden"
+                    style={{ display: "none" }}
                   />
                 </div>
               </div>
 
+              {/* submit */}
               <button
                 type="submit"
                 disabled={!hasSource}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#5b7cfa] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4a67e0] disabled:cursor-not-allowed disabled:opacity-30"
+                className="submit-btn"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  width: "100%", padding: "14px 20px", borderRadius: "12px",
+                  background: hasSource ? T.accent : "#c7d0e8",
+                  border: "none", cursor: hasSource ? "pointer" : "not-allowed",
+                  color: "#fff", fontSize: "14px", fontWeight: 700, letterSpacing: "-0.01em",
+                }}
               >
-                Generate my profile card
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
+                Build my card
+                <ArrowRight size={16} />
               </button>
 
-              {!hasSource && (
-                <p className="text-center text-xs text-white/25">Paste at least one URL above</p>
-              )}
+              <p style={{ textAlign: "center", fontSize: "11px", color: T.tert, margin: 0 }}>
+                Publishes at{" "}
+                <code style={{ padding: "1px 5px", borderRadius: "4px", background: "rgba(0,0,0,0.05)", fontSize: "10px" }}>
+                  zynd.ai/p/you
+                </code>{" "}
+                after your review
+              </p>
             </form>
           )}
 
+          {/* ── WORKING ── */}
           {phase === "working" && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-sm text-white/50">
-                <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-white/10 border-t-[#5b7cfa]" />
-                Scraping your sources and building your profile — takes 10–30 seconds.
+            <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "28px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+                <div className="spin" style={{ width: "20px", height: "20px", borderRadius: "50%", border: "2.5px solid rgba(91,124,250,0.15)", borderTopColor: T.accent, flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: T.pri, marginBottom: "2px" }}>
+                    Building your profile
+                  </div>
+                  <div style={{ fontSize: "12px", color: T.tert }}>Scraping sources · takes 10–30 seconds</div>
+                </div>
               </div>
               {urls.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 px-1">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {urls.map((url) => {
                     const kind = detectKind(url);
-                    const meta = KIND_META[kind];
+                    const c = CHIP[kind];
                     return (
-                      <span
-                        key={url}
-                        style={{ color: meta.color }}
-                        className="inline-flex items-center gap-1 text-xs opacity-40"
-                      >
-                        <KindIcon kind={kind} />
-                        {KIND_META[kind].label}
+                      <span key={url} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 9px", borderRadius: "6px", background: c.bg, color: c.color, fontSize: "11px", fontWeight: 600 }}>
+                        <KindIcon kind={kind} size={10} />
+                        {c.label}
                       </span>
                     );
                   })}
+                  {resume && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 9px", borderRadius: "6px", background: "#f8fafc", color: T.sec, fontSize: "11px", fontWeight: 600 }}>
+                      <Upload size={10} />
+                      Résumé
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           )}
 
+          {/* ── ERROR ── */}
           {phase === "error" && (
-            <div className="flex items-start justify-between gap-4 rounded-xl border border-red-500/20 bg-red-500/[0.05] px-4 py-4 text-sm text-red-400">
-              <span>{error}</span>
+            <div style={{ background: "#fff5f5", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "16px", padding: "20px 22px", boxShadow: T.shadow }}>
+              <div style={{ fontSize: "13px", color: "#dc2626", marginBottom: "14px", lineHeight: 1.5 }}>{error}</div>
               <button
                 onClick={() => setPhase("form")}
-                className="flex-shrink-0 rounded border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-semibold text-white/60 hover:text-white"
+                style={{ padding: "8px 16px", borderRadius: "8px", border: `1px solid ${T.border}`, background: T.surface, cursor: "pointer", fontSize: "13px", fontWeight: 600, color: T.sec }}
               >
                 Try again
               </button>
             </div>
           )}
 
+          {/* ── REVIEW ── */}
           {phase === "review" && card && (
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-[#5b7cfa]/20 bg-[#5b7cfa]/[0.05] px-4 py-3 text-sm text-white/50">
-                Review your card — nothing publishes until you confirm.
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+              <div style={{ background: "rgba(91,124,250,0.06)", border: "1px solid rgba(91,124,250,0.15)", borderRadius: "12px", padding: "12px 16px", fontSize: "13px", color: "#1e40af", lineHeight: 1.5 }}>
+                Review your card — nothing goes live until you publish.
               </div>
 
-              {(
-                [
-                  { label: "Name", value: card.identity.name, set: (v: string) => updateCard({ identity: { ...card.identity, name: v } }) },
-                  { label: "Headline", value: card.identity.headline, set: (v: string) => updateCard({ identity: { ...card.identity, headline: v } }) },
-                  { label: "Location", value: card.identity.location, set: (v: string) => updateCard({ identity: { ...card.identity, location: v } }) },
-                ] as const
-              ).map(({ label, value, set }) => (
-                <Field key={label} label={label}>
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => set(e.target.value)}
-                    className={INPUT}
-                  />
-                </Field>
-              ))}
+              {/* identity fields */}
+              <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "20px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "16px" }}>
+                  Identity
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <TextField label="Name" value={card.identity.name}
+                    onChange={(v) => updateCard({ identity: { ...card.identity, name: v } })} />
+                  <TextField label="Headline" value={card.identity.headline}
+                    onChange={(v) => updateCard({ identity: { ...card.identity, headline: v } })} />
+                  <TextField label="Location" value={card.identity.location}
+                    onChange={(v) => updateCard({ identity: { ...card.identity, location: v } })} />
+                </div>
+              </div>
 
-              <Field label="Summary">
-                <textarea
-                  rows={4}
-                  value={card.summary}
-                  onChange={(e) => updateCard({ summary: e.target.value })}
-                  className={INPUT + " resize-none"}
-                />
-              </Field>
+              {/* about */}
+              <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "20px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "16px" }}>
+                  About
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <TextField label="Summary" value={card.summary} rows={4}
+                    onChange={(v) => updateCard({ summary: v })} />
+                  <TextField label="Citation snippet" value={card.citation_snippet} rows={2}
+                    onChange={(v) => updateCard({ citation_snippet: v })} />
+                </div>
+              </div>
 
-              <Field label="Citation snippet">
-                <textarea
-                  rows={2}
-                  value={card.citation_snippet}
-                  onChange={(e) => updateCard({ citation_snippet: e.target.value })}
-                  className={INPUT + " resize-none"}
-                />
-              </Field>
-
-              <Field label="Skills" hint="One per line">
-                <textarea
-                  rows={4}
-                  value={card.skills.map((s) => s.name).join("\n")}
-                  onChange={(e) =>
+              {/* skills */}
+              <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "20px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "16px" }}>
+                  Skills
+                </div>
+                <TextField label="One per line" value={card.skills.map((s) => s.name).join("\n")} rows={5}
+                  onChange={(v) =>
                     updateCard({
-                      skills: e.target.value
-                        .split("\n")
-                        .map((n) => n.trim())
-                        .filter(Boolean)
-                        .map((name, i) =>
-                          card.skills[i] ?? { name, level: "intermediate", evidence_count: 0 }
-                        ),
+                      skills: v.split("\n").map((n) => n.trim()).filter(Boolean)
+                        .map((name, i) => card.skills[i] ?? { name, level: "intermediate", evidence_count: 0 }),
                     })
                   }
-                  className={INPUT + " resize-none"}
                 />
-              </Field>
+              </div>
 
+              {/* publish */}
               <button
                 onClick={publish}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#5b7cfa] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4a67e0]"
+                className="submit-btn"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                  width: "100%", padding: "14px 20px", borderRadius: "12px",
+                  background: T.accent, border: "none", cursor: "pointer",
+                  color: "#fff", fontSize: "14px", fontWeight: 700,
+                }}
               >
-                Publish my profile card
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                </svg>
+                Publish my card
+                <ArrowRight size={16} />
               </button>
-              <p className="text-center text-xs text-white/25">
-                Creates a public page at zynd.ai/p/&lt;handle&gt; and notifies search engines.
+              <p style={{ textAlign: "center", fontSize: "11px", color: T.tert, margin: 0 }}>
+                Creates a public page at <code style={{ padding: "1px 5px", borderRadius: "4px", background: "rgba(0,0,0,0.05)", fontSize: "10px" }}>zynd.ai/p/handle</code> and pings search engines
               </p>
             </div>
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 }

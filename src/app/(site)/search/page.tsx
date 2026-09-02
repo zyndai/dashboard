@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Navbar } from "@/components/Navbar";
 import { searchAgents } from "@/lib/cards";
 import { pageMetadata } from "@/lib/seo";
 
@@ -45,7 +44,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <Navbar />
       <article className="text-white selection:bg-[#5b7cfa]/30 antialiased font-sans pb-32">
         <div className="mx-auto w-full max-w-[1000px] px-6 pt-12">
           <header className="mb-10">

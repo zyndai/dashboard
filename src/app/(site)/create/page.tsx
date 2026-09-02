@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Github, Twitter, Linkedin, Globe, X as XIcon, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 
-import { Navbar } from "@/components/Navbar";
 import { CARDS_API } from "@/lib/cards";
 import type { AgentProfileCard, OnboardStatus } from "@/lib/cards";
 
@@ -241,8 +240,6 @@ export default function CreateProfilePage() {
       `}</style>
 
       <div style={{ background: T.bg, minHeight: "100vh", fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
-        <Navbar />
-
         <div style={{ maxWidth: "520px", margin: "0 auto", padding: "40px 24px 80px" }}>
 
           {/* back */}

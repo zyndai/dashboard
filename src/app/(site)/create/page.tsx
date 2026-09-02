@@ -10,16 +10,23 @@ import type { AgentProfileCard, OnboardStatus } from "@/lib/cards";
 
 // ─── tokens (mirror profile page) ─────────────────────────────────────────────
 const T = {
-  bg:      "#f0f2f7",
+  bg:      "#eef0f6",
   surface: "#ffffff",
   accent:  "#5b7cfa",
   navy:    "#0d1b2a",
-  border:  "rgba(0,0,0,0.07)",
-  shadow:  "0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.06)",
+  border:  "rgba(0,0,0,0.10)",
+  shadow:  "0 2px 4px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08)",
   pri:     "#0f172a",
   sec:     "#475569",
   tert:    "#94a3b8",
 } as const;
+
+const QUICK_ADD: { kind: UrlKind; domain: string }[] = [
+  { kind: "github",   domain: "github.com/" },
+  { kind: "linkedin", domain: "linkedin.com/in/" },
+  { kind: "x",        domain: "x.com/" },
+  { kind: "website",  domain: "" },
+];
 
 type Phase = "form" | "working" | "review" | "error";
 type UrlKind = "github" | "x" | "linkedin" | "website";
@@ -224,10 +231,16 @@ export default function CreateProfilePage() {
         }
 
         .url-box { transition: border-color 0.14s, box-shadow 0.14s; }
-        .url-box:hover { border-color: rgba(91,124,250,0.25) !important; }
+        .url-box:hover { border-color: rgba(91,124,250,0.3) !important; }
 
-        .submit-btn { transition: background 0.14s, transform 0.1s; }
-        .submit-btn:hover:not(:disabled) { background: #4a67e0 !important; }
+        .url-inner { transition: border-color 0.14s, box-shadow 0.14s; }
+        .url-inner:hover { border-color: rgba(0,0,0,0.2) !important; }
+
+        .quick-btn { transition: background 0.12s, border-color 0.12s, color 0.12s; }
+        .quick-btn:hover { background: rgba(91,124,250,0.08) !important; border-color: rgba(91,124,250,0.25) !important; color: #5b7cfa !important; }
+
+        .submit-btn { transition: opacity 0.14s, transform 0.1s, box-shadow 0.14s; }
+        .submit-btn:hover:not(:disabled) { opacity: 0.88; box-shadow: 0 4px 20px rgba(91,124,250,0.4) !important; }
         .submit-btn:active:not(:disabled) { transform: translateY(1px); }
 
         .chip-x { transition: opacity 0.12s; }
@@ -267,25 +280,38 @@ export default function CreateProfilePage() {
           {phase === "form" && (
             <form onSubmit={startOnboard} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 
-              {/* URL chip input */}
+              {/* URL chip input card */}
               <div
                 className="url-box"
                 style={{
                   background: T.surface,
-                  borderRadius: "16px",
-                  border: `1px solid ${inputFocused ? "rgba(91,124,250,0.4)" : T.border}`,
-                  boxShadow: inputFocused ? `0 0 0 3px rgba(91,124,250,0.1), ${T.shadow}` : T.shadow,
+                  borderRadius: "20px",
+                  border: `1.5px solid ${T.border}`,
+                  boxShadow: T.shadow,
                   overflow: "hidden",
                 }}
               >
-                <div style={{ padding: "16px 18px 0" }}>
-                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "12px" }}>
+                <div style={{ padding: "20px 20px 0" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: T.tert, marginBottom: "10px" }}>
                     Profiles
                   </div>
 
-                  {/* chips + input */}
+                  {/* inner text-field box */}
                   <div
-                    style={{ display: "flex", flexWrap: "wrap", gap: "6px", alignItems: "center", minHeight: "36px", cursor: "text" }}
+                    className="url-inner"
+                    style={{
+                      background: "#f7f9fc",
+                      border: `1.5px solid ${inputFocused ? T.accent : "rgba(0,0,0,0.13)"}`,
+                      boxShadow: inputFocused ? "0 0 0 3px rgba(91,124,250,0.12)" : "inset 0 1px 2px rgba(0,0,0,0.04)",
+                      borderRadius: "12px",
+                      padding: "10px 12px",
+                      cursor: "text",
+                      minHeight: "52px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "6px",
+                      alignItems: "center",
+                    }}
                     onClick={() => inputRef.current?.focus()}
                   >
                     {urls.map((url) => {
@@ -297,23 +323,24 @@ export default function CreateProfilePage() {
                           className="chip-enter"
                           style={{
                             display: "inline-flex", alignItems: "center", gap: "5px",
-                            padding: "5px 8px 5px 9px", borderRadius: "8px",
+                            padding: "5px 8px 5px 9px", borderRadius: "7px",
                             background: c.bg, border: `1px solid ${c.border}`,
                             color: c.color, fontSize: "12px", fontWeight: 600, lineHeight: 1,
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                           }}
                         >
                           <KindIcon kind={kind} size={11} />
-                          <span style={{ opacity: 0.55, fontSize: "10px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                          <span style={{ opacity: 0.5, fontSize: "10px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                             {c.label}
                           </span>
-                          <span style={{ maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px", fontWeight: 500, opacity: 0.75 }}>
+                          <span style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px", fontWeight: 500, opacity: 0.8 }}>
                             {shortenUrl(url)}
                           </span>
                           <button
                             type="button"
                             className="chip-x"
                             onClick={(e) => { e.stopPropagation(); removeUrl(url); }}
-                            style={{ display: "flex", alignItems: "center", border: "none", background: "none", cursor: "pointer", color: "inherit", padding: "0 0 0 2px", opacity: 0.35 }}
+                            style={{ display: "flex", alignItems: "center", border: "none", background: "none", cursor: "pointer", color: "inherit", padding: "0 0 0 2px", opacity: 0.3 }}
                           >
                             <XIcon size={10} />
                           </button>
@@ -330,17 +357,37 @@ export default function CreateProfilePage() {
                       onPaste={handlePaste}
                       onFocus={() => setInputFocused(true)}
                       onBlur={() => { setInputFocused(false); if (inputVal.trim()) addUrl(inputVal); }}
-                      placeholder={urls.length === 0 ? "github.com/you, linkedin.com/in/you…" : "Add another…"}
+                      placeholder={urls.length === 0 ? "github.com/you  or  linkedin.com/in/you" : "Add another URL…"}
                       style={{
-                        flex: "1 1 160px", minWidth: "160px", border: "none", outline: "none",
+                        flex: "1 1 180px", minWidth: "180px", border: "none", outline: "none",
                         background: "transparent", fontSize: "13px", color: T.pri,
                         fontFamily: "inherit",
                       }}
                     />
                   </div>
 
-                  <div style={{ fontSize: "11px", color: T.tert, marginTop: "10px", paddingBottom: "14px" }}>
-                    Press <kbd style={{ padding: "1px 5px", borderRadius: "4px", border: "1px solid rgba(0,0,0,0.1)", background: "#f1f5f9", fontSize: "10px", color: T.sec }}>Enter</kbd> after each URL · Backspace removes the last one
+                  {/* hints row */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px", paddingBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "5px" }}>
+                      {QUICK_ADD.filter(q => q.domain).map(({ kind, domain }) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          className="quick-btn"
+                          onClick={() => { setInputVal(domain); inputRef.current?.focus(); }}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: "4px",
+                            padding: "4px 8px", borderRadius: "6px",
+                            border: "1px solid rgba(0,0,0,0.10)", background: "transparent",
+                            cursor: "pointer", color: T.sec, fontSize: "11px", fontWeight: 500,
+                          }}
+                        >
+                          <KindIcon kind={kind} size={11} />
+                          {CHIP[kind].label}
+                        </button>
+                      ))}
+                    </div>
+                    <span style={{ fontSize: "11px", color: T.tert }}>https:// optional</span>
                   </div>
                 </div>
 
@@ -390,10 +437,11 @@ export default function CreateProfilePage() {
                 className="submit-btn"
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                  width: "100%", padding: "14px 20px", borderRadius: "12px",
-                  background: hasSource ? T.accent : "#c7d0e8",
+                  width: "100%", padding: "15px 20px", borderRadius: "14px",
+                  background: T.accent, opacity: hasSource ? 1 : 0.35,
                   border: "none", cursor: hasSource ? "pointer" : "not-allowed",
                   color: "#fff", fontSize: "14px", fontWeight: 700, letterSpacing: "-0.01em",
+                  boxShadow: hasSource ? "0 4px 16px rgba(91,124,250,0.3)" : "none",
                 }}
               >
                 Build my card

@@ -245,7 +245,6 @@ export default async function TagPage({ params }: PageProps) {
                               <Link
                                 key={sk.name}
                                 href={`${BASE}/tag/${encodeSkill(sk.name)}`}
-                                onClick={(e) => e.stopPropagation()}
                                 style={{
                                   fontSize: "11px", color: "#64748b",
                                   background: "rgba(255,255,255,0.04)",

@@ -69,7 +69,7 @@ export async function GET(_req: Request, { params }: Params) {
 
   return new Response(JSON.stringify(entity, null, 2), {
     headers: {
-      "Content-Type": "application/ld+json",
+      "Content-Type": "application/json",
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       "Access-Control-Allow-Origin": "*",
     },

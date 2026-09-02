@@ -123,7 +123,7 @@ export default async function DirectoryPage() {
                       <Link
                         key={s.name}
                         href={`/tag/${encodeSkill(s.name)}`}
-                        onClick={(e) => e.stopPropagation()}
+
                         className="inline-flex rounded-full border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2.5 py-0.5 text-xs text-[#a5b4fc] hover:bg-[#5b7cfa]/20 transition-colors"
                       >
                         {s.name}

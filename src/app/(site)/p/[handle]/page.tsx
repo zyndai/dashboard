@@ -615,6 +615,38 @@ export default async function PersonPage({ params }: PageProps) {
                 </div>
               )}
 
+              {/* Who I want to connect with */}
+              {card.connect_with && card.connect_with.length > 0 && (
+                <div className="pf-card pf-in">
+                  <div className="pf-card-body">
+                    <div className="pf-section-label">Who I want to connect with</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                      {card.connect_with.map((item) => (
+                        <span key={item} style={{ padding: "7px 14px", borderRadius: "100px", background: "#f8fafc", border: `1px solid ${T.border}`, color: T.textSec, fontSize: "12px", fontWeight: 500 }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* What I love talking about */}
+              {card.love_talking_about && card.love_talking_about.length > 0 && (
+                <div className="pf-card pf-in">
+                  <div className="pf-card-body">
+                    <div className="pf-section-label">What I love talking about</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                      {card.love_talking_about.map((item) => (
+                        <span key={item} style={{ padding: "7px 14px", borderRadius: "100px", background: "#faf5ff", border: "1px solid rgba(139,92,246,0.15)", color: "#6d28d9", fontSize: "12px", fontWeight: 500 }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Find similar people card */}
               <div className="pf-card pf-in">
                 <div className="pf-card-body">
@@ -643,6 +675,38 @@ export default async function PersonPage({ params }: PageProps) {
 
             {/* ── CENTER column ── */}
             <div className="pf-col-center">
+
+              {/* What I'm working on */}
+              {card.working_on && card.working_on.length > 0 && (
+                <div className="pf-card pf-in">
+                  <div className="pf-card-body">
+                    <div className="pf-section-label">What I&apos;m working on</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {card.working_on.map((item) => (
+                        <span key={item} style={{ padding: "8px 16px", borderRadius: "100px", background: T.accentMid, border: "1.5px solid rgba(91,124,250,0.2)", color: T.accent, fontSize: "13px", fontWeight: 600 }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* What I can help with */}
+              {card.can_help_with && card.can_help_with.length > 0 && (
+                <div className="pf-card pf-in">
+                  <div className="pf-card-body">
+                    <div className="pf-section-label">What I can help with</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {card.can_help_with.map((item) => (
+                        <span key={item} style={{ padding: "8px 16px", borderRadius: "100px", background: "#f0fdf4", border: "1.5px solid rgba(16,185,129,0.2)", color: "#065f46", fontSize: "13px", fontWeight: 600 }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* About */}
               {!isBlank(card.summary) && (
@@ -764,18 +828,29 @@ export default async function PersonPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* Tech stack icon grid — shows ALL skills with icons (3 libraries) */}
-              {card.skills.length > 0 && (
+              {/* GitHub stats — replaces Tech Stack icon grid */}
+              {card.github_stats && card.github_stats.total_repos > 0 && (
                 <div className="pf-card pf-in">
                   <div className="pf-card-body">
-                    <div className="pf-section-label">Tech Stack</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {card.skills.slice().sort((a, b) => b.evidence_count - a.evidence_count).slice(0, 16).map((skill) => (
-                        <div key={skill.name} className="pf-tech-icon" title={skill.name}>
-                          <SkillIcon name={skill.name} size={20} />
-                        </div>
-                      ))}
+                    <div className="pf-section-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Github size={11} />
+                      GitHub
                     </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
+                      <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "12px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: "24px", fontWeight: 700, color: T.accent, letterSpacing: "-0.03em" }}>{card.github_stats.total_repos}</div>
+                        <div style={{ fontSize: "11px", color: T.textTert, marginTop: "2px" }}>repos</div>
+                      </div>
+                      <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "12px", border: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#10b981", letterSpacing: "-0.03em" }}>{card.github_stats.active_repos}</div>
+                        <div style={{ fontSize: "11px", color: T.textTert, marginTop: "2px" }}>active</div>
+                      </div>
+                    </div>
+                    {card.github_stats.top_languages && card.github_stats.top_languages.length > 0 && (
+                      <div style={{ fontSize: "12px", color: T.textSec, fontWeight: 500 }}>
+                        {card.github_stats.top_languages.join("  ·  ")}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

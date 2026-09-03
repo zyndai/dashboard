@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Github, Twitter, Linkedin, Globe, X as XIcon, ArrowLeft, ArrowRight, Upload, Check } from "lucide-react";
+import { Github, Twitter, Linkedin, Globe, X as XIcon, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 
 import { CARDS_API } from "@/lib/cards";
 import type { AgentProfileCard, OnboardStatus } from "@/lib/cards";
@@ -39,41 +39,32 @@ const QUICK_ADD: { kind: UrlKind; domain: string }[] = [
   { kind: "website",  domain: "" },
 ];
 
-// ─── extraction checklist ─────────────────────────────────────────────────────
-const EXTRACT_ITEMS = [
-  { id: "location",          label: "Location" },
-  { id: "headline",          label: "Headline" },
-  { id: "summary",           label: "Summary" },
-  { id: "skills",            label: "Skills" },
-  { id: "docs",              label: "Documentation" },
-  { id: "github_repos",      label: "GitHub repos" },
-  { id: "github_activity",   label: "Recent GitHub activity" },
-  { id: "linkedin_posts",    label: "Recent LinkedIn posts" },
-  { id: "x_posts",           label: "X posts" },
-  { id: "website",           label: "Website / portfolio content" },
-];
-
-// ─── option pickers shown during extraction ───────────────────────────────────
-const OPTION_SETS: { id: string; label: string; options: string[] }[] = [
+// ─── one-at-a-time questions shown during extraction ─────────────────────────
+type QuestionType = "chips" | "text";
+const QUESTIONS: { id: string; label: string; type: QuestionType; options?: string[] }[] = [
   {
-    id: "working_on",
+    id: "working_on", type: "chips",
     label: "What are you working on?",
     options: ["Building a startup", "At a company", "Doing research", "Freelancing", "Open source", "Side project", "Investing", "Job hunting"],
   },
   {
-    id: "can_help",
+    id: "can_help", type: "chips",
     label: "What can you help people with?",
     options: ["Code review", "Fundraising", "ML / AI", "Technical interviews", "Hiring", "Design", "Go-to-market", "Investing"],
   },
   {
-    id: "connect_with",
+    id: "connect_with", type: "chips",
     label: "Who would you like to connect with?",
     options: ["Founders", "Investors", "Engineers", "ML Researchers", "Product Managers", "Designers", "Operators", "Scientists"],
   },
   {
-    id: "love_talking",
+    id: "love_talking", type: "chips",
     label: "What do you love talking about?",
     options: ["AI / ML", "Web3 / Crypto", "Startups", "Open source", "Design", "Climate tech", "Developer tools", "Research"],
+  },
+  {
+    id: "location", type: "text",
+    label: "Where are you based?",
   },
 ];
 
@@ -200,7 +191,8 @@ export default function CreateProfilePage() {
   const [resume, setResume] = useState<File | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
 
-  // Option pickers
+  // One-at-a-time questions
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [selections, setSelections] = useState<Record<string, Set<string>>>({
     working_on: new Set(), can_help: new Set(), connect_with: new Set(), love_talking: new Set(),
   });
@@ -209,35 +201,27 @@ export default function CreateProfilePage() {
   });
   const [locationInput, setLocationInput] = useState("");
 
-  // Extraction checklist progress
-  const [checkedCount, setCheckedCount] = useState(0);
   const [jobDone, setJobDone] = useState(false);
+  const pendingCardRef = useRef<AgentProfileCard | null>(null);
+  const questionIndexRef = useRef(0);
+  const jobDoneRef = useRef(false);
+  const selectionsRef = useRef(selections);
+  const customsRef = useRef(customs);
+  const locationRef = useRef(locationInput);
+
+  // Keep refs in sync
+  useEffect(() => { selectionsRef.current = selections; }, [selections]);
+  useEffect(() => { customsRef.current = customs; }, [customs]);
+  useEffect(() => { locationRef.current = locationInput; }, [locationInput]);
 
   const fileRef    = useRef<HTMLInputElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
   const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const checkRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const customRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => () => {
-    if (pollRef.current)  clearInterval(pollRef.current);
-    if (checkRef.current) clearInterval(checkRef.current);
+    if (pollRef.current) clearInterval(pollRef.current);
   }, []);
-
-  // Animate checklist during working phase
-  useEffect(() => {
-    if (phase !== "working") return;
-    setCheckedCount(0);
-    setJobDone(false);
-    const MAX_FAKE = 7;
-    checkRef.current = setInterval(() => {
-      setCheckedCount(c => {
-        if (c >= MAX_FAKE) { clearInterval(checkRef.current!); return c; }
-        return c + 1;
-      });
-    }, 2200);
-    return () => { if (checkRef.current) clearInterval(checkRef.current); };
-  }, [phase]);
 
   // ── URL chip helpers ──
   function addUrl(raw: string) {
@@ -293,6 +277,12 @@ export default function CreateProfilePage() {
     }
   }
 
+  function goToReview(rawCard: AgentProfileCard) {
+    const enriched = applyAnswers(rawCard, selectionsRef.current, customsRef.current, locationRef.current);
+    setCard(enriched);
+    setPhase("review");
+  }
+
   async function pollJob(id: string) {
     try {
       const res = await fetch(`${CARDS_API}/onboard/${id}`);
@@ -300,16 +290,14 @@ export default function CreateProfilePage() {
       const status: OnboardStatus = await res.json();
       if (status.status === "ready" && status.card) {
         clearInterval(pollRef.current!);
-        clearInterval(checkRef.current!);
-        // Flash all items as done
-        setCheckedCount(EXTRACT_ITEMS.length);
+        pendingCardRef.current = status.card;
+        jobDoneRef.current = true;
         setJobDone(true);
-        // Apply option-picker answers, then go to review
-        const enriched = applyAnswers(status.card, selections, customs, locationInput);
-        setTimeout(() => {
-          setCard(enriched);
-          setPhase("review");
-        }, 900);
+        // If user already answered all questions, go to review immediately
+        if (questionIndexRef.current >= QUESTIONS.length) {
+          goToReview(status.card);
+        }
+        // else: user still on questions — they'll trigger goToReview via Next/Done button
       } else if (status.status === "error") {
         clearInterval(pollRef.current!);
         setError(status.error || "Unknown error");
@@ -318,15 +306,27 @@ export default function CreateProfilePage() {
     } catch { /* transient */ }
   }
 
+  function advanceQuestion() {
+    const next = questionIndexRef.current + 1;
+    questionIndexRef.current = next;
+    setQuestionIndex(next);
+    if (next >= QUESTIONS.length && jobDoneRef.current && pendingCardRef.current) {
+      goToReview(pendingCardRef.current);
+    }
+  }
+
   async function publish() {
     if (!card || !jobId) return;
     setError(null);
     const userAnswers: Record<string, string> = {};
-    for (const { id } of OPTION_SETS) {
-      const parts = [...(selections[id] ?? new Set<string>()), ...(customs[id]?.trim() ? [customs[id].trim()] : [])];
-      if (parts.length > 0) userAnswers[id] = parts.join(", ");
+    for (const q of QUESTIONS) {
+      if (q.type === "chips") {
+        const parts = [...(selections[q.id] ?? new Set<string>()), ...(customs[q.id]?.trim() ? [customs[q.id].trim()] : [])];
+        if (parts.length > 0) userAnswers[q.id] = parts.join(", ");
+      } else if (q.id === "location" && locationInput.trim()) {
+        userAnswers["location"] = locationInput.trim();
+      }
     }
-    if (locationInput.trim()) userAnswers["location"] = locationInput.trim();
     try {
       const res = await fetch(`${CARDS_API}/onboard/${jobId}/publish`, {
         method: "POST",
@@ -505,151 +505,140 @@ export default function CreateProfilePage() {
           )}
 
           {/* ── WORKING ── */}
-          {phase === "working" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {phase === "working" && (() => {
+            const q = QUESTIONS[questionIndex];
+            const isLast = questionIndex === QUESTIONS.length - 1;
+            const isDone = questionIndex >= QUESTIONS.length;
 
-              {/* Extraction checklist */}
-              <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "20px 22px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px" }}>
-                  {!jobDone ? (
-                    <div className="spin" style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(91,124,250,0.15)", borderTopColor: T.accent, flexShrink: 0 }} />
-                  ) : (
-                    <div className="check-pop" style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Check size={10} strokeWidth={3} color="#fff" />
-                    </div>
-                  )}
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: T.pri }}>
-                      {jobDone ? "Profile gathered" : "Gathering your profile data"}
-                    </div>
-                    <div style={{ fontSize: "11px", color: T.tert, marginTop: "1px" }}>
-                      {jobDone ? "Applying your answers…" : "Scraping sources · 10–30 seconds"}
-                    </div>
-                  </div>
+            // "Finishing up" screen — user answered all questions, waiting for job
+            if (isDone) {
+              return (
+                <div style={{ background: T.surface, borderRadius: "20px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "48px 32px", textAlign: "center" }}>
+                  <div className="spin" style={{ width: "28px", height: "28px", borderRadius: "50%", border: "2.5px solid rgba(91,124,250,0.15)", borderTopColor: T.accent, margin: "0 auto 20px" }} />
+                  <div style={{ fontSize: "16px", fontWeight: 600, color: T.pri, marginBottom: "6px" }}>Finishing up…</div>
+                  <div style={{ fontSize: "13px", color: T.tert }}>Building your card, almost there</div>
+                </div>
+              );
+            }
+
+            return (
+              <div style={{ background: T.surface, borderRadius: "20px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "32px 28px" }}>
+                {/* Progress dots */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "28px" }}>
+                  {QUESTIONS.map((_, i) => (
+                    <div key={i} style={{
+                      width: i === questionIndex ? "20px" : "6px", height: "6px",
+                      borderRadius: "3px", background: i <= questionIndex ? T.accent : "rgba(0,0,0,0.10)",
+                      transition: "all 0.25s",
+                    }} />
+                  ))}
+                  <span style={{ marginLeft: "auto", fontSize: "11px", color: T.tert, fontWeight: 500 }}>
+                    {questionIndex + 1} of {QUESTIONS.length}
+                  </span>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {EXTRACT_ITEMS.map((item, i) => {
-                    const done = i < checkedCount;
-                    return (
-                      <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "9px", opacity: done ? 1 : 0.35, transition: "opacity 0.3s" }}>
-                        <div style={{
-                          width: "16px", height: "16px", borderRadius: "50%", flexShrink: 0,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          background: done ? "rgba(34,197,94,0.12)" : "rgba(0,0,0,0.05)",
-                          border: done ? "1.5px solid rgba(34,197,94,0.3)" : "1.5px solid rgba(0,0,0,0.10)",
-                          transition: "all 0.2s",
-                        }}>
-                          {done && <Check size={9} strokeWidth={3} color="#16a34a" className="check-pop" />}
-                        </div>
-                        <span style={{ fontSize: "12px", color: done ? T.sec : T.tert, fontWeight: done ? 500 : 400 }}>
-                          {item.label}
-                        </span>
-                      </div>
-                    );
-                  })}
+                {/* Question */}
+                <div style={{ fontSize: "22px", fontWeight: 700, color: T.navy, letterSpacing: "-0.02em", lineHeight: 1.25, marginBottom: "24px" }}>
+                  {q.label}
                 </div>
 
-                {urls.length > 0 && (
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "14px", paddingTop: "14px", borderTop: `1px solid ${T.border}` }}>
-                    {urls.map(url => {
-                      const kind = detectKind(url);
-                      const c = CHIP[kind];
+                {/* Chips question */}
+                {q.type === "chips" && q.options && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "9px", marginBottom: "24px" }}>
+                    {q.options.map(opt => {
+                      const selected = (selections[q.id] ?? new Set<string>()).has(opt);
                       return (
-                        <span key={url} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 10px 4px 8px", borderRadius: "7px", background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: "11px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                          <KindIcon kind={kind} size={11} />
-                          <span style={{ fontWeight: 600 }}>{c.label}</span>
-                          <span style={{ opacity: 0.65 }}>{shortenUrl(url)}</span>
-                        </span>
+                        <button key={opt} type="button" className="opt-btn"
+                          onClick={() => toggleOption(q.id, opt)}
+                          style={{
+                            padding: "10px 18px", borderRadius: "100px",
+                            border: `1.5px solid ${selected ? T.accent : "rgba(0,0,0,0.10)"}`,
+                            background: selected ? "rgba(91,124,250,0.08)" : T.surface,
+                            color: selected ? T.accent : T.sec,
+                            fontSize: "14px", fontWeight: selected ? 600 : 400,
+                            userSelect: "none",
+                          }}>
+                          {opt}
+                        </button>
                       );
                     })}
-                    {resume && (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "6px", background: "#f8fafc", color: T.sec, fontSize: "11px", fontWeight: 600 }}>
-                        <Upload size={10} />
-                        Résumé
-                      </span>
-                    )}
+                    {/* Custom "Other" input */}
+                    <input
+                      ref={el => { customRefs.current[q.id] = el; }}
+                      type="text"
+                      value={customs[q.id] ?? ""}
+                      onChange={e => setCustoms(p => ({ ...p, [q.id]: e.target.value }))}
+                      placeholder="Other…"
+                      style={{
+                        padding: "10px 16px", borderRadius: "100px",
+                        border: `1.5px solid ${customs[q.id] ? T.accent : "rgba(0,0,0,0.10)"}`,
+                        background: T.surface, color: T.pri, fontSize: "14px",
+                        outline: "none", fontFamily: "inherit", width: "100px",
+                        transition: "border-color 0.12s, width 0.2s",
+                      }}
+                      onFocus={e => (e.target.style.width = "160px")}
+                      onBlur={e => (e.target.style.width = customs[q.id] ? "160px" : "100px")}
+                    />
                   </div>
                 )}
-              </div>
 
-              {/* Option pickers — shown while waiting */}
-              <div style={{ background: T.surface, borderRadius: "16px", border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: "20px 22px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: T.accent, marginBottom: "18px" }}>
-                  While you wait — tell us more
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "22px" }}>
-                  {OPTION_SETS.map(({ id, label, options }) => (
-                    <div key={id}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: T.pri, marginBottom: "10px" }}>
-                        {label}
-                      </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
-                        {options.map(opt => {
-                          const selected = (selections[id] ?? new Set<string>()).has(opt);
-                          return (
-                            <button key={opt} type="button" className="opt-btn"
-                              onClick={() => toggleOption(id, opt)}
-                              style={{
-                                padding: "7px 14px", borderRadius: "100px",
-                                border: `1.5px solid ${selected ? T.accent : "rgba(0,0,0,0.10)"}`,
-                                background: selected ? "rgba(91,124,250,0.08)" : T.surface,
-                                color: selected ? T.accent : T.sec,
-                                fontSize: "12px", fontWeight: selected ? 600 : 400,
-                                userSelect: "none",
-                              }}>
-                              {opt}
-                            </button>
-                          );
-                        })}
-                        {customs[id] !== undefined && (
-                          <input
-                            ref={el => { customRefs.current[id] = el; }}
-                            type="text"
-                            value={customs[id]}
-                            onChange={e => setCustoms(p => ({ ...p, [id]: e.target.value }))}
-                            placeholder="Other…"
-                            style={{
-                              padding: "7px 12px", borderRadius: "100px",
-                              border: `1.5px solid ${customs[id] ? T.accent : "rgba(0,0,0,0.10)"}`,
-                              background: T.surface, color: T.pri, fontSize: "12px",
-                              outline: "none", fontFamily: "inherit", width: "90px",
-                              transition: "border-color 0.12s, width 0.2s",
-                            }}
-                            onFocus={e => (e.target.style.width = "140px")}
-                            onBlur={e => (e.target.style.width = customs[id] ? "140px" : "90px")}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Location — text input, only applied if extraction didn't find one */}
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: T.pri, marginBottom: "8px" }}>
-                      Where are you currently located?{" "}
-                      <span style={{ fontSize: "11px", fontWeight: 400, color: T.tert }}>optional</span>
-                    </div>
+                {/* Text question (location) */}
+                {q.type === "text" && (
+                  <div style={{ marginBottom: "24px" }}>
                     <input
                       type="text"
                       value={locationInput}
                       onChange={e => setLocationInput(e.target.value)}
                       placeholder="e.g. San Francisco, CA"
+                      autoFocus
                       style={{
-                        width: "100%", padding: "9px 12px", borderRadius: "10px",
+                        width: "100%", padding: "12px 16px", borderRadius: "12px",
                         border: `1.5px solid ${locationInput ? T.accent : "rgba(0,0,0,0.10)"}`,
-                        background: T.surface, color: T.pri, fontSize: "13px",
+                        background: "#f8fafc", color: T.pri, fontSize: "15px",
                         outline: "none", fontFamily: "inherit",
                         transition: "border-color 0.12s",
                         boxSizing: "border-box",
                       }}
+                      onKeyDown={e => { if (e.key === "Enter") advanceQuestion(); }}
                     />
+                    <div style={{ fontSize: "12px", color: T.tert, marginTop: "6px" }}>optional — skip if you prefer</div>
                   </div>
+                )}
+
+                {/* Nav buttons */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                  <button type="button" onClick={advanceQuestion}
+                    style={{ padding: "9px 16px", borderRadius: "10px", border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", color: T.tert, fontSize: "13px", fontWeight: 500 }}>
+                    Skip
+                  </button>
+                  <button type="button" className="submit-btn" onClick={advanceQuestion}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", borderRadius: "10px", background: T.accent, border: "none", cursor: "pointer", color: "#fff", fontSize: "13px", fontWeight: 700, boxShadow: "0 4px 14px rgba(91,124,250,0.3)" }}>
+                    {isLast ? "Done" : "Next"}
+                    <ArrowRight size={14} />
+                  </button>
                 </div>
+
+                {/* Subtle source chips at bottom */}
+                {urls.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "24px", paddingTop: "18px", borderTop: `1px solid ${T.border}` }}>
+                    {urls.map(url => {
+                      const kind = detectKind(url);
+                      const c = CHIP[kind];
+                      return (
+                        <span key={url} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 9px 3px 7px", borderRadius: "6px", background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: "11px", fontWeight: 500 }}>
+                          <KindIcon kind={kind} size={10} />
+                          <span style={{ opacity: 0.7 }}>{shortenUrl(url)}</span>
+                        </span>
+                      );
+                    })}
+                    <span style={{ fontSize: "11px", color: T.tert, alignSelf: "center", marginLeft: "4px" }}>
+                      {jobDone ? "✓ scraped" : "scraping…"}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ── ERROR ── */}
           {phase === "error" && (

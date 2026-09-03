@@ -59,6 +59,15 @@ export interface AgentProfileCard {
   experience_years: number | null;
   industries: string[];
   availability: string;
+  working_on: string[];
+  can_help_with: string[];
+  connect_with: string[];
+  love_talking_about: string[];
+  github_stats: {
+    total_repos: number;
+    active_repos: number;
+    top_languages: string[];
+  } | null;
 }
 
 export interface AgentSearchResult {

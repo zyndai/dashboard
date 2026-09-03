@@ -410,11 +410,11 @@ export default function CreateProfilePage() {
                       const kind = detectKind(url);
                       const c = CHIP[kind];
                       return (
-                        <span key={url} className="chip-enter" style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 8px 5px 9px", borderRadius: "7px", background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: "12px", fontWeight: 600, lineHeight: 1, boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-                          <KindIcon kind={kind} size={11} />
-                          <span style={{ opacity: 0.5, fontSize: "10px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>{c.label}</span>
-                          <span style={{ maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "11px", fontWeight: 500, opacity: 0.8 }}>{shortenUrl(url)}</span>
-                          <button type="button" className="chip-x" onClick={e => { e.stopPropagation(); removeUrl(url); }} style={{ display: "flex", alignItems: "center", border: "none", background: "none", cursor: "pointer", color: "inherit", padding: "0 0 0 2px", opacity: 0.3 }}>
+                        <span key={url} className="chip-enter" style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "5px 10px 5px 9px", borderRadius: "8px", background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: "12px", fontWeight: 500, lineHeight: 1, boxShadow: "0 1px 2px rgba(0,0,0,0.04)", whiteSpace: "nowrap" }}>
+                          <KindIcon kind={kind} size={12} />
+                          <span style={{ fontWeight: 600 }}>{c.label}</span>
+                          <span style={{ opacity: 0.65, maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis" }}>{shortenUrl(url)}</span>
+                          <button type="button" className="chip-x" onClick={e => { e.stopPropagation(); removeUrl(url); }} style={{ display: "flex", alignItems: "center", border: "none", background: "none", cursor: "pointer", color: "inherit", padding: "0 0 0 1px", opacity: 0.35, marginLeft: "1px" }}>
                             <XIcon size={10} />
                           </button>
                         </span>
@@ -531,9 +531,10 @@ export default function CreateProfilePage() {
                       const kind = detectKind(url);
                       const c = CHIP[kind];
                       return (
-                        <span key={url} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 8px", borderRadius: "6px", background: c.bg, color: c.color, fontSize: "11px", fontWeight: 600 }}>
-                          <KindIcon kind={kind} size={10} />
-                          {c.label}
+                        <span key={url} style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 10px 4px 8px", borderRadius: "7px", background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontSize: "11px", fontWeight: 500, whiteSpace: "nowrap" }}>
+                          <KindIcon kind={kind} size={11} />
+                          <span style={{ fontWeight: 600 }}>{c.label}</span>
+                          <span style={{ opacity: 0.65 }}>{shortenUrl(url)}</span>
                         </span>
                       );
                     })}

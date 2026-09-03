@@ -56,6 +56,11 @@ const EXTRACT_ITEMS = [
 // ─── option pickers shown during extraction ───────────────────────────────────
 const OPTION_SETS: { id: string; label: string; options: string[] }[] = [
   {
+    id: "working_on",
+    label: "What are you working on?",
+    options: ["Building a startup", "At a company", "Doing research", "Freelancing", "Open source", "Side project", "Investing", "Job hunting"],
+  },
+  {
     id: "can_help",
     label: "What can you help people with?",
     options: ["Code review", "Fundraising", "ML / AI", "Technical interviews", "Hiring", "Design", "Go-to-market", "Investing"],
@@ -134,30 +139,48 @@ function TextField({ label, value, onChange, rows, placeholder }: {
 }
 
 // ─── apply user answers to card ───────────────────────────────────────────────
-function applyAnswers(card: AgentProfileCard, selections: Record<string, Set<string>>, customs: Record<string, string>): AgentProfileCard {
+function applyAnswers(
+  card: AgentProfileCard,
+  selections: Record<string, Set<string>>,
+  customs: Record<string, string>,
+  locationInput: string,
+): AgentProfileCard {
   let c = { ...card, identity: { ...card.identity }, skills: [...card.skills], searchable_facts: [...card.searchable_facts] };
 
   const joinAnswers = (id: string) => [
-    ...selections[id],
+    ...(selections[id] ?? new Set<string>()),
     ...(customs[id]?.trim() ? [customs[id].trim()] : []),
   ];
+
+  const name = c.identity.name || "This person";
+
+  const workingOn = joinAnswers("working_on");
+  if (workingOn.length > 0) {
+    c.searchable_facts = [...c.searchable_facts, `${name} — working on ${workingOn.join(", ")} — Zynd`];
+    if (!c.summary) c.summary = `Currently working on: ${workingOn.join(", ")}.`;
+  }
 
   const canHelp = joinAnswers("can_help");
   if (canHelp.length > 0) {
     const newSkills = canHelp
-      .map(name => ({ name, level: "intermediate" as const, evidence_count: 1 }))
+      .map(n => ({ name: n, level: "intermediate" as const, evidence_count: 1 }))
       .filter(ns => !c.skills.find(s => s.name.toLowerCase() === ns.name.toLowerCase()));
     c.skills = [...c.skills, ...newSkills];
   }
 
-  const name = c.identity.name || "This person";
   const connectWith = joinAnswers("connect_with");
-  const loveTalking = joinAnswers("love_talking");
   if (connectWith.length > 0) {
     c.searchable_facts = [...c.searchable_facts, `${name} — looking to connect with ${connectWith.join(", ")} — Zynd`];
   }
+
+  const loveTalking = joinAnswers("love_talking");
   if (loveTalking.length > 0) {
     c.searchable_facts = [...c.searchable_facts, `${name} — loves talking about ${loveTalking.join(", ")} — Zynd`];
+  }
+
+  // Only use user-typed location if extraction didn't find one
+  if (!c.identity.location && locationInput.trim()) {
+    c.identity.location = locationInput.trim();
   }
 
   return c;
@@ -179,11 +202,12 @@ export default function CreateProfilePage() {
 
   // Option pickers
   const [selections, setSelections] = useState<Record<string, Set<string>>>({
-    can_help: new Set(), connect_with: new Set(), love_talking: new Set(),
+    working_on: new Set(), can_help: new Set(), connect_with: new Set(), love_talking: new Set(),
   });
   const [customs, setCustoms] = useState<Record<string, string>>({
-    can_help: "", connect_with: "", love_talking: "",
+    working_on: "", can_help: "", connect_with: "", love_talking: "",
   });
+  const [locationInput, setLocationInput] = useState("");
 
   // Extraction checklist progress
   const [checkedCount, setCheckedCount] = useState(0);
@@ -281,7 +305,7 @@ export default function CreateProfilePage() {
         setCheckedCount(EXTRACT_ITEMS.length);
         setJobDone(true);
         // Apply option-picker answers, then go to review
-        const enriched = applyAnswers(status.card, selections, customs);
+        const enriched = applyAnswers(status.card, selections, customs, locationInput);
         setTimeout(() => {
           setCard(enriched);
           setPhase("review");
@@ -299,9 +323,10 @@ export default function CreateProfilePage() {
     setError(null);
     const userAnswers: Record<string, string> = {};
     for (const { id } of OPTION_SETS) {
-      const parts = [...selections[id], ...(customs[id]?.trim() ? [customs[id].trim()] : [])];
+      const parts = [...(selections[id] ?? new Set<string>()), ...(customs[id]?.trim() ? [customs[id].trim()] : [])];
       if (parts.length > 0) userAnswers[id] = parts.join(", ");
     }
+    if (locationInput.trim()) userAnswers["location"] = locationInput.trim();
     try {
       const res = await fetch(`${CARDS_API}/onboard/${jobId}/publish`, {
         method: "POST",
@@ -562,7 +587,7 @@ export default function CreateProfilePage() {
                       </div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
                         {options.map(opt => {
-                          const selected = selections[id].has(opt);
+                          const selected = (selections[id] ?? new Set<string>()).has(opt);
                           return (
                             <button key={opt} type="button" className="opt-btn"
                               onClick={() => toggleOption(id, opt)}
@@ -578,7 +603,6 @@ export default function CreateProfilePage() {
                             </button>
                           );
                         })}
-                        {/* Custom input */}
                         {customs[id] !== undefined && (
                           <input
                             ref={el => { customRefs.current[id] = el; }}
@@ -600,6 +624,28 @@ export default function CreateProfilePage() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Location — text input, only applied if extraction didn't find one */}
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: T.pri, marginBottom: "8px" }}>
+                      Where are you currently located?{" "}
+                      <span style={{ fontSize: "11px", fontWeight: 400, color: T.tert }}>optional</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={locationInput}
+                      onChange={e => setLocationInput(e.target.value)}
+                      placeholder="e.g. San Francisco, CA"
+                      style={{
+                        width: "100%", padding: "9px 12px", borderRadius: "10px",
+                        border: `1.5px solid ${locationInput ? T.accent : "rgba(0,0,0,0.10)"}`,
+                        background: T.surface, color: T.pri, fontSize: "13px",
+                        outline: "none", fontFamily: "inherit",
+                        transition: "border-color 0.12s",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

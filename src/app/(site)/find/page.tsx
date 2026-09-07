@@ -37,7 +37,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     description: q
       ? `Search results for "${q}" on Zynd — ranked profiles with skills, location, and availability.`
       : "Find people on Zynd by role, skills, location, and availability.",
-    robots: q ? { index: true, follow: true } : { index: false, follow: false },
+    robots: { index: false, follow: false },
   };
 }
 

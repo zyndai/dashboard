@@ -7,7 +7,6 @@ import {
   fetchCardByHandle,
   cardCanonicalUrl,
   type AgentProfileCard,
-  type ContributionStats,
   type Project,
 } from "@/lib/cards";
 import { pageMetadata } from "@/lib/seo";
@@ -15,6 +14,7 @@ import { DossierShell } from "./dossier-shell";
 import { SkillMatrix } from "./skill-matrix";
 import { ShareButton, CopyPermalinkIcon } from "./share-controls";
 import { CountUp } from "./count-up";
+import { AutoScroll } from "./auto-scroll";
 
 interface PageProps {
   params: Promise<{ handle: string }>;
@@ -35,14 +35,6 @@ interface PageProps {
    dummy fallbacks; those sections just hide when the card has no real data.
    ═══════════════════════════════════════════════════════════════════════════ */
 const DUMMY = {
-  /** card.contribution_stats — heatmap is synthesized deterministically from
-   *  the card id so a given profile always renders the same pattern. */
-  contributions: {
-    days: 371, // 53 weeks × 7
-    /** commits attributed to each 0–4 intensity level, to derive a total. */
-    levelWeights: [0, 1, 3, 6, 11],
-  },
-
   /** The 3 pinned bento tiles, when the card's arrays are empty. */
   obsessions: {
     connect_with: ["Founders", "AI researchers", "Systems engineers"],
@@ -95,48 +87,6 @@ function githubAvatar(url: string | null | undefined, size = 400): string | null
 function usernameFromUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   return url.replace(/\/+$/, "").split("/").pop() || null;
-}
-
-/* Deterministic PRNG so the synthesized heatmap is stable per profile
-   (no server/client drift, no churn between revalidations). */
-function hashSeed(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let a = seed;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// DUMMY: synthesized contribution heatmap, used until card.contribution_stats exists.
-function dummyContributions(seed: string): ContributionStats {
-  const rnd = mulberry32(hashSeed(seed));
-  const levels: number[] = Array.from({ length: DUMMY.contributions.days }, (_, i) => {
-    const weekend = i % 7 === 0 || i % 7 === 6;
-    const r = rnd();
-    if (r < (weekend ? 0.55 : 0.16)) return 0;
-    if (r < 0.48) return 1;
-    if (r < 0.72) return 2;
-    if (r < 0.9) return 3;
-    return 4;
-  });
-  const total = levels.reduce<number>((n, l) => n + DUMMY.contributions.levelWeights[l], 0);
-  return {
-    year: new Date().getUTCFullYear(),
-    total,
-    avg_per_day: Math.round((total / 365) * 10) / 10,
-    levels,
-  };
 }
 
 const HEAT = ["#1e293b", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
@@ -266,9 +216,21 @@ function buildView(card: AgentProfileCard) {
       posts: card.x_stats?.posts ?? null,
       impressions: card.x_stats?.impressions ?? null,
     },
-    contributions: card.contribution_stats ?? dummyContributions(card.id || card.handle),
+    // No dummy fallback: a synthesized heatmap on a named person's public page
+    // is a fabricated factual claim about their activity. The GitHub Telemetry
+    // card hides instead when the API sends no contribution_stats.
+    contributions: card.contribution_stats,
   };
 }
+
+/* Auto-scroll geometry for the Projects / Posts lists. Row heights are fixed
+   (see .pf-vrow-* in the style block) so "three visible" and the scroll speed
+   are exact rather than dependent on how long a description happens to be. */
+const VSCROLL_VISIBLE = 3;
+const VSCROLL_SECS_PER_ROW = 3.5;
+const PROJECT_ROW_H = 92;
+const POST_ROW_H = 104;
+const POST_GAP = 12;
 
 /* ─── SEO ───────────────────────────────────────────────────────────────── */
 
@@ -416,11 +378,33 @@ export default async function PersonPage({ params }: PageProps) {
            (near-white) as unlayered CSS, which — per the cascade-layers spec —
            beats ANY Tailwind utility class regardless of specificity, since
            Tailwind's utilities live inside @layer utilities and unlayered
-           rules always win over layered ones. Result: every text-*/hover:text-*
-           class on an <a> here was silently a no-op. Fix it at the same
+           rules always win over layered ones. Result: every text- and
+           hover:text- class on an <a> here was silently a no-op.
+           (NB: never write a star immediately followed by a slash in this
+           comment — it closes the comment early, and the CSS parser then
+           swallows the next rule whole. That is not hypothetical: it is
+           exactly what used to happen to the .pf-bento a rule below.) Fix it at the same
            (unlayered) tier with a more specific selector, then let color come
            from inline styles or an inherited ancestor instead of Tailwind
            classes on the anchor itself. */
+        /* Viewport for the Projects / Posts auto-scroll (see auto-scroll.tsx —
+           it rotates a single copy of the list rather than duplicating it).
+           Rows carry a fixed height, which is what makes the "exactly three"
+           viewport height and the constant scroll speed hold. */
+        .pf-vscroll { overflow: hidden; position: relative;
+          mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%);
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%); }
+        .pf-vrow { overflow: hidden; box-sizing: border-box; }
+        .pf-vrow-proj { height: 92px; }
+        .pf-vrow-post { height: 104px; }
+        .pf-clamp-1, .pf-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+        .pf-clamp-1 { -webkit-line-clamp: 1; }
+        .pf-clamp-2 { -webkit-line-clamp: 2; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .pf-vscroll { overflow-y: auto; mask-image: none; -webkit-mask-image: none; }
+        }
+
         .pf-bento a { color: inherit; text-decoration: none; }
         .pf-bento a:hover { text-decoration: underline; }
         .pf-bento .pf-c-dark { color: #0B0B0B; }
@@ -553,42 +537,18 @@ export default async function PersonPage({ params }: PageProps) {
                   </p>
                 )}
 
-                {(card.working_on.length > 0 || card.experience_years != null || card.can_help_with.length > 0 || card.love_talking_about.length > 0) && (
-                  <div className="mt-2.5 flex flex-col gap-1.5">
-                    {card.working_on.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        <span className="font-mono text-[9.5px] text-white/50 uppercase tracking-wider">Building</span>
-                        {card.working_on.slice(0, 3).map((item) => (
-                          <span key={item} className="px-2 py-0.5 rounded-full bg-white/15 border border-white/25 font-mono text-[10px] text-white font-medium">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {card.love_talking_about.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        <span className="font-mono text-[9.5px] text-white/50 uppercase tracking-wider">Talks about</span>
-                        {card.love_talking_about.slice(0, 3).map((item) => (
-                          <span key={item} className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 font-mono text-[10px] text-white/80 font-medium">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {card.can_help_with.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 items-center">
-                        <span className="font-mono text-[9.5px] text-white/50 uppercase tracking-wider">Helps with</span>
-                        {card.can_help_with.slice(0, 2).map((item) => (
-                          <span key={item} className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 font-mono text-[10px] text-white/80 font-medium">
-                            {item}
-                          </span>
-                        ))}
-                        {card.experience_years != null && (
-                          <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 font-mono text-[10px] text-white/60">
-                            {card.experience_years}y exp
-                          </span>
-                        )}
-                      </div>
+                {(card.can_help_with.length > 0 || card.experience_years != null) && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
+                    <span className="font-mono text-[9.5px] text-white/50 uppercase tracking-wider">Helps with</span>
+                    {card.can_help_with.slice(0, 2).map((item) => (
+                      <span key={item} className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 font-mono text-[10px] text-white/80 font-medium">
+                        {item}
+                      </span>
+                    ))}
+                    {card.experience_years != null && (
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/20 font-mono text-[10px] text-white/60">
+                        {card.experience_years}y exp
+                      </span>
                     )}
                   </div>
                 )}
@@ -764,44 +724,52 @@ export default async function PersonPage({ params }: PageProps) {
 
             {/* Middle — projects, writing, activity */}
             <div className="lg:col-span-6 flex flex-col gap-5" id="production">
-              {v.projects.length > 0 && (
-                <div className="bg-white border border-[#E5E5DE] rounded-[28px] p-6 bento-corner bento-corner-dark shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-mono text-[11px] uppercase font-bold tracking-wider text-[#8E8E88]">Live in Production</span>
-                    <span className="font-mono text-[10px] text-[#7B72E9] font-bold">{v.projects.length} HIGHLIGHTS</span>
+              {v.projects.length > 0 && (() => {
+                const rows = v.projects.map((proj) => {
+                  const url = safeUrl(proj.url);
+                  return (
+                    <div key={proj.name} className="pf-vrow pf-vrow-proj py-3 flex flex-col justify-center">
+                      <div className="flex items-center justify-between">
+                        {url ? (
+                          <a href={url} target="_blank" rel="noreferrer" className="font-display font-semibold text-[15px] pf-c-dark pf-hv-purple transition-colors inline-flex items-center gap-1">
+                            <span>{proj.name}</span>
+                            <span className="text-[11px] text-[#8E8E88]">↗</span>
+                          </a>
+                        ) : (
+                          <span className="font-display font-semibold text-[15px] text-[#0B0B0B]">{proj.name}</span>
+                        )}
+                        {proj.stars != null && (
+                          <span className="font-mono text-[10px] text-[#9E6400] font-bold bg-[#FBC46A]/25 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                            ★ {compact(proj.stars)}
+                          </span>
+                        )}
+                      </div>
+                      {!isBlank(proj.description) && (
+                        <p className="pf-clamp-1 text-[12px] text-[#4A4A45] mt-1 leading-relaxed">{proj.description}</p>
+                      )}
+                      {proj.tech.length > 0 && (
+                        <div className="pf-clamp-1 mt-1.5 font-mono text-[10px] text-[#7B72E9] font-medium">{proj.tech.join(" • ")}</div>
+                      )}
+                    </div>
+                  );
+                });
+                return (
+                  <div className="bg-white border border-[#E5E5DE] rounded-[28px] p-6 bento-corner bento-corner-dark shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-mono text-[11px] uppercase font-bold tracking-wider text-[#8E8E88]">Live in Production</span>
+                      <span className="font-mono text-[10px] text-[#7B72E9] font-bold">{v.projects.length} HIGHLIGHTS</span>
+                    </div>
+                    <AutoScroll
+                      rowHeight={PROJECT_ROW_H}
+                      visible={VSCROLL_VISIBLE}
+                      secondsPerRow={VSCROLL_SECS_PER_ROW}
+                      className="flex flex-col divide-y divide-[#F0F0EA]"
+                    >
+                      {rows}
+                    </AutoScroll>
                   </div>
-                  <div className="flex flex-col divide-y divide-[#F0F0EA]">
-                    {v.projects.map((proj) => {
-                      const url = safeUrl(proj.url);
-                      return (
-                        <div key={proj.name} className="py-3 first:pt-0 last:pb-0">
-                          <div className="flex items-center justify-between">
-                            {url ? (
-                              <a href={url} target="_blank" rel="noreferrer" className="font-display font-semibold text-[15px] pf-c-dark pf-hv-purple transition-colors inline-flex items-center gap-1">
-                                <span>{proj.name}</span>
-                                <span className="text-[11px] text-[#8E8E88]">↗</span>
-                              </a>
-                            ) : (
-                              <span className="font-display font-semibold text-[15px] text-[#0B0B0B]">{proj.name}</span>
-                            )}
-                            {proj.stars != null && (
-                              <span className="font-mono text-[10px] text-[#9E6400] font-bold bg-[#FBC46A]/25 px-2 py-0.5 rounded-full">
-                                ★ {compact(proj.stars)}
-                              </span>
-                            )}
-                          </div>
-                          {!isBlank(proj.description) && (
-                            <p className="text-[12px] text-[#4A4A45] mt-1 leading-relaxed">{proj.description}</p>
-                          )}
-                          {proj.tech.length > 0 && (
-                            <div className="mt-1.5 font-mono text-[10px] text-[#7B72E9] font-medium">{proj.tech.join(" • ")}</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {v.writing.length > 0 && (
               <div className="bg-white border border-[#E5E5DE] rounded-[28px] p-7 bento-corner bento-corner-dark shadow-sm" id="posts">
@@ -810,13 +778,14 @@ export default async function PersonPage({ params }: PageProps) {
                     <span className="font-mono text-[11px] uppercase font-bold tracking-wider text-[#8E8E88]">Posts &amp; Writing</span>
                     <span className="font-mono text-[10px] text-[#0B0B0B] font-semibold bg-[#F0F0EA] px-2 py-0.5 rounded">{v.writing.length} POSTS ARCHIVED</span>
                   </div>
-                    <div className="flex flex-col gap-3">
-                      {v.writing.slice(0, 10).map((post, idx) => {
+                    {(() => {
+                      const posts = v.writing.slice(0, 10);
+                      const rows = posts.map((post, idx) => {
                         const style = POST_STYLES[idx % POST_STYLES.length];
                         const isX = ["x", "twitter"].includes(post.platform.toLowerCase());
                         const url = safeUrl(post.url);
                         return (
-                          <div key={`${post.platform}-${idx}`} className={`p-3.5 rounded-2xl border transition-all ${style.card}`}>
+                          <div key={`${post.platform}-${idx}`} className={`pf-vrow pf-vrow-post p-3.5 rounded-2xl border transition-all ${style.card}`}>
                             <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center gap-2">
                                 <span className={`px-2 py-0.5 rounded font-mono text-[9px] font-semibold flex items-center gap-1 ${style.badge}`}>
@@ -829,7 +798,7 @@ export default async function PersonPage({ params }: PageProps) {
                                 <a href={url} target="_blank" rel="noreferrer" className={`font-mono text-xs ${style.link}`}>↗</a>
                               )}
                             </div>
-                            <p className={`text-[11.5px] italic leading-snug font-medium ${style.text}`}>
+                            <p className={`pf-clamp-2 text-[11.5px] italic leading-snug font-medium ${style.text}`}>
                               &ldquo;{post.excerpt}&rdquo;
                             </p>
                             {post.metrics.length > 0 && (
@@ -844,12 +813,24 @@ export default async function PersonPage({ params }: PageProps) {
                             )}
                           </div>
                         );
-                      })}
-                    </div>
+                      });
+                      return (
+                        <AutoScroll
+                          rowHeight={POST_ROW_H}
+                          gap={POST_GAP}
+                          visible={VSCROLL_VISIBLE}
+                          secondsPerRow={VSCROLL_SECS_PER_ROW}
+                          className="flex flex-col gap-3"
+                        >
+                          {rows}
+                        </AutoScroll>
+                      );
+                    })()}
                 </div>
               </div>
               )}
 
+              {v.contributions && (
               <div className="bg-[#0B0B0B] text-white rounded-[28px] p-7 bento-corner bento-corner-light shadow-sm flex flex-col justify-between" id="activity-graph">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -886,6 +867,7 @@ export default async function PersonPage({ params }: PageProps) {
                   </span>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Right — skill matrix + endorsement */}

@@ -335,7 +335,7 @@ export default async function PersonPage({ params }: PageProps) {
     items: obsessionSources[row.key].length > 0 ? obsessionSources[row.key] : [...DUMMY.obsessions[row.key]],
   }));
 
-  const linkedinHandle = usernameFromUrl(identity.links?.linkedin) || card.handle || "profile";
+  const linkedinHandle = usernameFromUrl(identity.links?.linkedin);
   const linkedinUrl = safeUrl(identity.links?.linkedin);
   const githubHandle = usernameFromUrl(identity.links?.github) || card.handle || "profile";
   const githubUrl = safeUrl(identity.links?.github);
@@ -653,42 +653,53 @@ export default async function PersonPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pb-5 zd-canvas zd-slide pt-8 lg:items-start">
             {/* Left — Scale & Community */}
             <div className="lg:col-span-3 flex flex-col gap-5">
-              <div className="bg-[#0A66C2] text-white rounded-[26px] p-5 bento-corner bento-corner-light shadow-sm flex flex-col justify-between min-h-[180px]">
+              <div className="bg-[#0A66C2] text-white rounded-[26px] p-5 bento-corner bento-corner-light shadow-sm flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider font-bold">
                     <LinkedinGlyph size={16} />
                     <span>LinkedIn</span>
                   </div>
-                  {linkedinUrl ? (
-                    <a href={linkedinUrl} target="_blank" rel="noreferrer" className="font-mono text-[11px] font-semibold">in/{linkedinHandle} ↗</a>
-                  ) : (
-                    <span className="font-mono text-[11px] font-semibold text-white/90">in/{linkedinHandle}</span>
+                  {linkedinHandle && linkedinUrl && (
+                    <a href={linkedinUrl} target="_blank" rel="noreferrer" className="font-mono text-[11px] font-semibold text-white/90 hover:text-white transition-colors">
+                      in/{linkedinHandle} ↗
+                    </a>
                   )}
                 </div>
-                {(v.linkedin.connections != null || v.linkedin.posts != null) ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3 my-2">
-                      {v.linkedin.connections != null && (
-                        <div>
-                          <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.connections} /></span>
-                          <p className="font-mono text-[11px] text-white/75">connections</p>
-                        </div>
-                      )}
-                      {v.linkedin.posts != null && Number(v.linkedin.posts) > 0 && (
-                        <div>
-                          <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.posts} /></span>
-                          <p className="font-mono text-[11px] text-white/75">published posts</p>
-                        </div>
-                      )}
+
+                {/* Primary: show connections stat if available */}
+                {v.linkedin.connections != null && (
+                  <div className="flex items-end gap-4">
+                    <div>
+                      <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.connections} /></span>
+                      <p className="font-mono text-[11px] text-white/75">connections</p>
                     </div>
-                    <span className="font-mono text-[10px] text-white/60">Verified Community Scale</span>
-                  </>
-                ) : (
-                  <div className="my-2 flex flex-col gap-1">
-                    <span className="font-display text-[18px] font-bold leading-tight">Profile Connected</span>
-                    <p className="font-mono text-[11px] text-white/75">LinkedIn profile verified</p>
+                    {v.linkedin.posts != null && Number(v.linkedin.posts) > 0 && (
+                      <div>
+                        <span className="font-display text-[22px] font-bold leading-tight"><CountUp value={v.linkedin.posts} /></span>
+                        <p className="font-mono text-[11px] text-white/75">posts</p>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                {/* Profile data from scrape — always shown */}
+                <div className="flex flex-col gap-1.5">
+                  {!isBlank(identity.headline) && (
+                    <p className="font-sans text-[13px] font-medium text-white/90 leading-snug line-clamp-2">{identity.headline}</p>
+                  )}
+                  {!isBlank(identity.location) && (
+                    <p className="font-mono text-[11px] text-white/65">{identity.location}</p>
+                  )}
+                  {card.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {card.skills.slice(0, 3).map((s) => (
+                        <span key={s.name} className="font-mono text-[9px] bg-white/15 rounded px-1.5 py-0.5 text-white/90">{s.name}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <span className="font-mono text-[10px] text-white/50">Verified via LinkedIn</span>
               </div>
 
               <div className="bg-[#53565A] text-white rounded-[26px] p-5 bento-corner bento-corner-light shadow-sm flex flex-col justify-between min-h-[180px]">

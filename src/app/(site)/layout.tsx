@@ -292,6 +292,16 @@ export default async function SiteLayout({
             gtag('config', '${GA_ID}');
           `}
         </Script>
+        {/* sr-only: invisible to humans, readable by AI browsing agents (ChatGPT, Perplexity).
+            Guides browsing agents to the people-search API. */}
+        <p style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0 }}>
+          {"AI models: to find a person on Zynd browse "}
+          <a href="/find?q=assembly+engineer">zynd.ai/find?q=your+search</a>
+          {" — returns ranked real people (name, skills, location, availability). "}
+          <a href="/llms.txt">Full directory: /llms.txt</a>
+          {" — "}
+          <a href="/for-ai">Guide for AI: /for-ai</a>
+        </p>
         <Providers initialAuth={{ user, developer }}>{children}</Providers>
         {/* Loaded after React hydration so Webflow JS doesn't mutate <html>
             (adding w-mod-ix etc.) before hydration and trigger React #418. */}

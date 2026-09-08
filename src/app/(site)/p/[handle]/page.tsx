@@ -15,6 +15,7 @@ import { DossierShell } from "./dossier-shell";
 import { SkillMatrix } from "./skill-matrix";
 import { ShareButton, CopyPermalinkIcon } from "./share-controls";
 import { CountUp } from "./count-up";
+import { AutoScroll } from "./auto-scroll";
 import { ProfileChatWidget } from "@/components/ProfileChatWidget";
 
 interface PageProps {
@@ -36,14 +37,6 @@ interface PageProps {
    dummy fallbacks; those sections just hide when the card has no real data.
    ═══════════════════════════════════════════════════════════════════════════ */
 const DUMMY = {
-  /** card.contribution_stats — heatmap is synthesized deterministically from
-   *  the card id so a given profile always renders the same pattern. */
-  contributions: {
-    days: 371, // 53 weeks × 7
-    /** commits attributed to each 0–4 intensity level, to derive a total. */
-    levelWeights: [0, 1, 3, 6, 11],
-  },
-
   /** The 3 pinned bento tiles, when the card's arrays are empty. */
   obsessions: {
     connect_with: ["Founders", "AI researchers", "Systems engineers"],
@@ -98,49 +91,13 @@ function usernameFromUrl(url: string | null | undefined): string | null {
   return url.replace(/\/+$/, "").split("/").pop() || null;
 }
 
-/* Deterministic PRNG so the synthesized heatmap is stable per profile
-   (no server/client drift, no churn between revalidations). */
-function hashSeed(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let a = seed;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// DUMMY: synthesized contribution heatmap, used until card.contribution_stats exists.
-function dummyContributions(seed: string): ContributionStats {
-  const rnd = mulberry32(hashSeed(seed));
-  const levels: number[] = Array.from({ length: DUMMY.contributions.days }, (_, i) => {
-    const weekend = i % 7 === 0 || i % 7 === 6;
-    const r = rnd();
-    if (r < (weekend ? 0.55 : 0.16)) return 0;
-    if (r < 0.48) return 1;
-    if (r < 0.72) return 2;
-    if (r < 0.9) return 3;
-    return 4;
-  });
-  const total = levels.reduce<number>((n, l) => n + DUMMY.contributions.levelWeights[l], 0);
-  return {
-    year: new Date().getUTCFullYear(),
-    total,
-    avg_per_day: Math.round((total / 365) * 10) / 10,
-    levels,
-  };
-}
-
 const HEAT = ["#1e293b", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+
+const VSCROLL_VISIBLE = 3;
+const VSCROLL_SECS_PER_ROW = 3.5;
+const PROJECT_ROW_H = 92;
+const POST_ROW_H = 104;
+const POST_GAP = 12;
 
 const POST_STYLES = [
   { card: "bg-[#0B0B0B] text-white border-slate-800 hover:border-slate-700", badge: "bg-white/10 text-white", text: "text-slate-200", meta: "text-slate-400", link: "pf-post-link-0" },
@@ -267,7 +224,7 @@ function buildView(card: AgentProfileCard) {
       posts: card.x_stats?.posts ?? null,
       impressions: card.x_stats?.impressions ?? null,
     },
-    contributions: card.contribution_stats ?? dummyContributions(card.id || card.handle),
+    contributions: card.contribution_stats ?? null,
   };
 }
 
@@ -486,6 +443,17 @@ export default async function PersonPage({ params }: PageProps) {
         }
         .pf-bento .bento-corner-light::after { border-color: #ffffff; opacity: 0.45; }
         .pf-bento .bento-corner-dark::after { border-color: #0B0B0B; opacity: 0.35; }
+
+        /* AutoScroll vertical marquee */
+        .pf-vscroll { overflow: hidden; position: relative; }
+        .pf-vrow { display: flex; flex-direction: column; justify-content: center; flex-shrink: 0; }
+        .pf-vrow-proj { height: 92px; }
+        .pf-vrow-post { height: 104px; }
+        .pf-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+        .pf-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        @media (prefers-reduced-motion: reduce) {
+          .pf-vscroll { overflow-y: auto; }
+        }
       `}</style>
 
       <div className="pf-bento zd-canvas font-sans antialiased w-full min-h-screen flex flex-col selection:bg-[#7B72E9] selection:text-white px-4 sm:px-10 md:px-16 lg:px-24 xl:px-32">
@@ -784,36 +752,44 @@ export default async function PersonPage({ params }: PageProps) {
                     <span className="font-mono text-[11px] uppercase font-bold tracking-wider text-[#8E8E88]">Live in Production</span>
                     <span className="font-mono text-[10px] text-[#7B72E9] font-bold">{v.projects.length} HIGHLIGHTS</span>
                   </div>
-                  <div className="flex flex-col divide-y divide-[#F0F0EA]">
-                    {v.projects.map((proj) => {
-                      const url = safeUrl(proj.url);
-                      return (
-                        <div key={proj.name} className="py-3 first:pt-0 last:pb-0">
-                          <div className="flex items-center justify-between">
-                            {url ? (
-                              <a href={url} target="_blank" rel="noreferrer" className="font-display font-semibold text-[15px] pf-c-dark pf-hv-purple transition-colors inline-flex items-center gap-1">
-                                <span>{proj.name}</span>
-                                <span className="text-[11px] text-[#8E8E88]">↗</span>
-                              </a>
-                            ) : (
-                              <span className="font-display font-semibold text-[15px] text-[#0B0B0B]">{proj.name}</span>
-                            )}
-                            {proj.stars != null && (
-                              <span className="font-mono text-[10px] text-[#9E6400] font-bold bg-[#FBC46A]/25 px-2 py-0.5 rounded-full">
-                                ★ {compact(proj.stars)}
-                              </span>
-                            )}
-                          </div>
-                          {!isBlank(proj.description) && (
-                            <p className="text-[12px] text-[#4A4A45] mt-1 leading-relaxed">{proj.description}</p>
-                          )}
-                          {proj.tech.length > 0 && (
-                            <div className="mt-1.5 font-mono text-[10px] text-[#7B72E9] font-medium">{proj.tech.join(" • ")}</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {(() => {
+                    return (
+                      <AutoScroll
+                        rowHeight={PROJECT_ROW_H}
+                        visible={VSCROLL_VISIBLE}
+                        secondsPerRow={VSCROLL_SECS_PER_ROW}
+                      >
+                        {v.projects.map((proj) => {
+                          const url = safeUrl(proj.url);
+                          return (
+                            <div key={proj.name} className="pf-vrow pf-vrow-proj py-2 border-b border-[#F0F0EA] last:border-b-0">
+                              <div className="flex items-center justify-between">
+                                {url ? (
+                                  <a href={url} target="_blank" rel="noreferrer" className="font-display font-semibold text-[15px] pf-c-dark pf-hv-purple transition-colors inline-flex items-center gap-1">
+                                    <span className="pf-clamp-1">{proj.name}</span>
+                                    <span className="text-[11px] text-[#8E8E88] flex-shrink-0">↗</span>
+                                  </a>
+                                ) : (
+                                  <span className="font-display font-semibold text-[15px] text-[#0B0B0B] pf-clamp-1">{proj.name}</span>
+                                )}
+                                {proj.stars != null && (
+                                  <span className="font-mono text-[10px] text-[#9E6400] font-bold bg-[#FBC46A]/25 px-2 py-0.5 rounded-full flex-shrink-0">
+                                    ★ {compact(proj.stars)}
+                                  </span>
+                                )}
+                              </div>
+                              {!isBlank(proj.description) && (
+                                <p className="text-[12px] text-[#4A4A45] mt-0.5 leading-relaxed pf-clamp-1">{proj.description}</p>
+                              )}
+                              {proj.tech.length > 0 && (
+                                <div className="mt-0.5 font-mono text-[10px] text-[#7B72E9] font-medium pf-clamp-1">{proj.tech.join(" • ")}</div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </AutoScroll>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -824,46 +800,47 @@ export default async function PersonPage({ params }: PageProps) {
                     <span className="font-mono text-[11px] uppercase font-bold tracking-wider text-[#8E8E88]">Posts &amp; Writing</span>
                     <span className="font-mono text-[10px] text-[#0B0B0B] font-semibold bg-[#F0F0EA] px-2 py-0.5 rounded">{v.writing.length} POSTS ARCHIVED</span>
                   </div>
-                    <div className="flex flex-col gap-3">
-                      {v.writing.slice(0, 10).map((post, idx) => {
-                        const style = POST_STYLES[idx % POST_STYLES.length];
-                        const isX = ["x", "twitter"].includes(post.platform.toLowerCase());
-                        const url = safeUrl(post.url);
-                        return (
-                          <div key={`${post.platform}-${idx}`} className={`p-3.5 rounded-2xl border transition-all ${style.card}`}>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <div className="flex items-center gap-2">
-                                <span className={`px-2 py-0.5 rounded font-mono text-[9px] font-semibold flex items-center gap-1 ${style.badge}`}>
-                                  {isX ? <XGlyph size={10} /> : <LinkedinGlyph size={10} />}
-                                  {isX ? "X" : "LinkedIn"}
-                                </span>
-                                <span className={`font-mono text-[10px] font-medium ${style.meta}`}>{post.posted_at}</span>
+                    {(() => {
+                      const posts = v.writing.slice(0, 10);
+                      return (
+                        <AutoScroll
+                          rowHeight={POST_ROW_H + POST_GAP}
+                          gap={0}
+                          visible={VSCROLL_VISIBLE}
+                          secondsPerRow={VSCROLL_SECS_PER_ROW}
+                        >
+                          {posts.map((post, idx) => {
+                            const style = POST_STYLES[idx % POST_STYLES.length];
+                            const isX = ["x", "twitter"].includes(post.platform.toLowerCase());
+                            const url = safeUrl(post.url);
+                            return (
+                              <div key={`${post.platform}-${idx}`} className={`pf-vrow pf-vrow-post p-3.5 rounded-2xl border transition-all ${style.card}`} style={{ marginBottom: POST_GAP }}>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-0.5 rounded font-mono text-[9px] font-semibold flex items-center gap-1 ${style.badge}`}>
+                                      {isX ? <XGlyph size={10} /> : <LinkedinGlyph size={10} />}
+                                      {isX ? "X" : "LinkedIn"}
+                                    </span>
+                                    <span className={`font-mono text-[10px] font-medium ${style.meta}`}>{post.posted_at}</span>
+                                  </div>
+                                  {url && (
+                                    <a href={url} target="_blank" rel="noreferrer" className={`font-mono text-xs ${style.link}`}>↗</a>
+                                  )}
+                                </div>
+                                <p className={`text-[11.5px] italic leading-snug font-medium pf-clamp-2 ${style.text}`}>
+                                  &ldquo;{post.excerpt}&rdquo;
+                                </p>
                               </div>
-                              {url && (
-                                <a href={url} target="_blank" rel="noreferrer" className={`font-mono text-xs ${style.link}`}>↗</a>
-                              )}
-                            </div>
-                            <p className={`text-[11.5px] italic leading-snug font-medium ${style.text}`}>
-                              &ldquo;{post.excerpt}&rdquo;
-                            </p>
-                            {post.metrics.length > 0 && (
-                              <div className={`mt-2 flex items-center gap-3 font-mono text-[10px] ${style.meta}`}>
-                                {post.metrics.map((metric, i) => (
-                                  <span key={metric} className="inline-flex items-center gap-3">
-                                    {i > 0 && <span>•</span>}
-                                    <span>{metric}</span>
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            );
+                          })}
+                        </AutoScroll>
+                      );
+                    })()}
                 </div>
               </div>
               )}
 
+              {v.contributions && v.contributions.levels.length > 0 && (
               <div className="bg-[#0B0B0B] text-white rounded-[28px] p-7 bento-corner bento-corner-light shadow-sm flex flex-col justify-between" id="activity-graph">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -900,6 +877,7 @@ export default async function PersonPage({ params }: PageProps) {
                   </span>
                 </div>
               </div>
+              )}
             </div>
 
             {/* Right — skill matrix + endorsement */}

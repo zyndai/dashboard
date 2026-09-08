@@ -364,12 +364,7 @@ export default function CreateProfilePage() {
       const published = await res.json();
       const handle = published.handle || published.id;
       // Fire-and-forget: bust /registry cache + ping Bing IndexNow
-      fetch("/api/revalidate-agents", {
-        method: "POST",
-        headers: process.env.NEXT_PUBLIC_REVALIDATE_AGENTS_TOKEN
-          ? { "x-revalidate-token": process.env.NEXT_PUBLIC_REVALIDATE_AGENTS_TOKEN }
-          : {},
-      }).catch(() => {});
+      fetch("/api/revalidate-agents", { method: "POST" }).catch(() => {});
       fetch("/api/indexnow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

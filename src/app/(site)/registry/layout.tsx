@@ -65,8 +65,8 @@ export default async function RegistryLayout({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          // Replace </ to prevent </script> injection from untrusted API data
-          __html: JSON.stringify(itemList).replace(/<\//g, "<\\/"),
+          // Unicode-escape <, >, & so user-supplied strings can't break out of the script tag.
+          __html: JSON.stringify(itemList).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026"),
         }}
       />
       {/* sr-only agent index — zero visual space, full DOM text for LLM crawlers */}

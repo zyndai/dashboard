@@ -50,19 +50,17 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
       const res = await fetch("/api/chat/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, message: text, history }),
+        body: JSON.stringify({
+          handle,
+          messages: [...history, { role: "user", content: text }],
+        }),
       });
 
-      const contentType = res.headers.get("content-type") ?? "";
-      if (!res.ok || !res.body || contentType.includes("application/json")) {
-        const fallback = contentType.includes("application/json")
-          ? ((await res.json()) as { message?: string; error?: string })
-          : null;
-        const msg =
-          fallback?.message ?? fallback?.error ?? "Chat is unavailable right now.";
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
         setMessages((prev) => {
           const copy = [...prev];
-          copy[assistantIndex] = { role: "assistant", content: msg };
+          copy[assistantIndex] = { role: "assistant", content: err.error ?? "Chat is unavailable right now." };
           return copy;
         });
         return;
@@ -70,27 +68,41 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let acc = "";
+      let raw = "";
+      let text_acc = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += decoder.decode(value, { stream: true });
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[assistantIndex] = { role: "assistant", content: acc };
-          return copy;
-        });
-        scrollToBottom();
+        raw += decoder.decode(value, { stream: true });
+
+        // Parse CF Workers AI SSE: `data: {"response":"token"}\n`
+        const lines = raw.split("\n");
+        raw = lines.pop() ?? ""; // keep incomplete last line
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") break;
+          try {
+            const json = JSON.parse(payload) as { response?: string };
+            if (json.response) text_acc += json.response;
+          } catch { /* skip malformed lines */ }
+        }
+
+        if (text_acc) {
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[assistantIndex] = { role: "assistant", content: text_acc };
+            return copy;
+          });
+          scrollToBottom();
+        }
       }
 
-      if (!acc) {
+      if (!text_acc) {
         setMessages((prev) => {
           const copy = [...prev];
-          copy[assistantIndex] = {
-            role: "assistant",
-            content: "No response — please try again.",
-          };
+          copy[assistantIndex] = { role: "assistant", content: "No response — please try again." };
           return copy;
         });
       }

@@ -650,7 +650,7 @@ export default async function PersonPage({ params }: PageProps) {
           </div>
 
           {/* THREE-COLUMN DOSSIER BODY */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pb-5 zd-canvas zd-slide pt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pb-5 zd-canvas zd-slide pt-8 lg:items-start">
             {/* Left — Scale & Community */}
             <div className="lg:col-span-3 flex flex-col gap-5">
               <div className="bg-[#0A66C2] text-white rounded-[26px] p-5 bento-corner bento-corner-light shadow-sm flex flex-col justify-between min-h-[180px]">
@@ -665,17 +665,30 @@ export default async function PersonPage({ params }: PageProps) {
                     <span className="font-mono text-[11px] font-semibold text-white/90">in/{linkedinHandle}</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-3 my-2">
-                  <div>
-                    <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.connections ?? "—"} /></span>
-                    <p className="font-mono text-[11px] text-white/75">connections</p>
+                {(v.linkedin.connections != null || v.linkedin.posts != null) ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 my-2">
+                      {v.linkedin.connections != null && (
+                        <div>
+                          <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.connections} /></span>
+                          <p className="font-mono text-[11px] text-white/75">connections</p>
+                        </div>
+                      )}
+                      {v.linkedin.posts != null && Number(v.linkedin.posts) > 0 && (
+                        <div>
+                          <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.posts} /></span>
+                          <p className="font-mono text-[11px] text-white/75">published posts</p>
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-mono text-[10px] text-white/60">Verified Community Scale</span>
+                  </>
+                ) : (
+                  <div className="my-2 flex flex-col gap-1">
+                    <span className="font-display text-[18px] font-bold leading-tight">Profile Connected</span>
+                    <p className="font-mono text-[11px] text-white/75">LinkedIn profile verified</p>
                   </div>
-                  <div>
-                    <span className="font-display text-[28px] font-bold leading-tight"><CountUp value={v.linkedin.posts ?? "—"} /></span>
-                    <p className="font-mono text-[11px] text-white/75">published posts</p>
-                  </div>
-                </div>
-                <span className="font-mono text-[10px] text-white/60">Verified Community Scale</span>
+                )}
               </div>
 
               <div className="bg-[#53565A] text-white rounded-[26px] p-5 bento-corner bento-corner-light shadow-sm flex flex-col justify-between min-h-[180px]">

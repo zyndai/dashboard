@@ -1,176 +1,99 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { fetchCardByHandle } from "@/lib/cards";
 
-import { fetchCardByHandle, type AgentProfileCard } from "@/lib/cards";
+const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
+const CF_API_KEY = process.env.CLOUDFLARE_AI_KEY;
+// Fastest capable chat model on Workers AI
+const CF_MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 
-interface HistoryItem {
-  role: string;
-  content: string;
-}
-
-interface ChatRequestBody {
-  handle?: unknown;
-  message?: unknown;
-  history?: unknown;
-}
-
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL = "google/gemini-flash-1.5";
-const MAX_HISTORY = 6;
-
-function buildSystemPrompt(card: AgentProfileCard): string {
-  const { identity } = card;
-  const skills = card.skills.map((s) => s.name).join(", ");
+function buildSystemPrompt(card: Awaited<ReturnType<typeof fetchCardByHandle>>): string {
+  if (!card) return "You are a helpful assistant.";
+  const id = card.identity;
+  const skills = card.skills.slice(0, 10).map((s) => s.name).join(", ");
   const projects = card.projects
-    .map((p) => `${p.name}: ${p.description}`)
-    .join("\n");
+    .slice(0, 4)
+    .map((p) => `"${p.name}" — ${p.description}`)
+    .join("; ");
+  const posts = card.writing_samples
+    .slice(0, 3)
+    .map((w) => w.excerpt)
+    .join(" | ");
+  const workingOn = card.working_on?.slice(0, 3).join(", ") ?? "";
+  const canHelp = card.can_help_with?.slice(0, 3).join(", ") ?? "";
+  const topics = card.love_talking_about?.slice(0, 3).join(", ") ?? "";
 
-  return [
-    `You are an AI assistant for ${identity.name}'s profile on Zynd. Answer questions about them based on their profile data only. Be concise and helpful.`,
-    "",
-    "Profile:",
-    `Name: ${identity.name}`,
-    `Headline: ${identity.headline}`,
-    `Location: ${identity.location}`,
-    `Availability: ${card.availability}`,
-    `Summary: ${card.summary}`,
-    `Skills: ${skills}`,
-    `Working on: ${card.working_on.join(", ")}`,
-    `Can help with: ${card.can_help_with.join(", ")}`,
-    `Connect with: ${card.connect_with.join(", ")}`,
-    `Love talking about: ${card.love_talking_about.join(", ")}`,
-    `Experience: ${card.experience_years ?? "unknown"} years`,
-    `Industries: ${card.industries.join(", ")}`,
-    `Projects:\n${projects}`,
-  ].join("\n");
+  return `You're a witty, sharp assistant embedded on ${id.name}'s profile page. \
+People visiting this page are curious about ${id.name} — maybe they want to collaborate, hire them, or just learn more. \
+Your job is to make that feel like a real conversation, not a Wikipedia lookup.
+
+Facts about ${id.name}:
+- Headline: ${id.headline}
+- Location: ${id.location || "not shared"}
+- Summary: ${card.summary || "not available"}
+${skills ? `- Skills: ${skills}` : ""}
+${workingOn ? `- Currently working on: ${workingOn}` : ""}
+${canHelp ? `- Can help with: ${canHelp}` : ""}
+${topics ? `- Loves talking about: ${topics}` : ""}
+${projects ? `- Projects: ${projects}` : ""}
+${posts ? `- Things they've written: ${posts}` : ""}
+
+Rules:
+- Keep answers SHORT — 2 sentences max unless they explicitly ask for more detail.
+- Sound like you actually know this person, not like you're reading their LinkedIn bio.
+- If something is genuinely unknown, say "I don't have that info, but you could reach out directly."
+- Never say "As an AI" or anything that sounds robotic.
+- If someone asks something personal or off-topic, redirect with a light touch.
+- End with a follow-up question or a nudge when it feels natural.`;
 }
 
-function normalizeHistory(raw: unknown): HistoryItem[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter(
-      (item): item is HistoryItem =>
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as HistoryItem).role === "string" &&
-        typeof (item as HistoryItem).content === "string",
-    )
-    .slice(-MAX_HISTORY)
-    .map((item) => ({
-      role: item.role === "assistant" ? "assistant" : "user",
-      content: item.content,
-    }));
-}
-
-export async function POST(req: Request) {
-  let body: ChatRequestBody;
+export async function POST(req: NextRequest) {
   try {
-    body = (await req.json()) as ChatRequestBody;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+    const { handle, messages } = await req.json();
 
-  const handle = typeof body.handle === "string" ? body.handle.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
+    if (!handle || !Array.isArray(messages)) {
+      return NextResponse.json({ error: "handle and messages required" }, { status: 400 });
+    }
 
-  if (!handle || !message) {
-    return NextResponse.json(
-      { error: "handle and message are required" },
-      { status: 400 },
-    );
-  }
+    if (!CF_ACCOUNT_ID || !CF_API_KEY) {
+      return new Response("Chatbot not configured.", { status: 503 });
+    }
 
-  const card = await fetchCardByHandle(handle);
-  if (!card) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-  }
+    const card = await fetchCardByHandle(handle);
+    const systemPrompt = buildSystemPrompt(card);
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({
-      message: "Chat unavailable",
-    });
-  }
-
-  const messages = [
-    { role: "system", content: buildSystemPrompt(card) },
-    ...normalizeHistory(body.history),
-    { role: "user", content: message },
-  ];
-
-  let upstream: Response;
-  try {
-    upstream = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${CF_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          stream: true,
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          max_tokens: 300,
+        }),
       },
-      body: JSON.stringify({ model: MODEL, messages, stream: true }),
+    );
+
+    if (!res.ok || !res.body) {
+      const err = await res.text().catch(() => "unknown");
+      return NextResponse.json({ error: `CF AI error: ${err}` }, { status: 502 });
+    }
+
+    // Cloudflare Workers AI streams SSE in the same format as OpenAI — proxy directly.
+    return new Response(res.body, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
     });
-  } catch {
+  } catch (err) {
     return NextResponse.json(
-      { error: "Chat provider unreachable" },
-      { status: 502 },
+      { error: err instanceof Error ? err.message : "unknown" },
+      { status: 500 },
     );
   }
-
-  if (!upstream.ok || !upstream.body) {
-    return NextResponse.json(
-      { error: "Chat provider error" },
-      { status: 502 },
-    );
-  }
-
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const reader = upstream.body!.getReader();
-      const decoder = new TextDecoder();
-      const encoder = new TextEncoder();
-      let buffer = "";
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-
-            const data = trimmed.slice(5).trim();
-            if (data === "[DONE]") {
-              controller.close();
-              return;
-            }
-
-            try {
-              const parsed = JSON.parse(data) as {
-                choices?: { delta?: { content?: string } }[];
-              };
-              const token = parsed.choices?.[0]?.delta?.content;
-              if (token) controller.enqueue(encoder.encode(token));
-            } catch {
-              // Partial or non-JSON SSE keep-alive line — skip it.
-            }
-          }
-        }
-        controller.close();
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        reader.releaseLock();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
-  });
 }

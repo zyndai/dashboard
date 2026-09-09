@@ -571,7 +571,8 @@ export default function CreateProfilePage() {
           {/* ── header ── */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "9px", paddingLeft: "4px" }}>
-              <span style={{ width: "16px", height: "16px", borderRadius: "50%", border: `2.5px solid ${T.ink}`, display: "block" }} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/zynd-logo.png" alt="Zynd" style={{ height: "20px", width: "auto", display: "block" }} />
               <span style={{ font: `600 16px/1 ${DISPLAY}`, color: T.ink, letterSpacing: "-.01em" }}>Zynd Profile</span>
             </div>
             <Link href="/directory" className="zc-back"
@@ -1023,6 +1024,33 @@ export default function CreateProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ── below-shell tagline ── */}
+        <div style={{ maxWidth: "1440px", marginInline: "auto", padding: "56px 8px 0", display: "flex", flexDirection: "column", gap: "40px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ font: `700 52px/1.05 ${DISPLAY}`, color: T.ink, letterSpacing: "-.04em", margin: 0, maxWidth: "640px", textWrap: "pretty" }}>
+              Your work,<br />discoverable by AI.
+            </p>
+            <p style={{ font: `400 17px/1.65 ${SANS}`, color: T.soft, margin: 0, maxWidth: "440px", textWrap: "pretty" }}>
+              Paste your GitHub, LinkedIn, or X and Zynd builds a card that AI assistants, search, and real people can actually understand.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+            {[
+              { num: "01", label: "Add your profiles", desc: "GitHub · LinkedIn · X · any URL" },
+              { num: "02", label: "We scrape the public web", desc: "No passwords, no permissions" },
+              { num: "03", label: "You review and approve", desc: "Edit every line before it goes live" },
+            ].map(({ num, label, desc }) => (
+              <div key={num} style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "180px" }}>
+                <span style={{ font: `500 11px/1 ${MONO}`, letterSpacing: ".14em", color: T.faint }}>{num}</span>
+                <span style={{ font: `600 16px/1.3 ${DISPLAY}`, color: T.ink, letterSpacing: "-.01em" }}>{label}</span>
+                <span style={{ font: `400 13px/1.5 ${SANS}`, color: T.soft }}>{desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </>
   );

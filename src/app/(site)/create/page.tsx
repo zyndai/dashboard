@@ -490,10 +490,10 @@ export default function CreateProfilePage() {
         .zc-root button, .zc-root input, .zc-root textarea { font-family: inherit; -webkit-appearance: none; appearance: none; }
         .zc-root input::placeholder, .zc-root textarea::placeholder { color: ${T.faint}; }
 
-        .zc-root { min-height: 100vh; background: ${T.page}; padding: 44px 36px 36px; box-sizing: border-box; font-family: ${SANS}; color: ${T.ink}; line-height: 1.4; }
-        .zc-shell { max-width: 1440px; margin-inline: auto; background: ${T.shell}; border-radius: 34px; padding: 30px 32px 36px; display: flex; flex-direction: column; gap: 22px; box-sizing: border-box; }
-        .zc-grid { display: grid; grid-template-columns: 472px minmax(0,1fr); gap: 16px; align-items: start; }
-        .zc-panel { background: ${T.accent}; border-radius: 26px; padding: 34px 32px 30px; display: flex; flex-direction: column; gap: 30px; position: relative; overflow: hidden; min-height: 498px; box-sizing: border-box; }
+        .zc-root { height: 100dvh; background: ${T.page}; padding: 44px 36px 0; box-sizing: border-box; font-family: ${SANS}; color: ${T.ink}; line-height: 1.4; overflow: hidden; }
+        .zc-shell { max-width: 1440px; width: 100%; margin-inline: auto; background: ${T.shell}; border-radius: 34px 34px 0 0; padding: 30px 32px 36px; display: flex; flex-direction: column; gap: 22px; box-sizing: border-box; height: 100%; overflow-y: auto; }
+        .zc-grid { display: grid; grid-template-columns: 472px minmax(0,1fr); gap: 16px; align-items: stretch; flex: 1; min-height: 0; }
+        .zc-panel { background: ${T.accent}; border-radius: 26px; padding: 34px 32px 30px; display: flex; flex-direction: column; gap: 30px; position: relative; overflow: hidden; min-height: 0; box-sizing: border-box; }
         /* globals.css sets \`h1,h2 { font-family/weight/transform ... !important }\`
            for the landing page — this panel opts out of that treatment. */
         .zc-root h1.zc-panel-title {
@@ -505,9 +505,9 @@ export default function CreateProfilePage() {
           letter-spacing: -.035em !important;
           color: #fff; -webkit-text-fill-color: #fff;
         }
-        .zc-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+        .zc-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-y: auto; }
         .zc-card { background: ${T.card}; border-radius: 26px; box-sizing: border-box; }
-        .zc-step-card { min-height: 498px; }
+        .zc-step-card { flex: 1; }
         .zc-question { font: 700 34px/1.15 ${DISPLAY}; color: ${T.ink}; letter-spacing: -.03em; text-wrap: pretty; }
         .zc-ctarow { display: grid; grid-template-columns: minmax(0,1fr) 236px; gap: 16px; align-items: stretch; }
 
@@ -565,9 +565,9 @@ export default function CreateProfilePage() {
 
         @media (max-width: 1040px) {
           .zc-grid { grid-template-columns: minmax(0,1fr); }
-          .zc-panel { min-height: 0; padding: 28px 26px; gap: 24px; }
+          .zc-panel { padding: 28px 26px; gap: 24px; }
           .zc-root h1.zc-panel-title { font-size: 40px; }
-          .zc-step-card { min-height: 0; }
+          .zc-step-card { flex: none; }
         }
         @media (max-width: 640px) {
           .zc-root { padding: 16px 12px 56px; }
@@ -634,7 +634,7 @@ export default function CreateProfilePage() {
 
               {/* ── STEP 0 — paste links ── */}
               {phase === "form" && (
-                <form onSubmit={startOnboard} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <form onSubmit={startOnboard} style={{ display: "flex", flexDirection: "column", gap: "16px", flex: 1, minHeight: 0 }}>
 
                   <div className="zc-card" style={{ padding: "28px 28px 26px", display: "flex", flexDirection: "column", gap: "18px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
@@ -710,7 +710,7 @@ export default function CreateProfilePage() {
                     <input ref={fileRef} type="file" accept=".pdf,.docx,application/pdf" onChange={e => setResume(e.target.files?.[0] ?? null)} style={{ display: "none" }} />
                   </div>
 
-                  <div className="zc-ctarow">
+                  <div className="zc-ctarow" style={{ marginTop: "auto" }}>
                     <button type="submit" disabled={!hasSource} className="zc-cta"
                       style={{
                         background: hasSource ? T.accent : T.ctaOffBg, borderRadius: "26px", border: "none",
@@ -1047,7 +1047,7 @@ export default function CreateProfilePage() {
           </div>
 
           {/* ── tagline footer row — inside shell, always visible ── */}
-          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: "20px", display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
+          <div style={{ marginTop: "auto", borderTop: `1px solid ${T.border}`, paddingTop: "20px", display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
             <div style={{ flex: "0 0 auto", paddingRight: "32px", marginRight: "32px", borderRight: `1px solid ${T.border}` }}>
               <p style={{ font: `700 22px/1.1 ${DISPLAY}`, color: T.ink, letterSpacing: "-.03em", margin: 0, whiteSpace: "nowrap" }}>
                 Your work,<br />discoverable by AI.

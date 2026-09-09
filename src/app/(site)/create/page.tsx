@@ -490,7 +490,7 @@ export default function CreateProfilePage() {
         .zc-root button, .zc-root input, .zc-root textarea { font-family: inherit; -webkit-appearance: none; appearance: none; }
         .zc-root input::placeholder, .zc-root textarea::placeholder { color: ${T.faint}; }
 
-        .zc-root { min-height: 100vh; background: ${T.page}; padding: 44px 36px 80px; box-sizing: border-box; font-family: ${SANS}; color: ${T.ink}; line-height: 1.4; }
+        .zc-root { min-height: 100vh; background: ${T.page}; padding: 44px 36px 36px; box-sizing: border-box; font-family: ${SANS}; color: ${T.ink}; line-height: 1.4; }
         .zc-shell { max-width: 1440px; margin-inline: auto; background: ${T.shell}; border-radius: 34px; padding: 30px 32px 36px; display: flex; flex-direction: column; gap: 22px; box-sizing: border-box; }
         .zc-grid { display: grid; grid-template-columns: 472px minmax(0,1fr); gap: 16px; align-items: start; }
         .zc-panel { background: ${T.accent}; border-radius: 26px; padding: 34px 32px 30px; display: flex; flex-direction: column; gap: 30px; position: relative; overflow: hidden; min-height: 498px; box-sizing: border-box; }
@@ -1045,34 +1045,30 @@ export default function CreateProfilePage() {
 
             </div>
           </div>
-        </div>
 
-        {/* ── below-shell tagline ── */}
-        <div style={{ maxWidth: "1440px", marginInline: "auto", padding: "56px 8px 0", display: "flex", flexDirection: "column", gap: "40px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <p style={{ font: `700 52px/1.05 ${DISPLAY}`, color: T.ink, letterSpacing: "-.04em", margin: 0, maxWidth: "640px", textWrap: "pretty" }}>
-              Your work,<br />discoverable by AI.
-            </p>
-            <p style={{ font: `400 17px/1.65 ${SANS}`, color: T.soft, margin: 0, maxWidth: "440px", textWrap: "pretty" }}>
-              Paste your GitHub, LinkedIn, or X and Zynd builds a card that AI assistants, search, and real people can actually understand.
-            </p>
+          {/* ── tagline footer row — inside shell, always visible ── */}
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: "20px", display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
+            <div style={{ flex: "0 0 auto", paddingRight: "32px", marginRight: "32px", borderRight: `1px solid ${T.border}` }}>
+              <p style={{ font: `700 22px/1.1 ${DISPLAY}`, color: T.ink, letterSpacing: "-.03em", margin: 0, whiteSpace: "nowrap" }}>
+                Your work,<br />discoverable by AI.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "0", flex: 1, minWidth: 0 }}>
+              {[
+                { num: "01", label: "Add your profiles", desc: "GitHub · LinkedIn · X · any URL" },
+                { num: "02", label: "We scrape the public web", desc: "No passwords, no permissions" },
+                { num: "03", label: "You review and approve", desc: "Edit every line before it goes live" },
+              ].map(({ num, label, desc }, i) => (
+                <div key={num} style={{ flex: 1, minWidth: 0, paddingLeft: i > 0 ? "24px" : "0", borderLeft: i > 0 ? `1px solid ${T.border}` : "none", marginLeft: i > 0 ? "24px" : "0", display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <span style={{ font: `500 10px/1 ${MONO}`, letterSpacing: ".14em", color: T.faint }}>{num}</span>
+                  <span style={{ font: `600 13px/1.3 ${DISPLAY}`, color: T.ink, letterSpacing: "-.01em" }}>{label}</span>
+                  <span style={{ font: `400 12px/1.4 ${SANS}`, color: T.soft }}>{desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
-            {[
-              { num: "01", label: "Add your profiles", desc: "GitHub · LinkedIn · X · any URL" },
-              { num: "02", label: "We scrape the public web", desc: "No passwords, no permissions" },
-              { num: "03", label: "You review and approve", desc: "Edit every line before it goes live" },
-            ].map(({ num, label, desc }) => (
-              <div key={num} style={{ display: "flex", flexDirection: "column", gap: "10px", minWidth: "180px" }}>
-                <span style={{ font: `500 11px/1 ${MONO}`, letterSpacing: ".14em", color: T.faint }}>{num}</span>
-                <span style={{ font: `600 16px/1.3 ${DISPLAY}`, color: T.ink, letterSpacing: "-.01em" }}>{label}</span>
-                <span style={{ font: `400 13px/1.5 ${SANS}`, color: T.soft }}>{desc}</span>
-              </div>
-            ))}
-          </div>
         </div>
-
       </div>
     </>
   );

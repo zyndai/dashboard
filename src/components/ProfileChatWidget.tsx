@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MessageCircle, X, ArrowUp } from "lucide-react";
 
 interface ProfileChatWidgetProps {
   handle: string;
@@ -13,7 +13,7 @@ interface ChatMessage {
   content: string;
 }
 
-const MAX_HISTORY = 6;
+const MAX_HISTORY = 8;
 
 export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps) {
   const [open, setOpen] = useState(false);
@@ -21,13 +21,18 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const scrollToBottom = () => {
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 80);
+  }, [open]);
+
+  function scrollToBottom() {
     requestAnimationFrame(() => {
       const el = scrollRef.current;
       if (el) el.scrollTop = el.scrollHeight;
     });
-  };
+  }
 
   async function send() {
     const text = input.trim();
@@ -60,7 +65,7 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
         const err = await res.json().catch(() => ({})) as { error?: string };
         setMessages((prev) => {
           const copy = [...prev];
-          copy[assistantIndex] = { role: "assistant", content: err.error ?? "Chat is unavailable right now." };
+          copy[assistantIndex] = { role: "assistant", content: err.error ?? "Unavailable right now." };
           return copy;
         });
         return;
@@ -69,50 +74,46 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let raw = "";
-      let text_acc = "";
+      let textAcc = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         raw += decoder.decode(value, { stream: true });
 
-        // Parse CF Workers AI SSE: `data: {"response":"token"}\n`
         const lines = raw.split("\n");
-        raw = lines.pop() ?? ""; // keep incomplete last line
+        raw = lines.pop() ?? "";
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const payload = line.slice(6).trim();
           if (payload === "[DONE]") break;
           try {
             const json = JSON.parse(payload) as { response?: string };
-            if (json.response) text_acc += json.response;
-          } catch { /* skip malformed lines */ }
+            if (json.response) textAcc += json.response;
+          } catch { /* skip */ }
         }
 
-        if (text_acc) {
+        if (textAcc) {
           setMessages((prev) => {
             const copy = [...prev];
-            copy[assistantIndex] = { role: "assistant", content: text_acc };
+            copy[assistantIndex] = { role: "assistant", content: textAcc };
             return copy;
           });
           scrollToBottom();
         }
       }
 
-      if (!text_acc) {
+      if (!textAcc) {
         setMessages((prev) => {
           const copy = [...prev];
-          copy[assistantIndex] = { role: "assistant", content: "No response — please try again." };
+          copy[assistantIndex] = { role: "assistant", content: "No response — try again." };
           return copy;
         });
       }
     } catch {
       setMessages((prev) => {
         const copy = [...prev];
-        copy[assistantIndex] = {
-          role: "assistant",
-          content: "Something went wrong. Please try again.",
-        };
+        copy[assistantIndex] = { role: "assistant", content: "Something went wrong." };
         return copy;
       });
     } finally {
@@ -127,7 +128,16 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
         type="button"
         aria-label={`Ask about ${personName}`}
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors hover:bg-indigo-500"
+        style={{
+          position: "fixed", bottom: "24px", right: "24px", zIndex: 50,
+          width: "48px", height: "48px", borderRadius: "50%",
+          background: "#0B0B0B", color: "#fff", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+          transition: "transform 0.15s, box-shadow 0.15s",
+        }}
+        onMouseEnter={e => { (e.target as HTMLElement).style.transform = "scale(1.08)"; }}
+        onMouseLeave={e => { (e.target as HTMLElement).style.transform = "scale(1)"; }}
       >
         <MessageCircle size={20} />
       </button>
@@ -135,45 +145,71 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex h-[480px] w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-      <div className="flex items-center justify-between bg-indigo-600 px-4 py-3 text-white">
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{personName}</div>
-          <div className="text-[11px] text-indigo-200">Ask anything</div>
+    <div style={{
+      position: "fixed", bottom: "24px", right: "24px", zIndex: 50,
+      width: "360px", maxWidth: "calc(100vw - 32px)",
+      height: "520px", display: "flex", flexDirection: "column",
+      borderRadius: "20px", overflow: "hidden",
+      background: "#fff",
+      boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)",
+      border: "1px solid rgba(0,0,0,0.08)",
+    }}>
+
+      {/* Header */}
+      <div style={{
+        padding: "14px 16px", background: "#0B0B0B", color: "#fff",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexShrink: 0,
+      }}>
+        <div>
+          <div style={{ fontSize: "14px", fontWeight: 600, letterSpacing: "-0.01em" }}>{personName}</div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "1px" }}>Ask me anything</div>
         </div>
         <button
           type="button"
-          aria-label="Close chat"
           onClick={() => setOpen(false)}
-          className="text-indigo-200 transition-colors hover:text-white"
+          style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", padding: "4px", display: "flex", transition: "color 0.12s" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      {/* Messages */}
+      <div
+        ref={scrollRef}
+        style={{
+          flex: 1, overflowY: "auto", padding: "16px",
+          display: "flex", flexDirection: "column", gap: "10px",
+          background: "#FAFAF8",
+        }}
+      >
         {messages.length === 0 && (
-          <p className="mt-2 text-center text-[13px] text-slate-400">
-            Ask me anything about {personName}.
-          </p>
+          <div style={{ margin: "auto", textAlign: "center", color: "#999", fontSize: "13px" }}>
+            <div style={{ fontSize: "22px", marginBottom: "8px" }}>💬</div>
+            Ask anything about {personName.split(" ")[0]}
+          </div>
         )}
         {messages.map((m, i) => (
-          <div
-            key={i}
-            className={m.role === "user" ? "flex justify-end" : "flex justify-start"}
-          >
-            <div
-              className={
-                m.role === "user"
-                  ? "max-w-[80%] rounded-2xl rounded-br-sm bg-indigo-600 px-3 py-2 text-[13px] text-white"
-                  : "max-w-[80%] rounded-2xl rounded-bl-sm bg-slate-100 px-3 py-2 text-[13px] text-slate-800"
-              }
-            >
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+            <div style={{
+              maxWidth: "82%",
+              padding: "9px 13px",
+              borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+              background: m.role === "user" ? "#0B0B0B" : "#fff",
+              color: m.role === "user" ? "#fff" : "#1a1a1a",
+              fontSize: "13px", lineHeight: "1.5",
+              border: m.role === "assistant" ? "1px solid #E8E8E1" : "none",
+              boxShadow: m.role === "assistant" ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
+              wordBreak: "break-word",
+            }}>
               {m.content || (
-                <span className="inline-flex gap-1 text-slate-400">
-                  <span className="animate-pulse">•</span>
-                  <span className="animate-pulse [animation-delay:150ms]">•</span>
-                  <span className="animate-pulse [animation-delay:300ms]">•</span>
+                <span style={{ display: "inline-flex", gap: "3px", color: "#999" }}>
+                  <span style={{ animation: "dot 1.2s infinite", animationDelay: "0ms" }}>•</span>
+                  <span style={{ animation: "dot 1.2s infinite", animationDelay: "200ms" }}>•</span>
+                  <span style={{ animation: "dot 1.2s infinite", animationDelay: "400ms" }}>•</span>
+                  <style>{`@keyframes dot { 0%,80%,100%{opacity:.3} 40%{opacity:1} }`}</style>
                 </span>
               )}
             </div>
@@ -181,28 +217,52 @@ export function ProfileChatWidget({ handle, personName }: ProfileChatWidgetProps
         ))}
       </div>
 
-      <div className="flex items-center gap-2 border-t border-slate-200 px-3 py-2.5">
-        <input
+      {/* Input */}
+      <div style={{
+        padding: "10px 12px", background: "#fff",
+        borderTop: "1px solid #E8E8E1", display: "flex", alignItems: "flex-end", gap: "8px",
+        flexShrink: 0,
+      }}>
+        <textarea
+          ref={inputRef}
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
+          onChange={e => {
+            setInput(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
+          }}
+          onKeyDown={e => {
+            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
           }}
           placeholder="Ask a question…"
           disabled={sending}
-          className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-[13px] text-slate-800 outline-none focus:border-indigo-400 disabled:opacity-60"
+          rows={1}
+          style={{
+            flex: 1, resize: "none", border: "1px solid #E0E0D8",
+            borderRadius: "12px", padding: "9px 12px",
+            fontSize: "13px", lineHeight: "1.45",
+            color: "#1a1a1a", background: "#F7F7F4",
+            outline: "none", fontFamily: "inherit",
+            overflowY: "hidden", minHeight: "38px",
+            transition: "border-color 0.12s",
+          }}
+          onFocus={e => { e.target.style.borderColor = "#0B0B0B"; }}
+          onBlur={e => { e.target.style.borderColor = "#E0E0D8"; }}
         />
         <button
           type="button"
-          aria-label="Send message"
           onClick={send}
           disabled={sending || !input.trim()}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+          style={{
+            width: "36px", height: "36px", borderRadius: "10px", flexShrink: 0,
+            background: input.trim() && !sending ? "#0B0B0B" : "#E8E8E1",
+            color: input.trim() && !sending ? "#fff" : "#999",
+            border: "none", cursor: input.trim() && !sending ? "pointer" : "default",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.12s, color 0.12s",
+          }}
         >
-          <Send size={16} />
+          <ArrowUp size={16} />
         </button>
       </div>
     </div>

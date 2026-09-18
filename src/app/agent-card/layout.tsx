@@ -9,33 +9,29 @@ export const metadata: Metadata = {
   alternates: { canonical: "/agent-card" },
 };
 
-/**
- * Standalone root layout. `/agent-card` deliberately sits OUTSIDE the `(site)`
- * route group so it does not inherit globals.css / zynd-ui.css — the page ships
- * its own compiled Tailwind v3 stylesheet and would otherwise fight the app's
- * Tailwind 4 preflight.
- */
 export default function AgentCardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth bg-[#080909] text-[#bfbfb9]">
+    <html lang="en" className="scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Mono:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#080909] text-[#d3d3cd] font-sans antialiased selection:bg-[#7b72e9] selection:text-black overflow-x-hidden tech-grid min-h-screen">
-        {children}
+      <body className="ac-page antialiased selection:bg-[#4f46e5] selection:text-white overflow-x-hidden min-h-screen max-w-[100vw]">
+        <div className="ac-mesh" aria-hidden="true">
+          <span className="ac-blob ac-blob-a" />
+          <span className="ac-blob ac-blob-b" />
+          <span className="ac-blob ac-blob-c" />
+        </div>
+        <div className="ac-grain" aria-hidden="true" />
+        <div className="relative z-[2]">{children}</div>
       </body>
     </html>
   );

@@ -18,6 +18,16 @@ function encodeSkill(name: string): string {
   return encodeURIComponent(name.toLowerCase().replace(/\s+/g, "-"));
 }
 
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "?";
+}
+
 function buildJsonLd(cards: Awaited<ReturnType<typeof listCards>>) {
   return {
     "@context": "https://schema.org",
@@ -55,97 +65,257 @@ export default async function DirectoryPage() {
           __html: JSON.stringify(buildJsonLd(cards)).replace(/</g, "\\u003c"),
         }}
       />
-      <article className="text-white selection:bg-[#5b7cfa]/30 antialiased font-sans pb-32">
-        <div className="mx-auto w-full max-w-[1000px] px-6 pt-12">
-          <header className="mb-12">
-            {/* div not h1 — globals.css sets h1 { font-size: 6rem } */}
-            <div className="text-4xl font-bold text-white md:text-5xl">
-              People on Zynd
-            </div>
-            <p className="mt-4 max-w-2xl text-lg text-zinc-400">
+      <style>{`
+        .dir-page {
+          position: relative;
+          min-height: 100vh;
+          background: #d5dde8;
+          background-image: radial-gradient(rgba(15,23,42,0.045) 1px, transparent 0);
+          background-size: 22px 22px;
+          color: #0b1220;
+          font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+          padding: 48px 24px 96px;
+        }
+        .dir-page::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(560px 560px at 88% -8%, rgba(129,140,248,0.38), transparent 60%),
+            radial-gradient(480px 480px at 6% 92%, rgba(196,181,253,0.32), transparent 62%);
+        }
+        .dir-wrap { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; }
+        .dir-kicker {
+          font-family: ui-monospace, "Space Mono", monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #4f46e5;
+          margin-bottom: 12px;
+        }
+        .dir-title {
+          font-size: clamp(36px, 5vw, 56px);
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          line-height: 1.05;
+          color: #0b1220;
+          margin: 0;
+        }
+        .dir-lede {
+          margin: 16px 0 0;
+          max-width: 640px;
+          font-size: 17px;
+          line-height: 1.6;
+          color: #1e293b;
+        }
+        .dir-meta {
+          margin-top: 22px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: center;
+        }
+        .dir-pill {
+          font-family: ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: #fff;
+          border: 1px solid #94a3b8;
+          color: #0f172a;
+        }
+        .dir-cta {
+          font-family: ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 8px 14px;
+          border-radius: 999px;
+          background: #4f46e5;
+          color: #fff !important;
+          text-decoration: none;
+        }
+        .dir-empty {
+          margin-top: 40px;
+          background: #fff;
+          border: 1px solid #94a3b8;
+          border-radius: 24px;
+          padding: 32px;
+          color: #334155;
+        }
+        .dir-grid {
+          margin-top: 40px;
+          display: grid;
+          gap: 16px;
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 640px) { .dir-grid { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 1024px) { .dir-grid { grid-template-columns: 1fr 1fr 1fr; } }
+        .dir-card {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          min-height: 220px;
+          background: #fff;
+          border: 1px solid #94a3b8;
+          border-radius: 24px;
+          padding: 20px;
+          box-shadow: 0 22px 40px -28px rgba(15,23,42,0.4);
+          transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        }
+        .dir-card:hover {
+          transform: translateY(-2px);
+          border-color: #4f46e5;
+          box-shadow: 0 28px 48px -24px rgba(79,70,229,0.35);
+        }
+        .dir-card a.dir-cover {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          border-radius: 24px;
+        }
+        .dir-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+        .dir-av {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          flex-shrink: 0;
+          border: 2px solid #e2e8f0;
+        }
+        .dir-av-fb {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(145deg, #5c56f6, #4f46e5);
+          color: #fff;
+          font-family: ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .dir-name {
+          font-size: 16px;
+          font-weight: 800;
+          color: #0b1220;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+        }
+        .dir-loc {
+          font-family: ui-monospace, monospace;
+          font-size: 11px;
+          color: #475569;
+          margin-top: 2px;
+        }
+        .dir-headline {
+          font-size: 14px;
+          line-height: 1.5;
+          color: #334155;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          flex: 1;
+        }
+        .dir-chips { position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+        .dir-chip {
+          font-family: ui-monospace, monospace;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: #eef2ff;
+          color: #312e81;
+          border: 1px solid #c7d2fe;
+          text-decoration: none;
+        }
+        .dir-chip:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+        .dir-more { font-family: ui-monospace, monospace; font-size: 11px; color: #64748b; padding: 4px 6px; }
+        .dir-foot {
+          margin-top: 48px;
+          text-align: center;
+          font-family: ui-monospace, monospace;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #475569;
+        }
+      `}</style>
+      <article className="dir-page">
+        <div className="dir-wrap">
+          <header>
+            <div className="dir-kicker">{"// PEOPLE DIRECTORY"}</div>
+            <h1 className="dir-title">People on Zynd</h1>
+            <p className="dir-lede">
               Profiles on Zynd, the AI agent discovery network. Each entry is one
               person, one page — skills and work synthesized from public GitHub
               activity and résumés.
             </p>
+            <div className="dir-meta">
+              <span className="dir-pill">{cards.length} {cards.length === 1 ? "profile" : "profiles"} published</span>
+              <Link href="/create" className="dir-cta">Create your Living Profile →</Link>
+            </div>
           </header>
 
           {cards.length === 0 ? (
-            <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-8 text-zinc-400">
+            <div className="dir-empty">
               No profiles published yet.{" "}
-              <Link href="/create" className="text-[#5b7cfa] hover:text-white">
+              <Link href="/create" style={{ color: "#4f46e5", fontWeight: 700 }}>
                 Be the first — create your profile.
               </Link>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="dir-grid">
               {cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="group relative flex flex-col rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-[#5b7cfa]/40"
-                >
-                  {/* Full-coverage card link — skill chips sit above it via z-index */}
+                <div key={card.id} className="dir-card">
                   <Link
                     href={cardCanonicalUrl(card)}
-                    className="absolute inset-0 z-[1] rounded-lg"
+                    className="dir-cover"
                     aria-label={`View ${card.identity.name}'s profile`}
                   />
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="dir-head">
                     {card.identity.avatar_url && /^https?:\/\//.test(card.identity.avatar_url) ? (
                       <img
                         src={card.identity.avatar_url}
                         alt={card.identity.name}
-                        width={36}
-                        height={36}
-                        className="rounded-full object-cover flex-shrink-0"
+                        width={44}
+                        height={44}
+                        className="dir-av"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-br from-[#5b7cfa]/20 to-[#a78bfa]/20 border border-[#5b7cfa]/20 flex items-center justify-center text-[#a78bfa] text-xs font-bold">
-                        {(card.identity.name || "?")
-                          .split(/\s+/)
-                          .map((p) => p[0])
-                          .filter(Boolean)
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase()}
-                      </div>
+                      <div className="dir-av-fb">{initials(card.identity.name)}</div>
                     )}
-                    <div className="min-w-0">
-                      <div className="text-base font-semibold text-white group-hover:text-[#a5b4fc] truncate">
-                        {card.identity.name}
-                      </div>
-                      {card.identity.location && (
-                        <div className="text-xs text-zinc-500 truncate">{card.identity.location}</div>
-                      )}
+                    <div style={{ minWidth: 0 }}>
+                      <div className="dir-name">{card.identity.name}</div>
+                      {card.identity.location ? (
+                        <div className="dir-loc">{card.identity.location}</div>
+                      ) : null}
                     </div>
                   </div>
-
-                  <div className="text-sm text-zinc-400 mb-4 line-clamp-2 flex-1">
-                    {card.identity.headline}
-                  </div>
-
-                  <div className="relative z-[2] flex flex-wrap gap-1.5">
+                  <div className="dir-headline">{card.identity.headline}</div>
+                  <div className="dir-chips">
                     {card.skills.slice(0, 4).map((s) => (
-                      <Link
-                        key={s.name}
-                        href={`/tag/${encodeSkill(s.name)}`}
-                        className="inline-flex rounded-full border border-[#5b7cfa]/30 bg-[#5b7cfa]/10 px-2.5 py-0.5 text-xs text-[#a5b4fc] hover:bg-[#5b7cfa]/20 transition-colors"
-                      >
+                      <Link key={s.name} href={`/tag/${encodeSkill(s.name)}`} className="dir-chip">
                         {s.name}
                       </Link>
                     ))}
-                    {card.skills.length > 4 && (
-                      <span className="inline-flex px-1.5 py-0.5 text-xs text-zinc-600">
-                        +{card.skills.length - 4}
-                      </span>
-                    )}
+                    {card.skills.length > 4 ? (
+                      <span className="dir-more">+{card.skills.length - 4}</span>
+                    ) : null}
                   </div>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="mt-16 text-center text-sm text-zinc-600">
-            {cards.length} {cards.length === 1 ? "profile" : "profiles"} published
+          <div className="dir-foot">
+            {cards.length} {cards.length === 1 ? "profile" : "profiles"} · living identities
           </div>
         </div>
       </article>

@@ -8,7 +8,7 @@ import { useMyCard } from "@/hooks/useMyCard";
 
 export function Navbar(): React.ReactElement {
   const { authenticated, logout } = useAuth();
-  const { handle: cardHandle } = useMyCard();
+  const { ready: cardReady, handle: cardHandle } = useMyCard();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Lock body scroll while the mobile menu is open
@@ -180,13 +180,13 @@ export function Navbar(): React.ReactElement {
                         <div className="navbar-button-w">
                           <div className="navbar-button-c">
                             <div className="navbar-button-b" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                              {authenticated && cardHandle && (
+                              {authenticated && cardReady && (
                                 <Link
-                                  href={`/p/${encodeURIComponent(cardHandle)}`}
+                                  href={cardHandle ? `/p/${encodeURIComponent(cardHandle)}` : "/create"}
                                   className="navbar-link w-nav-link"
                                   style={{ padding: 0, fontSize: "16px", fontWeight: 600, color: "#a5b4fc", whiteSpace: "nowrap" }}
                                 >
-                                  My profile
+                                  {cardHandle ? "My profile" : "Create profile"}
                                 </Link>
                               )}
                               {authenticated && (
@@ -262,9 +262,13 @@ export function Navbar(): React.ReactElement {
             <a href="https://docs.zynd.ai" target="_blank" rel="noopener noreferrer" onClick={() => setMobileOpen(false)}>Docs</a>
             <Link href="/blogs" onClick={() => setMobileOpen(false)}>Blogs</Link>
             <Link href="/team" onClick={() => setMobileOpen(false)}>Team</Link>
-            {authenticated && cardHandle && (
-              <Link href={`/p/${encodeURIComponent(cardHandle)}`} onClick={() => setMobileOpen(false)} style={{ color: "#6366F1" }}>
-                My profile
+            {authenticated && cardReady && (
+              <Link
+                href={cardHandle ? `/p/${encodeURIComponent(cardHandle)}` : "/create"}
+                onClick={() => setMobileOpen(false)}
+                style={{ color: "#6366F1" }}
+              >
+                {cardHandle ? "My profile" : "Create profile"}
               </Link>
             )}
             {authenticated && (

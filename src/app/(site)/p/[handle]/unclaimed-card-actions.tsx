@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
+import { claimHeaders, forgetClaimToken } from "@/lib/claim-tokens";
 
 const STORAGE_KEY = "zynd_my_handles";
 
@@ -29,9 +30,14 @@ export function UnclaimedCardActions({ handle }: { handle: string }) {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || "https://api.zynd.ai"}/cards/by-handle/${encodeURIComponent(handle)}`,
-          { method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({}) }
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...claimHeaders(handle) },
+            body: JSON.stringify({}),
+          }
         );
         if (res.ok) {
+          forgetClaimToken(handle);
           setClaimed(true);
           try {
             const stored: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");

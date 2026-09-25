@@ -1,3 +1,5 @@
+import { claimHeaders, forgetClaimToken } from "./claim-tokens";
+
 export interface Identity {
   name: string;
   headline: string;
@@ -264,10 +266,12 @@ export async function updateCard(
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        ...claimHeaders(handle),
       },
       body: JSON.stringify(card),
     });
     if (!res.ok) return null;
+    forgetClaimToken(handle);
     return (await res.json()) as AgentProfileCard;
   } catch {
     return null;

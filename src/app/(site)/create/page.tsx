@@ -11,6 +11,7 @@ import { CARDS_API } from "@/lib/cards";
 import { setAuthNext, setClaimHandle } from "@/lib/auth/next-cookie";
 import type { AgentProfileCard, OnboardStatus, Project, ScrapeWarning, WritingSample } from "@/lib/cards";
 import { MemoryProviderOnboard } from "@/components/memory/MemoryProviderOnboard";
+import { claimHeaders, forgetClaimToken, saveClaimToken } from "@/lib/claim-tokens";
 
 // Memory layer (api.zynd.ai) — same host the /connect and /findable pages use.
 const ZYND_API = process.env.NEXT_PUBLIC_ZYND_API_URL || "https://api.zynd.ai";
@@ -694,6 +695,11 @@ function CreateProfilePageContent() {
       if (!res.ok) throw new Error((await res.text()) || `Status ${res.status}`);
       const publishedCard = await res.json();
       const publishedHandle = publishedCard.handle || publishedCard.id;
+      // Anonymous publish: the API returns a one-time claim token, required to
+      // take ownership after signing in (sent as X-Claim-Token).
+      if (typeof publishedCard.claim_token === "string") {
+        saveClaimToken(publishedHandle, publishedCard.claim_token);
+      }
       // Persist handle in localStorage so the creator can edit/claim without
       // signing in first — even after navigating to /p/[handle] directly.
       try {
@@ -712,18 +718,27 @@ function CreateProfilePageContent() {
   }
 
   // Claim the freshly published card when a signed-in user created it —
-  // and when they sign in from the claim screen (backend sets owner_email
-  // on the first authenticated PATCH). Claiming also seeds the memory layer:
-  // exchange → declare key points from the card → snapshot onto the card.
+  // and when they sign in from the claim screen (an anonymous publish is
+  // claimed by the first authenticated PATCH that carries its claim token).
+  // Claiming also seeds the memory layer: exchange → declare key points from
+  // the card → snapshot onto the card. The snapshot refresh is owner-only, so
+  // it waits for the claim to land.
   useEffect(() => {
     if (!authenticated || !published || !card) return;
-    getToken().then(token => {
+    getToken().then(async token => {
       if (!token) return;
-      fetch(`${CARDS_API}/cards/by-handle/${encodeURIComponent(published)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(publishableCard(card, excluded)),
-      }).catch(() => { /* non-fatal — card is live either way */ });
+      try {
+        const res = await fetch(`${CARDS_API}/cards/by-handle/${encodeURIComponent(published)}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...claimHeaders(published),
+          },
+          body: JSON.stringify(publishableCard(card, excluded)),
+        });
+        if (res.ok) forgetClaimToken(published);
+      } catch { /* non-fatal — card is live either way */ }
       syncMemoryOnClaim(token, published);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

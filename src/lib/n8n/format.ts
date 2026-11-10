@@ -153,3 +153,47 @@ export const taskTone = (s: N8nTask["status"]): Tone =>
 
 export const toneClass = (t: Tone): string =>
   t === "active" ? "badge-active" : t === "warning" ? "badge-inactive" : t === "pending" ? "badge-pending" : t === "error" ? "badge-error" : "badge-muted";
+
+/** M6.2: "12.5%", or a dash while no call has finished. */
+export const formatRate = (rate: number | null): string => (rate === null ? "—" : `${(Math.round(rate * 1000) / 10).toString()}%`);
+
+export interface DayBar {
+  day: string;
+  completed: number;
+  failed: number;
+  /** Cancelled and still-open calls: counted in `calls`, neither completed nor failed. */
+  other: number;
+  calls: number;
+  revenueUsd: number;
+}
+
+/**
+ * M6.2: one bar per UTC day for the last `days` days ending `endDay` (YYYY-MM-DD), zero-filled so
+ * quiet days show as gaps instead of being skipped. Sums every listing in `series`.
+ */
+export function dailyBars(series: { day: string; calls: number; completed: number; failed: number; revenueUsd: string }[], days: number, endDay: string): DayBar[] {
+  const end = Date.parse(`${endDay}T00:00:00Z`);
+  const by = new Map<string, DayBar>();
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(end - i * 86_400_000).toISOString().slice(0, 10);
+    by.set(day, { day, completed: 0, failed: 0, other: 0, calls: 0, revenueUsd: 0 });
+  }
+  for (const s of series) {
+    const b = by.get(s.day);
+    if (!b) continue;
+    b.calls += s.calls;
+    b.completed += s.completed;
+    b.failed += s.failed;
+    b.other += s.calls - s.completed - s.failed;
+    b.revenueUsd = Math.round((b.revenueUsd + Number(s.revenueUsd)) * 1e6) / 1e6;
+  }
+  return [...by.values()];
+}
+
+/** Grace periods offered when rotating a key (M6.4). */
+export const GRACE_OPTIONS = [
+  { hours: 1, label: "1 hour" },
+  { hours: 24, label: "24 hours" },
+  { hours: 168, label: "7 days" },
+  { hours: 0, label: "Immediately" },
+] as const;

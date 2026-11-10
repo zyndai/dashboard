@@ -5,7 +5,7 @@ import { gatewayRequest } from "./gateway";
 import { csrfProblem } from "./route";
 import { mintSessionToken } from "./session";
 import {
-  formatUsd, keyState, listingBadge, maskKey, nextToggle, parseTags, shortId, validateKeyForm, validateListingForm,
+  dailyBars, formatRate, formatUsd, keyState, listingBadge, maskKey, nextToggle, parseTags, shortId, validateKeyForm, validateListingForm,
 } from "./format";
 
 const SECRET = "test-session-secret-0123456789abcdef0123456789";
@@ -161,6 +161,26 @@ const ok = async (name: string, fn: () => void | Promise<void>) => {
     for (const c of ["0", "-1", "abc", "1.1234567"]) assert.ok(bad({ spendCapUsd: c }).errors.spendCapUsd, c);
     assert.ok(bad({ expiresOn: "2029-12-31" }).errors.expiresOn);
     assert.ok(bad({ expiresOn: "soon" }).errors.expiresOn);
+  });
+
+  await ok("formatRate and dailyBars (M6.2)", () => {
+    assert.equal(formatRate(null), "—");
+    assert.equal(formatRate(0), "0%");
+    assert.equal(formatRate(0.4), "40%");
+    assert.equal(formatRate(1 / 3), "33.3%");
+    const bars = dailyBars(
+      [
+        { day: "2030-01-03", calls: 5, completed: 2, failed: 2, revenueUsd: "0.100000" },
+        { day: "2030-01-03", calls: 1, completed: 1, failed: 0, revenueUsd: "0.050000" },
+        { day: "2029-12-01", calls: 9, completed: 9, failed: 0, revenueUsd: "9" }, // outside the window
+      ],
+      4,
+      "2030-01-04",
+    );
+    assert.deepEqual(bars.map((b) => b.day), ["2030-01-01", "2030-01-02", "2030-01-03", "2030-01-04"]);
+    assert.deepEqual(bars[2], { day: "2030-01-03", calls: 6, completed: 3, failed: 2, other: 1, revenueUsd: 0.15 });
+    assert.equal(bars[0]!.calls, 0);
+    assert.equal(dailyBars([], 30, "2030-01-31").length, 30);
   });
 
   console.log(`\n${n} checks passed`);

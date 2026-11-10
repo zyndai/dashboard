@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { n8nFetch, useN8nData } from "@/lib/n8n/client";
 import { formatUsd, listingBadge } from "@/lib/n8n/format";
 import type { N8nListing, N8nTask, N8nWallet } from "@/lib/n8n/types";
+import { ListingAnalytics } from "./analytics";
 import { ListingForm } from "./listing-form";
 import { ToggleButton } from "./listings";
 import { TaskTable } from "./task-table";
@@ -97,6 +98,8 @@ export function ListingDetail({ id }: { id: string }) {
         {row("Last heartbeat", l.heartbeat?.lastBeatAt ? new Date(l.heartbeat.lastBeatAt).toLocaleString() : "—")}
         {row("Payout wallet", address ? <><CopyField value={address} /><p style={{ margin: "6px 0 0", fontSize: "12px", color: "rgba(246,246,246,0.4)" }}>Callers pay this address. It is derived from your key; the Gateway holds the signing key.</p></> : wallet.error ? "Unavailable" : "…")}
       </div>
+
+      <ListingAnalytics listingId={l.id} />
 
       <h3>Task history</h3>
       <div className="dashboard-card" style={{ padding: 0 }}>

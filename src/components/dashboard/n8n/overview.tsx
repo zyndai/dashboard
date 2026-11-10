@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useN8nData } from "@/lib/n8n/client";
 import { keyState } from "@/lib/n8n/format";
 import type { N8nApiKey, N8nListing, N8nTask, N8nWallet } from "@/lib/n8n/types";
+import { ListingAnalytics } from "./analytics";
 import { TaskTable } from "./task-table";
 import { CopyField, ErrorBox, Loading } from "./ui";
 
@@ -47,6 +48,8 @@ export function N8nOverview() {
           </ol>
         </div>
       )}
+
+      {all.length > 0 && <ListingAnalytics names={names} />}
 
       <h3>Recent tasks</h3>
       <div className="dashboard-card" style={{ padding: 0 }}>

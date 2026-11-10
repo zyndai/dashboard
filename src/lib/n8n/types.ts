@@ -41,6 +41,38 @@ export interface CreatedN8nApiKey extends N8nApiKey {
   key: string;
 }
 
+/** Response to rotating a key: the replacement (with its plaintext) and the old key, now expiring. */
+export interface RotatedN8nApiKey extends CreatedN8nApiKey {
+  previous: N8nApiKey;
+}
+
+/** M6.2: one listing's inbound calls on one UTC day. */
+export interface DailyStat {
+  day: string; // YYYY-MM-DD
+  listingId: string | null;
+  calls: number;
+  completed: number;
+  failed: number;
+  revenueUsd: string;
+}
+
+export interface ListingTotals {
+  listingId: string | null;
+  calls: number;
+  completed: number;
+  failed: number;
+  /** failed / (completed + failed); null while nothing has finished. */
+  errorRate: number | null;
+  revenueUsd: string;
+}
+
+export interface N8nAnalytics {
+  days: number;
+  since: string;
+  series: DailyStat[];
+  totals: ListingTotals[];
+}
+
 export interface N8nTask {
   id: string;
   listingId: string | null;

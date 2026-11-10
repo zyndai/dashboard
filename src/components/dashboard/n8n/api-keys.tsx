@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { n8nFetch, useN8nData } from "@/lib/n8n/client";
-import { formatUsd, keyState, maskKey, validateKeyForm, type KeyFormValues } from "@/lib/n8n/format";
-import { KEY_PERMISSIONS, type CreatedN8nApiKey, type N8nApiKey } from "@/lib/n8n/types";
+import { GRACE_OPTIONS, formatUsd, keyState, maskKey, validateKeyForm, type KeyFormValues } from "@/lib/n8n/format";
+import { KEY_PERMISSIONS, type CreatedN8nApiKey, type N8nApiKey, type RotatedN8nApiKey } from "@/lib/n8n/types";
 import { CopyField, Empty, ErrorBox, FieldError, Loading } from "./ui";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString() : "—");
@@ -16,6 +16,9 @@ export function ApiKeysTable() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [rotateId, setRotateId] = useState<string | null>(null);
+  const [grace, setGrace] = useState<number>(24);
+  const [rotated, setRotated] = useState<RotatedN8nApiKey | null>(null);
 
   if (loading) return <Loading what="API keys" />;
   const keys = data?.keys ?? [];
@@ -34,9 +37,37 @@ export function ApiKeysTable() {
     }
   }
 
+  // M6.4: the replacement's plaintext is shown here once; the old key keeps working until `previous.expiresAt`.
+  async function rotate(id: string) {
+    setBusyId(id);
+    try {
+      setRotated(await n8nFetch<RotatedN8nApiKey>(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: "POST", body: { graceHours: grace } }));
+      setRotateId(null);
+      setActionError(null);
+      await reload();
+    } catch (e) {
+      setActionError((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <>
       {(error || actionError) && <ErrorBox message={(actionError ?? error) as string} />}
+      {rotated && (
+        <div className="dashboard-card" style={{ borderColor: "rgba(255,184,0,0.4)", marginBottom: 16 }}>
+          <h2 style={{ marginTop: 0, fontSize: "18px" }}>New key for &ldquo;{rotated.name}&rdquo;: copy it now</h2>
+          <p style={{ fontSize: "14px", color: "rgba(246,246,246,0.7)", lineHeight: 1.6 }}>
+            Paste it into the <strong>API Key</strong> field of the Zynd API credential in n8n. This is the only time it is shown.{" "}
+            {rotated.previous.expiresAt && new Date(rotated.previous.expiresAt).getTime() > Date.now()
+              ? <>The old key <code>{maskKey(rotated.previous.keyPrefix)}</code> keeps working until {new Date(rotated.previous.expiresAt).toLocaleString()}.</>
+              : <>The old key <code>{maskKey(rotated.previous.keyPrefix)}</code> no longer works.</>}
+          </p>
+          <CopyField value={rotated.key} secret />
+          <button className="dashboard-button-secondary" style={{ marginTop: 16 }} onClick={() => setRotated(null)}>I have saved it</button>
+        </div>
+      )}
       <div className="dashboard-card" style={{ padding: 0 }}>
         {keys.length === 0 ? (
           <Empty title="No API keys yet">
@@ -61,6 +92,17 @@ export function ApiKeysTable() {
                       <td>{when(k.lastUsedAt)}</td>
                       <td>
                         <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                          {state !== "active" ? null : rotateId === k.id ? (
+                            <>
+                              <select aria-label="Keep the old key working for" className="dashboard-input" style={{ padding: "4px 8px", fontSize: "12px", width: "auto" }} value={grace} onChange={(e) => setGrace(Number(e.target.value))}>
+                                {GRACE_OPTIONS.map((o) => <option key={o.hours} value={o.hours}>Old key works {o.hours === 0 ? "no longer" : `for ${o.label}`}</option>)}
+                              </select>
+                              <button className="dashboard-button" style={{ padding: "6px 12px", fontSize: "12px" }} disabled={busyId === k.id} onClick={() => rotate(k.id)}>{busyId === k.id ? "…" : "Rotate"}</button>
+                              <button className="dashboard-button-secondary" style={{ padding: "6px 12px", fontSize: "12px" }} onClick={() => setRotateId(null)}>Cancel</button>
+                            </>
+                          ) : (
+                            <button className="dashboard-button-secondary" style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "4px" }} onClick={() => { setRotateId(k.id); setConfirmId(null); }}>Rotate…</button>
+                          )}
                           {state === "revoked" ? null : confirmId === k.id ? (
                             <>
                               <button className="dashboard-button" style={{ background: "#ef4444", padding: "6px 12px", fontSize: "12px" }} disabled={busyId === k.id} onClick={() => revoke(k.id)}>{busyId === k.id ? "…" : "Revoke"}</button>

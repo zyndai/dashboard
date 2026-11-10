@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+function safeNext(): string {
+  const raw = new URLSearchParams(window.location.search).get("next");
+  return raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\") ? raw : "/dashboard";
+}
 
 const ROLES = [
   { value: "developer", label: "Developer", description: "Building agents and tools" },
@@ -14,6 +20,7 @@ const ROLES = [
 
 export default function OnboardSetupPage() {
   const router = useRouter();
+  const { refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -26,8 +33,11 @@ export default function OnboardSetupPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/auth"); return; }
+      // Already completed setup? Don't show the form again.
+      const existing = await fetch("/api/developer/keys").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (existing?.username) { router.replace(safeNext()); return; }
       const meta = user.user_metadata;
       if (meta?.full_name) setName(meta.full_name);
       else if (meta?.name) setName(meta.name);
@@ -77,12 +87,9 @@ export default function OnboardSetupPage() {
         setSubmitting(false);
         return;
       }
-      const raw = new URLSearchParams(window.location.search).get("next");
-      const dest =
-        raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")
-          ? raw
-          : "/dashboard";
-      router.push(dest);
+      // Sync the auth context so DeveloperGate/dashboard see the new username.
+      await refresh();
+      router.push(safeNext());
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);

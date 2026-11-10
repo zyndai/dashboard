@@ -5,7 +5,7 @@ import { gatewayRequest } from "./gateway";
 import { csrfProblem } from "./route";
 import { mintSessionToken } from "./session";
 import {
-  dailyBars, formatRate, formatUsd, keyState, listingBadge, maskKey, nextToggle, parseTags, shortId, validateKeyForm, validateListingForm,
+  dailyBars, formatBalance, formatRate, formatUsd, keyState, listingBadge, maskKey, nextToggle, parseTags, shortId, validateKeyForm, validateListingForm,
 } from "./format";
 
 const SECRET = "test-session-secret-0123456789abcdef0123456789";
@@ -121,6 +121,12 @@ const ok = async (name: string, fn: () => void | Promise<void>) => {
     assert.equal(formatUsd(null), "—");
     assert.equal(shortId("zns:0123456789abcdef0123456789abcdef"), "zns:012345…abcdef");
     assert.equal(shortId("short"), "short");
+    assert.equal(formatBalance("2.500000"), "$2.50 USD");
+    assert.equal(formatBalance("0.000125"), "$0.000125 USD");
+    assert.equal(formatBalance("0.000000"), "$0.00 USD");
+    assert.equal(formatBalance(null), "—");
+    assert.equal(formatBalance(undefined), "—");
+    assert.equal(formatBalance("nope"), "—");
     assert.deepEqual(parseTags(" a, b ,,a,  c "), ["a", "b", "c"]);
   });
 

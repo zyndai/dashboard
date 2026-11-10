@@ -88,7 +88,9 @@ export interface N8nTask {
 
 export interface N8nWallet {
   payer: string;
-  listings: { listingId: string; name: string; address: string }[];
+  /** Decimal USD; null when the balance could not be read right now. */
+  payerBalanceUsd: string | null;
+  listings: { listingId: string; name: string; address: string; balanceUsd: string | null }[];
 }
 
 export const KEY_PERMISSIONS = ["search", "call", "complete"] as const;

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { n8nFetch, useN8nData } from "@/lib/n8n/client";
-import { formatUsd, listingBadge } from "@/lib/n8n/format";
+import { formatBalance, formatUsd, listingBadge } from "@/lib/n8n/format";
 import type { N8nListing, N8nTask, N8nWallet } from "@/lib/n8n/types";
 import { ListingAnalytics } from "./analytics";
 import { ListingForm } from "./listing-form";
@@ -43,7 +43,8 @@ export function ListingDetail({ id }: { id: string }) {
   }
   const l = listing.data;
   const badge = listingBadge(l);
-  const address = wallet.data?.listings.find((w) => w.listingId === l.id)?.address;
+  const agentWallet = wallet.data?.listings.find((w) => w.listingId === l.id);
+  const address = agentWallet?.address;
 
   async function remove() {
     setDeleting(true);
@@ -96,7 +97,8 @@ export function ListingDetail({ id }: { id: string }) {
         {row("Agent URL", l.entityUrl ? <CopyField value={l.entityUrl} /> : "—")}
         {row("n8n webhook", l.webhookUrl ?? "Bound when you activate a workflow with the Zynd Trigger")}
         {row("Last heartbeat", l.heartbeat?.lastBeatAt ? new Date(l.heartbeat.lastBeatAt).toLocaleString() : "—")}
-        {row("Payout wallet", address ? <><CopyField value={address} /><p style={{ margin: "6px 0 0", fontSize: "12px", color: "rgba(246,246,246,0.4)" }}>Callers pay this address. It is derived from your key; the Gateway holds the signing key.</p></> : wallet.error ? "Unavailable" : "…")}
+        {row("Payout wallet", address ? <><CopyField value={address} /><p style={{ margin: "6px 0 0", fontSize: "12px", color: "rgba(246,246,246,0.4)" }}>Callers pay this address. The Gateway holds the key of this agent&apos;s wallet.</p></> : wallet.error ? "Unavailable" : "…")}
+        {row("Balance", wallet.error ? "Unavailable" : agentWallet ? formatBalance(agentWallet.balanceUsd) : "…")}
       </div>
 
       <ListingAnalytics listingId={l.id} />

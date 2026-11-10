@@ -57,6 +57,9 @@ export const formatUsd = (v: string | null | undefined): string => {
   return `$${n.toFixed(6).replace(/(\.\d{2}\d*?)0+$/, "$1")}`;
 };
 
+/** A wallet balance as shown to developers: always "USD", never the token name. null = not readable right now. */
+export const formatBalance = (v: string | null | undefined): string => (v === null || v === undefined ? "—" : formatUsd(v) === "—" ? "—" : `${formatUsd(v)} USD`);
+
 export const shortId = (id: string | null, head = 10, tail = 6): string =>
   !id ? "—" : id.length <= head + tail + 1 ? id : `${id.slice(0, head)}…${id.slice(-tail)}`;
 

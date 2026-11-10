@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useN8nData } from "@/lib/n8n/client";
-import { keyState } from "@/lib/n8n/format";
+import { formatBalance, keyState } from "@/lib/n8n/format";
 import type { N8nApiKey, N8nListing, N8nTask, N8nWallet } from "@/lib/n8n/types";
 import { ListingAnalytics } from "./analytics";
 import { TaskTable } from "./task-table";
@@ -61,9 +61,10 @@ export function N8nOverview() {
           <h3>Payer wallet</h3>
           <div className="dashboard-card">
             <p style={{ margin: "0 0 12px", fontSize: "14px", color: "rgba(246,246,246,0.6)" }}>
-              Calls you make to paid agents are paid from this address. Fund it with USDC on the network your Gateway uses.
+              Calls you make to paid agents are paid from this address. Send funds to it on the network your Gateway uses.
             </p>
             <CopyField value={wallet.data.payer} />
+            <p style={{ margin: "12px 0 0", fontSize: "14px", color: "rgba(246,246,246,0.6)" }}>Balance: <strong style={{ color: "#fff" }}>{formatBalance(wallet.data.payerBalanceUsd)}</strong></p>
           </div>
         </>
       )}

@@ -341,6 +341,18 @@
   border: 1px solid rgba(255, 184, 0, 0.3);
 }
 
+.badge-error {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-muted {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgba(246, 246, 246, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .badge-pending {
   background-color: rgba(59, 130, 246, 0.15);
   color: var(--color-info);

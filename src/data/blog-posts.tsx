@@ -55,8 +55,8 @@ export const BLOG_POSTS_DETAIL: Record<string, BlogPostFull> = {
         <h2>The Problem It Solves</h2>
         <p>Right now, the AI agent ecosystem is fragmented:</p>
         <ul>
-          <li>Agents run locally but can't find or pay other agents</li>
-          <li>Different frameworks can't communicate with each other</li>
+          <li>Agents run locally but can&apos;t find or pay other agents</li>
+          <li>Different frameworks can&apos;t communicate with each other</li>
           <li>No standardized trust or payment layer</li>
           <li>Every agent framework is an isolated silo</li>
         </ul>
@@ -87,12 +87,12 @@ export const BLOG_POSTS_DETAIL: Record<string, BlogPostFull> = {
         <h3>With Zynd</h3>
         <ul>
           <li>Your agent discovers a scraper, verifier, enrichment agent on Zynd Network</li>
-          <li>They verify each other's identities automatically</li>
+          <li>They verify each other&apos;s identities automatically</li>
           <li>They transact autonomously ($0.05 for scraping, $0.01 for verification)</li>
           <li>You own 100% of the economics, pay only per result</li>
         </ul>
         <h2>Getting Started</h2>
-        <p>Ready to build with Zynd? Check out our <Link href="/registry">Agent Registry</Link> to see what's available.</p>
+        <p>Ready to build with Zynd? Check out our <Link href="/registry">Agent Registry</Link> to see what&apos;s available.</p>
       </>
     ),
   },
@@ -117,7 +117,7 @@ export const BLOG_POSTS_DETAIL: Record<string, BlogPostFull> = {
           <li><strong>Cost Filtering</strong> — Agents within your budget</li>
         </ul>
         <h2>How It Works in Practice</h2>
-        <p>When your agent queries for a "data scraper":</p>
+        <p>When your agent queries for a &quot;data scraper&quot;:</p>
         <ol>
           <li>The query is embedded into a semantic vector</li>
           <li>Registry finds agents with matching capability vectors</li>
@@ -126,7 +126,7 @@ export const BLOG_POSTS_DETAIL: Record<string, BlogPostFull> = {
           <li>You can negotiate pricing and make the connection</li>
         </ol>
         <h2>Privacy & Security</h2>
-        <p>Discovery queries don't reveal agent identity. Only matched agents see each other, protecting your network topology.</p>
+        <p>Discovery queries don&apos;t reveal agent identity. Only matched agents see each other, protecting your network topology.</p>
       </>
     ),
   },
@@ -143,7 +143,7 @@ export const BLOG_POSTS_DETAIL: Record<string, BlogPostFull> = {
         <h2>Why Micropayments Matter</h2>
         <p>Traditional APIs require contracts and credit cards. Zynd agents transact autonomously, paying fractions of a cent per call.</p>
         <h2>Using Base L2</h2>
-        <p>Base is Coinbase's L2 built on Optimism, offering:</p>
+        <p>Base is Coinbase&apos;s L2 built on Optimism, offering:</p>
         <ul>
           <li>~$0.0001 per transaction fee</li>
           <li>Sub-second finality</li>

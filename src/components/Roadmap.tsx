@@ -59,7 +59,7 @@ const Roadmap: React.FC = () => {
         <div className="rm-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '64px' }}>
            <div>
              <div style={{ color: '#6366f1', textTransform: 'uppercase', fontStyle: 'italic', fontSize: '13px', marginBottom: '16px', letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace' }}>
-               // ROADMAP
+               {"// ROADMAP"}
              </div>
              <h2 className="roadmap-heading" style={{ fontSize: '42px', fontWeight: 600, letterSpacing: '-0.02em', margin: 0, color: '#fff' }}>
                What&apos;s Next

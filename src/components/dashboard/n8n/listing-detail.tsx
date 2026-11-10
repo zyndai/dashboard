@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { n8nFetch, useN8nData } from "@/lib/n8n/client";
+import { n8nFetch, n8nKey, useInvalidateN8n, useN8nData } from "@/lib/n8n/client";
 import { formatBalance, formatUsd, listingBadge } from "@/lib/n8n/format";
 import type { N8nListing, N8nTask, N8nWallet } from "@/lib/n8n/types";
 import { ListingAnalytics } from "./analytics";
@@ -24,7 +25,12 @@ export function ListingDetail({ id }: { id: string }) {
   const router = useRouter();
   const failed = useSearchParams().get("activationFailed");
   const path = `/listings/${encodeURIComponent(id)}`;
+  const qc = useQueryClient();
+  const invalidate = useInvalidateN8n();
   const listing = useN8nData<N8nListing>(path, { pollMs: 15_000 });
+  // Open instantly from the cached list while the full record loads.
+  const fromList = qc.getQueryData<{ listings: N8nListing[] }>(n8nKey("/listings"))?.listings.find((x) => x.id === id);
+  const current = listing.data ?? fromList ?? null;
   const tasks = useN8nData<{ tasks: N8nTask[] }>(`/tasks?listingId=${encodeURIComponent(id)}&limit=25`, { pollMs: 30_000 });
   const wallet = useN8nData<N8nWallet>("/wallet");
   const [editing, setEditing] = useState(false);
@@ -32,8 +38,8 @@ export function ListingDetail({ id }: { id: string }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  if (listing.loading) return <Loading what="listing" />;
-  if (listing.error || !listing.data) {
+  if (listing.loading && !current) return <Loading what="listing" />;
+  if (!current) {
     return (
       <>
         <ErrorBox message={listing.error ?? "Listing not found"} />
@@ -41,7 +47,7 @@ export function ListingDetail({ id }: { id: string }) {
       </>
     );
   }
-  const l = listing.data;
+  const l = current;
   const badge = listingBadge(l);
   const agentWallet = wallet.data?.listings.find((w) => w.listingId === l.id);
   const address = agentWallet?.address;
@@ -50,6 +56,8 @@ export function ListingDetail({ id }: { id: string }) {
     setDeleting(true);
     try {
       await n8nFetch(path, { method: "DELETE" });
+      qc.removeQueries({ queryKey: n8nKey(path) });
+      await invalidate("/listings", "/wallet");
       router.push("/dashboard/n8n/listings");
       router.refresh();
     } catch (e) {
@@ -83,7 +91,7 @@ export function ListingDetail({ id }: { id: string }) {
             {badge.hint && <p style={{ margin: "10px 0 0", fontSize: "13px", color: "rgba(246,246,246,0.55)" }}>{badge.hint}</p>}
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
-            <ToggleButton listing={l} onDone={() => { setActionError(null); void listing.reload(); }} onError={setActionError} />
+            <ToggleButton listing={l} onDone={() => { setActionError(null); void invalidate("/listings", "/wallet"); }} onError={setActionError} />
             <button className="dashboard-button-secondary" style={{ padding: "6px 12px", fontSize: "12px", borderRadius: "4px" }} onClick={() => setEditing(true)}>Edit</button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -46,8 +47,8 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ initial, children }: AuthProviderProps) {
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
+  const [supabase] = useState(() => createClient());
+  const queryClient = useQueryClient();
 
   const seeded = !!initial;
   const [user, setUser] = useState<User | null>(initial?.user ?? null);
@@ -95,7 +96,12 @@ export function AuthProvider({ initial, children }: AuthProviderProps) {
       if (event === "SIGNED_OUT") {
         setDeveloper(null);
         knownUserIdRef.current = null;
+        // Never let one user's cached dashboard data leak to the next session.
+        queryClient.clear();
       } else if (nextUser && nextUser.id !== knownUserIdRef.current) {
+        // A different account signed in: drop anything cached for the previous one.
+        if (knownUserIdRef.current) queryClient.clear();
+        else void queryClient.invalidateQueries();
         knownUserIdRef.current = nextUser.id;
         refresh();
       }
@@ -105,7 +111,7 @@ export function AuthProvider({ initial, children }: AuthProviderProps) {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [seeded, supabase, refresh]);
+  }, [seeded, supabase, refresh, queryClient]);
 
   const login = useCallback(() => {
     supabase.auth.signInWithOAuth({
@@ -128,8 +134,9 @@ export function AuthProvider({ initial, children }: AuthProviderProps) {
     }
     setUser(null);
     setDeveloper(null);
+    queryClient.clear();
     window.location.href = "/";
-  }, [supabase]);
+  }, [supabase, queryClient]);
 
   const value = useMemo<AuthContextValue>(() => ({
     ready,

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useEntities } from "@/hooks/useEntities";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EntityFormProps {
   entity?: { name: string; description: string; tags?: string[] };
@@ -14,6 +16,8 @@ interface EntityFormProps {
 export function EntityForm({ entity, isEditing = false, entityId }: EntityFormProps) {
   const router = useRouter();
   const { authenticated } = useAuth();
+  const { refresh } = useEntities();
+  const queryClient = useQueryClient();
   const [name, setName] = useState(entity?.name ?? "");
   const [description, setDescription] = useState(entity?.description ?? "");
   const [tagInput, setTagInput] = useState("");
@@ -43,6 +47,9 @@ export function EntityForm({ entity, isEditing = false, entityId }: EntityFormPr
         const { error: err } = await supabase.from("entities").insert({ name: name.trim(), description: description.trim() || null, tags: tags.length > 0 ? tags : null, status: "active" });
         if (err) throw err;
       }
+      // Drop cached copies so the list and detail pages show the saved values.
+      if (entityId) void queryClient.invalidateQueries({ queryKey: ["entity", entityId] });
+      void refresh();
       router.push("/dashboard/entities");
     } catch (err) { console.error(err); setError("Failed to save entity. Please try again."); }
     finally { setSubmitting(false); }

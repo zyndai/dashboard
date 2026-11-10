@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useFeaturedAgents, uniqueCategories, type FeaturedAgent } from "@/lib/landing/featuredAgents";
 import { AgentCard, AgentCardStyles, dotColorFor } from "./AgentCard";
 
@@ -17,11 +17,12 @@ function padRow(arr: FeaturedAgent[], min = 6): FeaturedAgent[] {
   return out;
 }
 
+const subscribeNoop = () => () => {};
+
 export function AgentDirectoryMarquee(): React.ReactElement | null {
   const { agents, loading } = useFeaturedAgents(300);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const display = useMemo(
     () => (activeCategory ? agents.filter((a) => a.category === activeCategory) : agents),

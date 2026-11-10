@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { n8nFetch, useN8nData } from "@/lib/n8n/client";
+import { n8nFetch, useInvalidateN8n, useN8nData } from "@/lib/n8n/client";
 import { GRACE_OPTIONS, formatUsd, keyState, maskKey, validateKeyForm, type KeyFormValues } from "@/lib/n8n/format";
 import { KEY_PERMISSIONS, type CreatedN8nApiKey, type N8nApiKey, type RotatedN8nApiKey } from "@/lib/n8n/types";
 import { CopyField, Empty, ErrorBox, FieldError, Loading } from "./ui";
@@ -12,7 +12,8 @@ const when = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString() :
 
 /** M4.8: prefix only (masked), permissions, spend, expiry. */
 export function ApiKeysTable() {
-  const { data, error, loading, reload } = useN8nData<{ keys: N8nApiKey[] }>("/api-keys");
+  const { data, error, loading } = useN8nData<{ keys: N8nApiKey[] }>("/api-keys");
+  const invalidate = useInvalidateN8n();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export function ApiKeysTable() {
       await n8nFetch(`/api-keys/${encodeURIComponent(id)}`, { method: "DELETE" });
       setConfirmId(null);
       setActionError(null);
-      await reload();
+      await invalidate("/api-keys");
     } catch (e) {
       setActionError((e as Error).message);
     } finally {
@@ -44,7 +45,7 @@ export function ApiKeysTable() {
       setRotated(await n8nFetch<RotatedN8nApiKey>(`/api-keys/${encodeURIComponent(id)}/rotate`, { method: "POST", body: { graceHours: grace } }));
       setRotateId(null);
       setActionError(null);
-      await reload();
+      await invalidate("/api-keys");
     } catch (e) {
       setActionError((e as Error).message);
     } finally {
@@ -141,6 +142,8 @@ export function ApiKeyForm() {
   const [created, setCreated] = useState<CreatedN8nApiKey | null>(null);
   const [saved, setSaved] = useState(false);
 
+  const invalidate = useInvalidateN8n();
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setProblem(null);
@@ -150,6 +153,7 @@ export function ApiKeyForm() {
     setBusy(true);
     try {
       setCreated(await n8nFetch<CreatedN8nApiKey>("/api-keys", { method: "POST", body: payload }));
+      await invalidate("/api-keys");
     } catch (err) {
       setProblem((err as Error).message);
     } finally {

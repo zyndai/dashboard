@@ -65,7 +65,7 @@ export default async function FindPage({ searchParams }: PageProps) {
           Zynd — Find People
         </h1>
         <p style={{ color: "#555", fontSize: "0.95rem", marginBottom: "1.25rem" }}>
-          Search Zynd's directory of people by role, skills, location, or availability.
+          Search Zynd&apos;s directory of people by role, skills, location, or availability.
           Append <code>?q=your query</code> to this URL or use the form below.
         </p>
 

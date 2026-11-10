@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { n8nFetch, useN8nData } from "@/lib/n8n/client";
+import { n8nFetch, useInvalidateN8n, useN8nData } from "@/lib/n8n/client";
 import { formatBalance, listingBadge, nextToggle } from "@/lib/n8n/format";
 import type { N8nListing, N8nWallet } from "@/lib/n8n/types";
 import { Empty, ErrorBox, Loading, Mono, StatusBadge } from "./ui";
@@ -10,6 +10,7 @@ import { Empty, ErrorBox, Loading, Mono, StatusBadge } from "./ui";
 /** Activate / deactivate with its own busy state. Used by the table and the detail page. */
 export function ToggleButton({ listing, onDone, onError }: { listing: N8nListing; onDone: () => void; onError: (m: string) => void }) {
   const [busy, setBusy] = useState(false);
+  const invalidate = useInvalidateN8n();
   const action = nextToggle(listing.status);
   if (!action) return null;
   return (
@@ -20,6 +21,7 @@ export function ToggleButton({ listing, onDone, onError }: { listing: N8nListing
         setBusy(true);
         try {
           await n8nFetch(`/listings/${encodeURIComponent(listing.id)}/${action}`, { method: "POST" });
+          await invalidate("/listings", "/wallet");
           onDone();
         } catch (e) {
           onError((e as Error).message);

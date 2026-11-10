@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { use } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 interface EntityDetail {
@@ -50,26 +51,18 @@ interface EntityDetail {
 
 export default function EntityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const [entity, setEntity] = useState<EntityDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [entityId, setEntityId] = useState<string | null>(null);
-
-  useEffect(() => { params.then((p) => setEntityId(p.id)); }, [params]);
-
-  useEffect(() => {
-    if (!entityId) return;
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/entities/${entityId}`);
-        if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed"); }
-        setEntity((await res.json()).entity);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load entity details");
-      } finally { setLoading(false); }
-    })();
-  }, [entityId]);
+  const { id: entityId } = use(params);
+  const query = useQuery({
+    queryKey: ["entity", entityId],
+    queryFn: async (): Promise<EntityDetail> => {
+      const res = await fetch(`/api/entities/${entityId}`);
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || "Failed"); }
+      return (await res.json()).entity;
+    },
+  });
+  const entity = query.data ?? null;
+  const loading = query.isPending;
+  const error = query.error ? (query.error instanceof Error ? query.error.message : "Failed to load entity details") : null;
 
   if (loading) {
     return (

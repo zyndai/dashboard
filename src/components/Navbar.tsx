@@ -130,7 +130,7 @@ export function Navbar(): React.ReactElement {
               <div className="navbar-cont-w">
                 <div className="navbar-cont-c">
                   <div className="navbar-brand-w">
-                    <a
+                    <Link
                       href="/"
                       aria-current="page"
                       className="navbar-brand w-nav-brand w--current"
@@ -151,7 +151,7 @@ export function Navbar(): React.ReactElement {
                           fontFamily: "'Chakra Petch', 'Space Grotesk', sans-serif",
                         }}>ZYND<span style={{ color: "#6366F1" }}>AI</span></span>
                       </div>
-                    </a>
+                    </Link>
                   </div>
                   <nav role="navigation" className="navbar-menu w-nav-menu">
                     <div className="navbar-menu-c">

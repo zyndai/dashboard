@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-interface DevInfo {
-  developer_id: string;
-  username: string | null;
-  evm_address: string | null;
-}
+import { useState } from "react";
+import { useDeveloperInfo } from "@/hooks/useDeveloperInfo";
 
 function CodeBlock({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
@@ -58,14 +53,7 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 export default function CliPage() {
-  const [dev, setDev] = useState<DevInfo | null>(null);
-
-  useEffect(() => {
-    fetch("/api/developer/keys")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setDev(d))
-      .catch(() => {});
-  }, []);
+  const dev = useDeveloperInfo();
 
   const did = dev?.developer_id ?? "<your-did>";
   const username = dev?.username ?? "yourname";

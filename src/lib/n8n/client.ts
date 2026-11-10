@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export class N8nApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string, readonly details?: unknown) {
@@ -33,35 +34,45 @@ export async function n8nFetch<T>(path: string, init: { method?: string; body?: 
   return data as T;
 }
 
-/** GET + reload + optional polling. Polling keeps status badges within one beat of the truth (M4.6). */
-export function useN8nData<T>(path: string, opts: { pollMs?: number } = {}) {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const alive = useRef(true);
+/** Cache key for a Gateway path. Components sharing a path share one cached request. */
+export const n8nKey = (path: string) => ["n8n", path] as const;
 
-  const load = useCallback(async () => {
-    try {
-      const d = await n8nFetch<T>(path);
-      if (!alive.current) return;
-      setData(d);
-      setError(null);
-    } catch (e) {
-      if (alive.current) setError((e as Error).message);
-    } finally {
-      if (alive.current) setLoading(false);
-    }
-  }, [path]);
+/**
+ * Cached GET with optional background polling. Data survives tab switches: `loading` is true
+ * only when nothing is cached yet, and stale data is refetched silently (`fetching`).
+ * Polling pauses while the browser tab is hidden. `keepPrevious` keeps the old result visible while
+ * a changed path (e.g. a new date range) loads.
+ */
+export function useN8nData<T>(path: string, opts: { pollMs?: number; keepPrevious?: boolean } = {}) {
+  const q = useQuery({
+    queryKey: n8nKey(path),
+    queryFn: () => n8nFetch<T>(path),
+    refetchInterval: opts.pollMs,
+    placeholderData: opts.keepPrevious ? keepPreviousData : undefined,
+  });
+  const { refetch } = q;
+  const reload = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+  return {
+    data: q.data ?? null,
+    error: q.error ? (q.error as Error).message : null,
+    loading: q.isPending,
+    fetching: q.isFetching,
+    reload,
+  };
+}
 
-  useEffect(() => {
-    alive.current = true;
-    void load();
-    const t = opts.pollMs ? setInterval(() => void load(), opts.pollMs) : undefined;
-    return () => {
-      alive.current = false;
-      if (t) clearInterval(t);
-    };
-  }, [load, opts.pollMs]);
-
-  return { data, error, loading, reload: load };
+/** Mark cached n8n data stale so mounted views refetch right away (call after a mutation). */
+export function useInvalidateN8n() {
+  const qc = useQueryClient();
+  return useCallback(
+    (...prefixes: string[]) =>
+      Promise.all(
+        prefixes.map((p) =>
+          qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "n8n" && String(query.queryKey[1]).startsWith(p) }),
+        ),
+      ),
+    [qc],
+  );
 }

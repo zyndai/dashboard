@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 const PRODUCTS = [
@@ -227,7 +228,7 @@ export function VideoSection(): React.ReactElement {
               </div>
               <div className="ss-bottom-pill">
                 <a href="https://docs.zynd.ai">Protocol</a>
-                <a href="/registry">Registry</a>
+                <Link href="/registry">Registry</Link>
                 <a href="https://docs.zynd.ai">Developers</a>
               </div>
               <a href="/auth" className="ss-bottom-contact">Get API Key</a>

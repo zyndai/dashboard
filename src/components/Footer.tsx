@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from 'react';
 
 const Footer: React.FC = () => {
@@ -36,7 +37,7 @@ const Footer: React.FC = () => {
            
            {/* Block 1: Logo */}
            <div className="ft-col-1">
-              <a href="/" className="navbar-brand" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: 'none', marginBottom: '16px' }}>
+              <Link href="/" className="navbar-brand" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: 'none', marginBottom: '16px' }}>
                 <img
                   src="/assets/zynd-logo.png"
                   alt="ZyndAI"
@@ -50,7 +51,7 @@ const Footer: React.FC = () => {
                   color: "#fff",
                   fontFamily: "'Space Grotesk', sans-serif",
                 }}>ZYND<span style={{ color: "#6366f1" }}>AI</span></span>
-              </a>
+              </Link>
            </div>
 
            {/* Block 2: Links */}

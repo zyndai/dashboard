@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { n8nFetch } from "@/lib/n8n/client";
+import { n8nFetch, useInvalidateN8n } from "@/lib/n8n/client";
 import { validateListingForm, type ListingFormValues } from "@/lib/n8n/format";
 import type { N8nListing } from "@/lib/n8n/types";
 import { ErrorBox, FieldError } from "./ui";
@@ -18,6 +18,7 @@ export function ListingForm({ initial, listingId }: { initial?: ListingFormValue
   const [errors, setErrors] = useState<ReturnType<typeof validateListingForm>["errors"]>({});
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const invalidate = useInvalidateN8n();
   const editing = Boolean(listingId);
   const set = (k: keyof ListingFormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setValues((v) => ({ ...v, [k]: e.target.value }));
@@ -36,14 +37,17 @@ export function ListingForm({ initial, listingId }: { initial?: ListingFormValue
           method: "PATCH",
           body: { name: payload.name, summary: payload.summary, tags: payload.tags, workflowId: payload.workflowId ?? null, priceUsd: payload.priceUsd ?? null },
         });
+        await invalidate("/listings", "/wallet");
         router.push(`/dashboard/n8n/listings/${encodeURIComponent(listingId as string)}`);
         router.refresh();
         return;
       }
       const created = await n8nFetch<N8nListing>("/listings", { method: "POST", body: payload });
+      await invalidate("/listings", "/wallet");
       if (activate) {
         try {
           await n8nFetch(`/listings/${encodeURIComponent(created.id)}/activate`, { method: "POST" });
+          await invalidate("/listings");
         } catch (err) {
           // The listing exists as a DRAFT; send them to it so they can retry activation.
           router.push(`/dashboard/n8n/listings/${encodeURIComponent(created.id)}?activationFailed=${encodeURIComponent((err as Error).message)}`);

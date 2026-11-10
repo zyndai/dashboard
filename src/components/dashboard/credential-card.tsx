@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Copy, ShieldCheck, ShieldX, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Dialog } from "@/components/ui/Dialog";
@@ -95,10 +95,8 @@ export function CredentialCard({
 }: CredentialCardProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [credData, setCredData] = useState<CredentialData | null>(null);
-
-  useEffect(() => {
-    if (!credential) return;
+  const credData = useMemo<CredentialData | null>(() => {
+    if (!credential) return null;
 
     const cred = credential as Record<string, unknown> & { id?: string; revoked?: boolean; vc?: Record<string, unknown>; issuanceDate?: string; issuer?: string };
     let processedData: CredentialData;
@@ -133,7 +131,7 @@ export function CredentialCard({
       };
     }
 
-    setCredData(processedData);
+    return processedData;
   }, [credential, isDID]);
 
   if (!credData) {

@@ -1,15 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useEntities } from "@/hooks/useEntities";
-
-interface DevInfo {
-  developer_id: string;
-  public_key: string;
-  name: string;
-  username: string | null;
-  evm_address: string | null;
-}
+import { useDeveloperInfo } from "@/hooks/useDeveloperInfo";
 
 const PAGE_SIZE = 5;
 
@@ -19,19 +12,12 @@ function truncateAddr(addr: string) {
 
 export default function WalletPage() {
   const { entities, loading: entitiesLoading } = useEntities();
-  const [devInfo, setDevInfo] = useState<DevInfo | null>(null);
+  const devInfo = useDeveloperInfo();
   const [topUpAgentId, setTopUpAgentId] = useState<string | null>(null);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [topUpSuccess, setTopUpSuccess] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-
-  useEffect(() => {
-    fetch("/api/developer/keys")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => d && setDevInfo(d))
-      .catch(() => {});
-  }, []);
 
   const agentsWithWallet = entities.filter((e) => e.wallet_address);
   const activeAgents = entities.filter((e) => e.status.toUpperCase() === "ACTIVE").length;

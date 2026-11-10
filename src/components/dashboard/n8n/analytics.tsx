@@ -17,7 +17,7 @@ const CHART_H = 120;
 export function ListingAnalytics({ listingId, names }: { listingId?: string; names?: Record<string, string> }) {
   const [days, setDays] = useState<(typeof RANGES)[number]>(30);
   const qs = `?days=${days}${listingId ? `&listingId=${encodeURIComponent(listingId)}` : ""}`;
-  const { data, error, loading } = useN8nData<N8nAnalytics>(`/analytics${qs}`, { pollMs: 60_000 });
+  const { data, error, loading } = useN8nData<N8nAnalytics>(`/analytics${qs}`, { pollMs: 60_000, keepPrevious: true });
 
   const bars = useMemo(() => (data ? dailyBars(data.series, data.days, new Date().toISOString().slice(0, 10)) : []), [data]);
   const peak = Math.max(1, ...bars.map((b) => b.calls));

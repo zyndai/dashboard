@@ -51,18 +51,23 @@ export function AddMoneyModal({
   const popupRef = useRef<Window | null>(null);
   const pollAbort = useRef<{ cancelled: boolean } | null>(null);
 
-  const reset = useCallback(() => {
-    setPhase("idle");
-    setError(null);
-    setTxHash(null);
-    setAmount(String(presetAmounts[0] ?? ""));
-    if (pollAbort.current) pollAbort.current.cancelled = true;
-    pollAbort.current = null;
-  }, [presetAmounts]);
+  // Reset form state when the modal closes (adjusting state during render, not in an effect).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open) {
+      setPhase("idle");
+      setError(null);
+      setTxHash(null);
+      setAmount(String(presetAmounts[0] ?? ""));
+    }
+  }
 
   useEffect(() => {
-    if (!open) reset();
-  }, [open, reset]);
+    if (open) return;
+    if (pollAbort.current) pollAbort.current.cancelled = true;
+    pollAbort.current = null;
+  }, [open]);
 
   useEffect(() => {
     return () => {

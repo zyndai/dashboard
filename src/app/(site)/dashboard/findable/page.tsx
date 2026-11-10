@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useZyndToken } from "@/hooks/useZyndToken";
 
 const API_BASE = process.env.NEXT_PUBLIC_ZYND_API_URL || "https://api.zynd.ai";
 
@@ -31,51 +32,30 @@ const SEEKING = ["co_founder", "technical_feedback", "early_users", "mentoring",
 const OPEN_TO = ["coffee_chat", "collaboration", "mentoring_others", "being_mentored", "peer_review", "co_founder", "early_user_testing"];
 
 export default function FindablePage() {
-  const [supabase] = useState(() => createClient());
-  const [token, setToken] = useState<string | null>(null);
-  const [card, setCard] = useState<Fact[]>([]);
-  const [suggestions, setSuggestions] = useState<Fact[]>([]);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [error, setError] = useState("");
-  const [text, setText] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+  const tokenQuery = useZyndToken();
+  const token = tokenQuery.data?.token ?? null;
   const [busy, setBusy] = useState(false);
+  const [text, setText] = useState<Record<string, string>>({});
 
-  const refresh = useCallback(async (tok: string) => {
-    const [c, s] = await Promise.all([
-      fetch(`${API_BASE}/me/findability`, { headers: { Authorization: `Bearer ${tok}` } }),
-      fetch(`${API_BASE}/me/findability/suggestions`, { headers: { Authorization: `Bearer ${tok}` } }),
-    ]);
-    if (!c.ok || !s.ok) throw new Error(`Failed to load (${c.status}/${s.status})`);
-    setCard(await c.json());
-    setSuggestions(await s.json());
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Not signed in.");
-        const res = await fetch(`${API_BASE}/token/exchange`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (!res.ok) throw new Error(`Auth failed (${res.status})`);
-        const { token: tok } = (await res.json()) as { token: string };
-        await refresh(tok);
-        if (!cancelled) {
-          setToken(tok);
-          setStatus("ready");
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Something went wrong.");
-          setStatus("error");
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [supabase, refresh]);
+  const findability = useQuery({
+    queryKey: ["findability", token],
+    enabled: !!token,
+    queryFn: async () => {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [c, s] = await Promise.all([
+        fetch(`${API_BASE}/me/findability`, { headers }),
+        fetch(`${API_BASE}/me/findability/suggestions`, { headers }),
+      ]);
+      if (!c.ok || !s.ok) throw new Error(`Failed to load (${c.status}/${s.status})`);
+      return { card: (await c.json()) as Fact[], suggestions: (await s.json()) as Fact[] };
+    },
+  });
+  const card = findability.data?.card ?? [];
+  const suggestions = findability.data?.suggestions ?? [];
+  const failure = tokenQuery.error ?? findability.error;
+  const status: "loading" | "ready" | "error" = failure ? "error" : findability.data ? "ready" : "loading";
+  const error = failure instanceof Error ? failure.message : "Something went wrong.";
 
   const act = useCallback(
     async (path: string, body: object) => {
@@ -87,12 +67,12 @@ export default function FindablePage() {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        await refresh(token);
+        await queryClient.invalidateQueries({ queryKey: ["findability", token] });
       } finally {
         setBusy(false);
       }
     },
-    [token, refresh],
+    [token, queryClient],
   );
 
   const cardHas = (predicate: string, object: string) =>

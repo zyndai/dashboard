@@ -69,7 +69,7 @@ const UseCases: React.FC = () => {
         
         <div style={{ textAlign: 'center', marginBottom: '64px' }}>
           <div style={{ color: '#6366f1', textTransform: 'uppercase', fontStyle: 'italic', fontSize: '13px', marginBottom: '16px', letterSpacing: '0.05em', fontFamily: 'ui-monospace, monospace' }}>
-            // USE CASES
+            {"// USE CASES"}
           </div>
           <h2 className="uc-heading" style={{ fontSize: '42px', fontWeight: 600, color: '#fff', marginBottom: '16px', letterSpacing: '-0.02em' }}>
             The Economy is Already Forming

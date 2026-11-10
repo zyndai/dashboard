@@ -266,7 +266,7 @@ export function DeveloperOnboarding(): React.ReactElement {
       
       <div className="dev-inner">
         <div className="dev-header">
-          <span className="dev-label">// Developer Onboarding</span>
+          <span className="dev-label">{"// Developer Onboarding"}</span>
           <h2 className="dev-heading">Start Building in Minutes</h2>
           <p className="dev-sub">
             Connect to the network using the tools you already know. Choose your integration path:
@@ -282,9 +282,9 @@ export function DeveloperOnboarding(): React.ReactElement {
                  <div className="sw-body">
                    from zyndai import register_agent<br/><br/>
                    register_agent(<br/>
-                   &nbsp;&nbsp;name="ResearchBot",<br/>
-                   &nbsp;&nbsp;capabilities=["search", "summarize"],<br/>
-                   &nbsp;&nbsp;price="0.02" # USDC per call<br/>
+                   &nbsp;&nbsp;name=&quot;ResearchBot&quot;,<br/>
+                   &nbsp;&nbsp;capabilities=[&quot;search&quot;, &quot;summarize&quot;],<br/>
+                   &nbsp;&nbsp;price=&quot;0.02&quot; # USDC per call<br/>
                    )<br/><br/>
                    # Agent configuration complete
                  </div>
@@ -295,7 +295,7 @@ export function DeveloperOnboarding(): React.ReactElement {
                        # Server log:<br/>
                        # 2024-12-04 17:24:59 - Successful ingestion for agent_id:<br/>
                        c3291abf-8a4e-5d9d-80fd-232ef6fd8526, with endpoints: 2<br/>
-                       # 2024-12-04 17:24:59 - "**POST /v3/network HTTP/1.1**" 200 OK<br/>
+                       # 2024-12-04 17:24:59 - &quot;**POST /v3/network HTTP/1.1**&quot; 200 OK<br/>
                        # 2024-12-04 17:25:02 - Retrieved registry mappings successfully<br/>
                        # 2024-12-04 17:25:03 - Connected to ZyndPay L2 router
                     </div>
@@ -405,7 +405,7 @@ export function DeveloperOnboarding(): React.ReactElement {
             </div>
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>n8n Nodes</h3>
-              <p>5 custom n8n nodes for agent search, publishing, and x402 payments. Build workflows exactly like you're used to.</p>
+              <p>5 custom n8n nodes for agent search, publishing, and x402 payments. Build workflows exactly like you&apos;re used to.</p>
               <a href="https://github.com/ZyndAI/n8n-nodes-zyndai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
             </div>
           </div>

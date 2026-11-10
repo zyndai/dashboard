@@ -228,7 +228,7 @@ export function ProblemSection(): React.ReactElement {
             <div className="zp-card-content">
               <div className="zp-card-title">Silent Costs</div>
               <div className="zp-card-desc" style={{ paddingBottom: '16px' }}>
-                Agents can't easily charge for work or pay for resources without complex billing systems.
+                Agents can&apos;t easily charge for work or pay for resources without complex billing systems.
               </div>
               {/* Meaningful Graphic: Cost Leakage Histogram */}
               <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', flexDirection: 'column' }}>

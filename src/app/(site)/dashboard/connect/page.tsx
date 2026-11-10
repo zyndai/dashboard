@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
+import { useZyndToken } from "@/hooks/useZyndToken";
 
 // ZYND memory-layer API. Override per-env with NEXT_PUBLIC_ZYND_API_URL.
 const API_BASE = process.env.NEXT_PUBLIC_ZYND_API_URL || "https://api.zynd.ai";
@@ -74,49 +74,10 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 export default function ConnectPage() {
-  const [supabase] = useState(() => createClient());
-  const [status, setStatus] = useState<Status>("loading");
-  const [result, setResult] = useState<ExchangeResult | null>(null);
-  const [error, setError] = useState("");
-  // Bumped to re-run the exchange effect (retry) without a setState-watching effect.
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function exchange() {
-      setStatus("loading");
-      setError("");
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const accessToken = session?.access_token;
-        // Layout gates /dashboard behind auth, so this is defensive, not expected.
-        if (!accessToken) throw new Error("No active session. Please sign in again.");
-
-        const res = await fetch(`${API_BASE}/token/exchange`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (!res.ok) throw new Error(`Token exchange failed (${res.status}). Try again.`);
-
-        const data = (await res.json()) as ExchangeResult;
-        if (!cancelled) {
-          setResult(data);
-          setStatus("ready");
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Something went wrong.");
-          setStatus("error");
-        }
-      }
-    }
-
-    exchange();
-    return () => {
-      cancelled = true;
-    };
-  }, [supabase, reloadKey]);
+  const exchange = useZyndToken();
+  const status: Status = exchange.isPending ? "loading" : exchange.isError ? "error" : "ready";
+  const result: ExchangeResult | null = exchange.data ?? null;
+  const error = exchange.error instanceof Error ? exchange.error.message : "Something went wrong.";
 
   const config = result
     ? JSON.stringify(
@@ -157,7 +118,7 @@ export default function ConnectPage() {
       {status === "error" && (
         <div className="zc-card">
           <p style={{ color: "#ff9b9b", fontSize: "14px", marginTop: 0, fontWeight: 500 }}>{error}</p>
-          <button className="zc-btn" onClick={() => setReloadKey((k) => k + 1)}>
+          <button className="zc-btn" onClick={() => void exchange.refetch()}>
             Retry
           </button>
         </div>

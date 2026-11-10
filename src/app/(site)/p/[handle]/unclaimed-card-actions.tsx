@@ -1,22 +1,26 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
 
 const STORAGE_KEY = "zynd_my_handles";
 
+const subscribeNoop = () => () => {};
+
 export function UnclaimedCardActions({ handle }: { handle: string }) {
   const { authenticated, ready } = useAuth();
-  const [isCreator, setIsCreator] = useState(false);
+  const isCreator = useSyncExternalStore(
+    subscribeNoop,
+    () => {
+      try {
+        const stored: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return stored.includes(handle);
+      } catch { return false; }
+    },
+    () => false,
+  );
   const [claiming, setClaiming] = useState(false);
   const [claimed, setClaimed] = useState(false);
-
-  useEffect(() => {
-    try {
-      const stored: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      setIsCreator(stored.includes(handle));
-    } catch { /* non-fatal */ }
-  }, [handle]);
 
   // Once user signs in after creating, auto-claim (PATCH card with their email)
   // then remove handle from localStorage since it's now officially owned.

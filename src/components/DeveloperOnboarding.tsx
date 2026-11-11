@@ -2,7 +2,22 @@
 
 import React from "react";
 
+const N8N_INSTALL_CMD = "npm install n8n-nodes-zynd";
+const N8N_NPM_URL = "https://www.npmjs.com/package/n8n-nodes-zynd";
+
 export function DeveloperOnboarding(): React.ReactElement {
+  const [n8nCopied, setN8nCopied] = React.useState(false);
+
+  const copyN8nInstall = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(N8N_INSTALL_CMD);
+      setN8nCopied(true);
+      setTimeout(() => setN8nCopied(false), 1800);
+    } catch {
+      // Clipboard unavailable (insecure context / denied): the command stays visible to copy by hand.
+    }
+  };
+
   return (
     <section className="dev-sec">
       <style>{`
@@ -151,6 +166,33 @@ export function DeveloperOnboarding(): React.ReactElement {
           text-transform: uppercase;
         }
         .bc-cta:hover { color: #e9d5ff; }
+        .bc-install {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin: 4px 0 12px;
+          padding: 10px 14px;
+          background: #111;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 8px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          font-size: 13px;
+          color: rgba(255,255,255,0.85);
+        }
+        .bc-install button {
+          background: none;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
+          font-family: 'Space Grotesk', sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #c084fc;
+        }
+        .bc-install button:hover { color: #e9d5ff; }
 
         /* SciPhi Style Code Window */
         .sciphi-win {
@@ -406,7 +448,11 @@ export function DeveloperOnboarding(): React.ReactElement {
             <div className="bc-bottom">
               <h3 style={{textTransform:'uppercase'}}>n8n Nodes</h3>
               <p>5 custom n8n nodes for agent search, publishing, and x402 payments. Build workflows exactly like you&apos;re used to.</p>
-              <a href="https://github.com/ZyndAI/n8n-nodes-zyndai" target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
+              <div className="bc-install">
+                <code>{N8N_INSTALL_CMD}</code>
+                <button type="button" onClick={copyN8nInstall} aria-label="Copy npm install command">{n8nCopied ? "Copied" : "Copy"}</button>
+              </div>
+              <a href={N8N_NPM_URL} target="_blank" rel="noopener noreferrer" className="bc-cta" style={{marginTop:'4px'}}>Get n8n Nodes ↗</a>
             </div>
           </div>
         </div>
